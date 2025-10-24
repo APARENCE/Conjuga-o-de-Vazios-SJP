@@ -1,4 +1,4 @@
-import { Container } from "@/types/container";
+import { Container, ContainerFile } from "@/types/container";
 import {
   Table,
   TableBody,
@@ -9,12 +9,14 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { FileUploadDialog } from "@/components/FileUploadDialog";
 
 interface ContainerTableProps {
   containers: Container[];
+  onContainerUpdate: (containerId: string, files: ContainerFile[]) => void;
 }
 
-export function ContainerTable({ containers }: ContainerTableProps) {
+export function ContainerTable({ containers, onContainerUpdate }: ContainerTableProps) {
   const getStatusBadge = (status: string) => {
     if (!status) return <Badge variant="secondary">-</Badge>;
     const statusLower = String(status).toLowerCase();
@@ -56,12 +58,13 @@ export function ContainerTable({ containers }: ContainerTableProps) {
               <TableHead className="font-semibold">Depot de Devolução</TableHead>
               <TableHead className="font-semibold">Data de Devolução</TableHead>
               <TableHead className="font-semibold">Status</TableHead>
+              <TableHead className="font-semibold">Arquivos</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {containers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={16} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={17} className="text-center py-8 text-muted-foreground">
                   Nenhum container encontrado. Importe uma planilha para começar.
                 </TableCell>
               </TableRow>
@@ -86,6 +89,13 @@ export function ContainerTable({ containers }: ContainerTableProps) {
                   <TableCell>{container.depotDevolucao}</TableCell>
                   <TableCell>{container.dataDevolucao}</TableCell>
                   <TableCell>{getStatusBadge(container.status)}</TableCell>
+                  <TableCell>
+                    <FileUploadDialog
+                      containerId={container.id}
+                      files={container.files || []}
+                      onFilesChange={(files) => onContainerUpdate(container.id, files)}
+                    />
+                  </TableCell>
                 </TableRow>
               ))
             )}

@@ -9,7 +9,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import Containers from "./pages/Containers";
 import Analise from "./pages/Analise";
 import NotFound from "./pages/NotFound";
-import { Container } from "@/types/container";
+import { Container, ContainerFile } from "@/types/container";
 import { parseExcelFile, exportToExcel } from "@/lib/excelUtils";
 import { toast } from "@/hooks/use-toast";
 
@@ -68,6 +68,14 @@ const App = () => {
     }
   };
 
+  const handleContainerUpdate = (containerId: string, files: ContainerFile[]) => {
+    setContainers((prev) =>
+      prev.map((container) =>
+        container.id === containerId ? { ...container, files } : container
+      )
+    );
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -83,7 +91,7 @@ const App = () => {
                 </header>
                 <main className="flex-1 p-6 overflow-auto">
                   <Routes>
-                    <Route path="/" element={<Containers containers={containers} />} />
+                    <Route path="/" element={<Containers containers={containers} onContainerUpdate={handleContainerUpdate} />} />
                     <Route path="/analise" element={<Analise containers={containers} />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>

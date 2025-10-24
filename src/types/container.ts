@@ -1,3 +1,12 @@
+export interface ContainerFile {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  dataUrl: string;
+  uploadedAt: string;
+}
+
 export interface Container {
   id: string;
   container: string;
@@ -16,6 +25,7 @@ export interface Container {
   depotDevolucao: string;
   dataDevolucao: string;
   status: string;
+  files?: ContainerFile[];
 }
 
 export interface ContainerStats {

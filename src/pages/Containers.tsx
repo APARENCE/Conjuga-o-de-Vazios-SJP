@@ -1,13 +1,14 @@
-import { Container } from "@/types/container";
+import { Container, ContainerFile } from "@/types/container";
 import { ContainerTable } from "@/components/ContainerTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
 
 interface ContainersPageProps {
   containers: Container[];
+  onContainerUpdate: (containerId: string, files: ContainerFile[]) => void;
 }
 
-export default function Containers({ containers }: ContainersPageProps) {
+export default function Containers({ containers, onContainerUpdate }: ContainersPageProps) {
   const stats = {
     total: containers.length,
     devolvidos: containers.filter(c => {
@@ -83,7 +84,7 @@ export default function Containers({ containers }: ContainersPageProps) {
         </Card>
       </div>
 
-      <ContainerTable containers={containers} />
+      <ContainerTable containers={containers} onContainerUpdate={onContainerUpdate} />
     </div>
   );
 }
