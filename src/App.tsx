@@ -1,0 +1,107 @@
+import { useState, useRef } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
+import Containers from "./pages/Containers";
+import Analise from "./pages/Analise";
+import NotFound from "./pages/NotFound";
+import { Container } from "@/types/container";
+import { parseExcelFile, exportToExcel } from "@/lib/excelUtils";
+import { toast } from "@/hooks/use-toast";
+
+const queryClient = new QueryClient();
+
+const App = () => {
+  const [containers, setContainers] = useState<Container[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImport = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const data = await parseExcelFile(file);
+      setContainers(data);
+      toast({
+        title: "Importação concluída!",
+        description: `${data.length} containers foram importados com sucesso.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro na importação",
+        description: "Não foi possível importar o arquivo. Verifique o formato.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExport = () => {
+    if (containers.length === 0) {
+      toast({
+        title: "Nenhum dado para exportar",
+        description: "Importe uma planilha primeiro.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      exportToExcel(containers);
+      toast({
+        title: "Exportação concluída!",
+        description: "O arquivo Excel foi baixado com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro na exportação",
+        description: "Não foi possível exportar o arquivo.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <SidebarProvider>
+            <div className="min-h-screen flex w-full bg-background">
+              <AppSidebar onImport={handleImport} onExport={handleExport} />
+              <div className="flex-1 flex flex-col">
+                <header className="h-14 border-b border-border bg-card flex items-center px-4">
+                  <SidebarTrigger />
+                </header>
+                <main className="flex-1 p-6 overflow-auto">
+                  <Routes>
+                    <Route path="/" element={<Containers containers={containers} />} />
+                    <Route path="/analise" element={<Analise containers={containers} />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+              </div>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </SidebarProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
+
+export default App;
