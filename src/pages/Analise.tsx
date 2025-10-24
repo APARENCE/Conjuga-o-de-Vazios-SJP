@@ -61,7 +61,7 @@ export default function Analise({ containers }: AnalisePageProps) {
 
     containers.forEach(c => {
       const dias = typeof c.diasRestantes === 'number' ? c.diasRestantes : 0;
-      if (dias <= 0) ranges["Vencido"]++;
+      if (dias === 0) ranges["Vencido"]++;
       else if (dias <= 3) ranges["1-3 dias"]++;
       else if (dias <= 7) ranges["4-7 dias"]++;
       else if (dias <= 14) ranges["8-14 dias"]++;

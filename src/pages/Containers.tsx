@@ -1,14 +1,39 @@
+import { useState } from "react";
 import { Container, ContainerFile } from "@/types/container";
 import { ContainerTable } from "@/components/ContainerTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import { ContainerFormDialog } from "@/components/ContainerFormDialog";
 
 interface ContainersPageProps {
   containers: Container[];
   onContainerUpdate: (containerId: string, files: ContainerFile[]) => void;
+  onContainerAdd: (container: Partial<Container>) => void;
+  onContainerEdit: (id: string, container: Partial<Container>) => void;
+  onContainerDelete: (id: string) => void;
 }
 
-export default function Containers({ containers, onContainerUpdate }: ContainersPageProps) {
+export default function Containers({ 
+  containers, 
+  onContainerUpdate, 
+  onContainerAdd, 
+  onContainerEdit, 
+  onContainerDelete 
+}: ContainersPageProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredContainers = containers.filter(c => {
+    const search = searchTerm.toLowerCase();
+    return (
+      c.container?.toLowerCase().includes(search) ||
+      c.armador?.toLowerCase().includes(search) ||
+      c.status?.toLowerCase().includes(search) ||
+      c.motorista?.toLowerCase().includes(search)
+    );
+  });
+
   const stats = {
     total: containers.length,
     devolvidos: containers.filter(c => {
@@ -21,17 +46,30 @@ export default function Containers({ containers, onContainerUpdate }: Containers
     }).length,
     vencidos: containers.filter(c => {
       const dias = typeof c.diasRestantes === 'number' ? c.diasRestantes : 0;
-      return dias <= 0;
+      return dias === 0;
     }).length,
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Gestão de Containers</h1>
-        <p className="text-muted-foreground mt-1">
-          Controle de entrada e saída de containers CAS
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Gestão de Containers</h1>
+          <p className="text-muted-foreground mt-1">
+            Controle de entrada e saída de containers CAS
+          </p>
+        </div>
+        <ContainerFormDialog onSave={onContainerAdd} />
+      </div>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Pesquisar por container, armador, status ou motorista..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -84,7 +122,12 @@ export default function Containers({ containers, onContainerUpdate }: Containers
         </Card>
       </div>
 
-      <ContainerTable containers={containers} onContainerUpdate={onContainerUpdate} />
+      <ContainerTable 
+        containers={filteredContainers} 
+        onContainerUpdate={onContainerUpdate}
+        onContainerEdit={onContainerEdit}
+        onContainerDelete={onContainerDelete}
+      />
     </div>
   );
 }

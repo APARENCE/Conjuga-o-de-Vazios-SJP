@@ -76,6 +76,54 @@ const App = () => {
     );
   };
 
+  const handleContainerAdd = (containerData: Partial<Container>) => {
+    const newContainer: Container = {
+      id: `container-${Date.now()}`,
+      container: containerData.container || "",
+      armador: containerData.armador || "",
+      dataOperacao: containerData.dataOperacao || "",
+      dataPorto: containerData.dataPorto || "",
+      demurrage: containerData.demurrage || "",
+      freeTime: containerData.freeTime || 0,
+      diasRestantes: containerData.diasRestantes || 0,
+      placas: containerData.placas || "",
+      motorista: containerData.motorista || "",
+      origem: containerData.origem || "",
+      baixaPatio: containerData.baixaPatio || "",
+      containerTroca: containerData.containerTroca || "",
+      armadorTroca: containerData.armadorTroca || "",
+      depotDevolucao: containerData.depotDevolucao || "",
+      dataDevolucao: containerData.dataDevolucao || "",
+      status: containerData.status || "",
+      files: [],
+    };
+    setContainers((prev) => [...prev, newContainer]);
+    toast({
+      title: "Container adicionado!",
+      description: "O container foi adicionado com sucesso.",
+    });
+  };
+
+  const handleContainerEdit = (id: string, containerData: Partial<Container>) => {
+    setContainers((prev) =>
+      prev.map((container) =>
+        container.id === id ? { ...container, ...containerData } : container
+      )
+    );
+    toast({
+      title: "Container atualizado!",
+      description: "O container foi atualizado com sucesso.",
+    });
+  };
+
+  const handleContainerDelete = (id: string) => {
+    setContainers((prev) => prev.filter((container) => container.id !== id));
+    toast({
+      title: "Container excluído!",
+      description: "O container foi excluído com sucesso.",
+    });
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -91,7 +139,18 @@ const App = () => {
                 </header>
                 <main className="flex-1 p-6 overflow-auto">
                   <Routes>
-                    <Route path="/" element={<Containers containers={containers} onContainerUpdate={handleContainerUpdate} />} />
+                    <Route 
+                      path="/" 
+                      element={
+                        <Containers 
+                          containers={containers} 
+                          onContainerUpdate={handleContainerUpdate}
+                          onContainerAdd={handleContainerAdd}
+                          onContainerEdit={handleContainerEdit}
+                          onContainerDelete={handleContainerDelete}
+                        />
+                      } 
+                    />
                     <Route path="/analise" element={<Analise containers={containers} />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
