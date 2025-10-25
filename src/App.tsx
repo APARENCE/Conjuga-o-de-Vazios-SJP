@@ -195,6 +195,7 @@ const App = () => {
                       element={
                         <Inventario 
                           inventory={inventory} 
+                          containers={containers} // Passando containers
                           onItemAdd={handleInventoryAdd}
                           onItemEdit={handleInventoryEdit}
                           onItemDelete={handleInventoryDelete}
