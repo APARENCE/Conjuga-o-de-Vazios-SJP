@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 
 interface ContainerTableProps {
   containers: Container[];
@@ -52,6 +53,10 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
     return "text-success";
   };
 
+  // Classes para colunas fixas
+  const fixedColumnClasses = "sticky bg-background z-20";
+  const fixedHeaderClasses = "sticky top-0 z-30 bg-muted/50 shadow-sm"; // Z-index maior para o cabeçalho fixo
+
   return (
     <Card className="border-0 shadow-sm">
       {/* Envolve a tabela em um div com altura máxima e overflow para permitir a rolagem interna */}
@@ -60,8 +65,12 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
           {/* Aplicamos sticky, top-0 e bg-background ao TableHeader */}
           <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
             <TableRow className="bg-muted/50 hover:bg-muted/50">
-              <TableHead className="font-semibold">Container</TableHead>
-              <TableHead className="font-semibold">Armador</TableHead>
+              {/* Coluna 1: Container (Fixo na esquerda) */}
+              <TableHead className={cn("font-semibold left-0", fixedHeaderClasses)}>Container</TableHead>
+              
+              {/* Coluna 2: Armador (Fixo na esquerda, deslocado) */}
+              <TableHead className={cn("font-semibold left-[120px]", fixedHeaderClasses)}>Armador</TableHead>
+              
               <TableHead className="font-semibold">Data Operação</TableHead>
               <TableHead className="font-semibold">Data Porto</TableHead>
               <TableHead className="font-semibold">Demurrage</TableHead>
@@ -90,8 +99,16 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
             ) : (
               containers.map((container) => (
                 <TableRow key={container.id} className="hover:bg-muted/30">
-                  <TableCell className="font-bold">{container.container}</TableCell>
-                  <TableCell className="font-bold">{container.armador}</TableCell>
+                  {/* Coluna 1: Container (Fixo na esquerda) */}
+                  <TableCell className={cn("font-bold left-0 w-[120px]", fixedColumnClasses)}>
+                    {container.container}
+                  </TableCell>
+                  
+                  {/* Coluna 2: Armador (Fixo na esquerda, deslocado) */}
+                  <TableCell className={cn("font-bold left-[120px] w-[120px]", fixedColumnClasses)}>
+                    {container.armador}
+                  </TableCell>
+                  
                   <TableCell>{container.dataOperacao}</TableCell>
                   <TableCell>{container.dataPorto}</TableCell>
                   <TableCell>{container.demurrage}</TableCell>
