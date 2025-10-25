@@ -58,7 +58,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="font-semibold">Container</TableHead>
+              <TableHead className="font-semibold">Conteinner</TableHead>
               <TableHead className="font-semibold">Armador</TableHead>
               <TableHead className="font-semibold">Data de Operação</TableHead>
               <TableHead className="font-semibold">Data Porto</TableHead>

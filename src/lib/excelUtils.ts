@@ -198,7 +198,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
 export const exportToExcel = (containers: Container[]) => {
   const worksheet = XLSX.utils.json_to_sheet(
     containers.map(c => ({
-      'CONTAINER': c.container,
+      'CONTEINNER': c.container,
       'ARMADOR': c.armador,
       'DATA DE OPERAÇÃO': c.dataOperacao,
       'DATA PORTO': c.dataPorto,
