@@ -26,11 +26,16 @@ export default function Containers({
 
   const filteredContainers = containers.filter(c => {
     const search = searchTerm.toLowerCase();
+    
+    // Função auxiliar para garantir que o valor é uma string minúscula
+    const safeString = (value: string | number | undefined | null) => 
+      String(value || '').toLowerCase();
+
     return (
-      c.container?.toLowerCase().includes(search) ||
-      c.armador?.toLowerCase().includes(search) ||
-      c.status?.toLowerCase().includes(search) ||
-      c.motorista?.toLowerCase().includes(search)
+      safeString(c.container).includes(search) ||
+      safeString(c.armador).includes(search) ||
+      safeString(c.status).includes(search) ||
+      safeString(c.motorista).includes(search)
     );
   });
 
