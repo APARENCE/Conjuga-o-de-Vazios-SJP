@@ -160,11 +160,14 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
               let value = row[colIndex] ?? ""; 
 
               if (key === 'freeTime' || key === 'diasRestantes') {
+                // Trata valores numéricos, aceitando vírgula como separador decimal
                 const numericValue = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : Number(value);
                 partialContainer[key] = isNaN(numericValue) ? 0 : numericValue;
               } else if (['dataOperacao', 'dataPorto', 'demurrage', 'dataDevolucao'].includes(key)) {
+                // Trata campos de data
                 partialContainer[key] = excelDateToJSDate(value);
               } else {
+                // Trata todos os outros campos como string
                 partialContainer[key] = String(value).trim();
               }
             });
@@ -220,8 +223,8 @@ export const exportToExcel = (containers: Container[]) => {
       'MOTORISTA': c.motorista,
       'ORIGEM': c.origem,
       'BAIXA PÁTIO SJP': c.baixaPatio,
-      'CONTAINER (TROCA)': c.containerTroca,
-      'ARMADOR (TROCA)': c.armadorTroca,
+      'CONTAINER TROCA': c.containerTroca,
+      'ARMADOR TROCA': c.armadorTroca,
       'DEPOT DEVOLUÇÃO': c.depotDevolucao,
       'DATA DEVOLUÇÃO': c.dataDevolucao,
       'STATUS': c.status,

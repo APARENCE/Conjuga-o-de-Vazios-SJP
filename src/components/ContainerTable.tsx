@@ -69,8 +69,8 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               <TableHead className="font-semibold">Motorista</TableHead>
               <TableHead className="font-semibold">Origem</TableHead>
               <TableHead className="font-semibold">Baixa Pátio SJP</TableHead>
-              <TableHead className="font-semibold">Container (Troca)</TableHead>
-              <TableHead className="font-semibold">Armador (Troca)</TableHead>
+              <TableHead className="font-semibold">Container Troca</TableHead>
+              <TableHead className="font-semibold">Armador Troca</TableHead>
               <TableHead className="font-semibold">Depot Devolução</TableHead>
               <TableHead className="font-semibold">Data Devolução</TableHead>
               <TableHead className="font-semibold">Status</TableHead>
