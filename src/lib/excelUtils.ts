@@ -56,10 +56,11 @@ const excelDateToJSDate = (serial: any): string => {
 const HEADER_MAP: { [key: string]: keyof Container } = {
   // Container Identification
   'container': 'container',
-  'conteiner': 'container', // Adicionando a grafia com um 'N'
-  'conteinner': 'container', // Mantendo a grafia com dois 'N'
+  'conteiner': 'container',
+  'conteinner': 'container',
   'nº container': 'container',
   'n container': 'container',
+  'container (troca)': 'containerTroca', // Garantindo que o container de troca não seja confundido com o principal
   
   // Armador/Shipping Line
   'armador': 'armador',
@@ -127,22 +128,39 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
         // 1. Mapeamento de Cabeçalho
         const rawHeaderRow = jsonData[0];
         const columnMap: { [key: number]: keyof Container } = {};
+        let containerColumnIndex: number | null = null;
+        let armadorColumnIndex: number | null = null;
+
 
         rawHeaderRow.forEach((rawHeader, index) => {
           const header = String(rawHeader || '').toLowerCase().trim();
           const mappedKey = HEADER_MAP[header];
+          
           if (mappedKey) {
             columnMap[index] = mappedKey;
+            
+            // Rastreia os índices das colunas principais
+            if (mappedKey === 'container' && containerColumnIndex === null) {
+                containerColumnIndex = index;
+            }
+            if (mappedKey === 'armador' && armadorColumnIndex === null) {
+                armadorColumnIndex = index;
+            }
           }
         });
         
-        // Fallback: Se as colunas A (índice 0) e B (índice 1) não foram mapeadas pelo nome do cabeçalho,
-        // assume-se que são 'container' e 'armador' por padrão.
-        if (columnMap[0] === undefined) {
+        // Fallback: Se as colunas principais não foram mapeadas pelo nome do cabeçalho,
+        // assume-se que as colunas A (índice 0) e B (índice 1) são 'container' e 'armador'.
+        if (containerColumnIndex === null) {
           columnMap[0] = 'container';
+          containerColumnIndex = 0;
         }
-        if (columnMap[1] === undefined) {
-          columnMap[1] = 'armador';
+        if (armadorColumnIndex === null) {
+          // Garante que o armador não sobrescreva o container se ambos caírem no índice 1
+          if (columnMap[1] !== 'container') {
+            columnMap[1] = 'armador';
+            armadorColumnIndex = 1;
+          }
         }
         
         // 2. Processamento das Linhas de Dados
@@ -174,12 +192,13 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
             });
 
             // Usa o valor do container como ID, com fallback para um ID gerado
-            const id = String(partialContainer.container || '').trim() || `import-${Date.now()}-${index}`;
+            const containerValue = String(partialContainer.container || '').trim();
+            const id = containerValue || `import-${Date.now()}-${index}`;
 
             // Garante que o objeto final tenha a estrutura completa de 'Container'
             return {
               id: id,
-              container: partialContainer.container || '',
+              container: containerValue,
               armador: partialContainer.armador || '',
               dataOperacao: partialContainer.dataOperacao || '',
               dataPorto: partialContainer.dataPorto || '',
@@ -213,7 +232,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
 export const exportToExcel = (containers: Container[]) => {
   const worksheet = XLSX.utils.json_to_sheet(
     containers.map(c => ({
-      'CONTAINER': c.container, // Padronizando para CONTAINER (um N)
+      'CONTAINER': c.container,
       'ARMADOR': c.armador,
       'DATA OPERAÇÃO': c.dataOperacao,
       'DATA PORTO': c.dataPorto,
