@@ -6,7 +6,14 @@ const excelDateToJSDate = (serial: any): string => {
   if (!serial || serial === "-" || serial === "") return "";
   
   // If it's already a string date, return it
-  if (typeof serial === "string") return serial;
+  if (typeof serial === "string") {
+    // Tenta normalizar strings que já parecem datas (ex: 2024-01-01) para DD/MM/YYYY
+    const dateMatch = serial.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateMatch) {
+      return `${dateMatch[3]}/${dateMatch[2]}/${dateMatch[1]}`;
+    }
+    return serial;
+  }
   
   // Excel stores dates as numbers (days since 1900-01-01)
   if (typeof serial === "number") {
@@ -14,10 +21,10 @@ const excelDateToJSDate = (serial: any): string => {
     const utc_days = Math.floor(serial - 25569);
     const date_info = new Date(utc_days * 86400 * 1000);
     
-    // Format DD/MM/YY
+    // Format DD/MM/YYYY
     const day = String(date_info.getDate()).padStart(2, '0');
     const month = String(date_info.getMonth() + 1).padStart(2, '0');
-    const year = String(date_info.getFullYear()).slice(-2);
+    const year = String(date_info.getFullYear()); // Use full year
     
     return `${day}/${month}/${year}`;
   }
@@ -127,7 +134,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
                 const numericValue = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : Number(value);
                 container[key] = isNaN(numericValue) ? 0 : numericValue;
               } else if (key === 'dataOperacao' || key === 'dataPorto' || key === 'demurrage' || key === 'dataDevolucao') {
-                // Converte data serial do Excel para string DD/MM/YY
+                // Converte data serial do Excel para string DD/MM/YYYY
                 container[key] = excelDateToJSDate(value);
               } else {
                 // Trata todos os outros campos como strings, garantindo que sejam limpos
