@@ -54,10 +54,12 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
 
   return (
     <Card className="border-0 shadow-sm">
-      <div className="overflow-x-auto">
+      {/* Envolve a tabela em um div com altura máxima e overflow para permitir a rolagem interna */}
+      <div className="overflow-x-auto max-h-[70vh] lg:max-h-[80vh]">
         <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
+          {/* Aplicamos sticky, top-0 e bg-background ao TableHeader */}
+          <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
               <TableHead className="font-semibold">Container</TableHead>
               <TableHead className="font-semibold">Armador</TableHead>
               <TableHead className="font-semibold">Data Operação</TableHead>
