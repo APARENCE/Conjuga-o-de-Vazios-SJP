@@ -8,6 +8,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Containers from "./pages/Containers";
 import Analise from "./pages/Analise";
+import Inventario from "./pages/Inventario"; // Importando a nova página
 import NotFound from "./pages/NotFound";
 import { Container, ContainerFile } from "@/types/container";
 import { parseExcelFile, exportToExcel } from "@/lib/excelUtils";
@@ -152,6 +153,7 @@ const App = () => {
                       } 
                     />
                     <Route path="/analise" element={<Analise containers={containers} />} />
+                    <Route path="/inventario" element={<Inventario />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>

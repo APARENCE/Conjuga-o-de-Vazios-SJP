@@ -1,4 +1,4 @@
-import { Home, BarChart3, Upload, Download } from "lucide-react";
+import { Home, BarChart3, Upload, Download, PackageOpen } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -23,6 +23,7 @@ export function AppSidebar({ onImport, onExport }: AppSidebarProps) {
   const menuItems = [
     { title: "Containers", url: "/", icon: Home },
     { title: "Análise", url: "/analise", icon: BarChart3 },
+    { title: "Inventário", url: "/inventario", icon: PackageOpen },
   ];
 
   return (
