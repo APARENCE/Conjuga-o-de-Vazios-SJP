@@ -89,21 +89,20 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
           }
         });
         
-        // Check if essential columns are missing
-        if (!Object.values(columnMap).includes('container') || !Object.values(columnMap).includes('armador')) {
-             console.warn("Colunas essenciais 'container' ou 'armador' não foram encontradas no cabeçalho.");
-        }
-
         // 2. Process Data Rows (starting from index 1)
         const rows = jsonData.slice(1);
         
         const containers: Container[] = rows
-          .filter(row => String(row[0] || '').trim() !== '') // Filter out empty rows based on the first column (assuming it's container)
+          // REMOVIDO: Filtro baseado apenas na primeira coluna (row[0])
           .map((row, index) => {
             const container: Partial<Container> = {
               id: `import-${Date.now()}-${index}`, // Generate unique ID
               files: [],
             };
+
+            // Se a linha inteira estiver vazia, o map ainda a processará, mas os campos serão vazios.
+            // Se o container (coluna A) e armador (coluna B) estiverem vazios, a linha será ignorada na visualização, mas estará no estado.
+            // Vamos garantir que pelo menos o ID seja gerado.
 
             Object.keys(columnMap).forEach(colIndexStr => {
               const colIndex = parseInt(colIndexStr);
@@ -144,7 +143,9 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
               id: container.id!,
               files: container.files,
             } as Container;
-          });
+          })
+          // Adicionando um filtro final para remover linhas que não resultaram em nenhum dado útil (ex: linhas totalmente vazias)
+          .filter(c => c.container || c.armador);
         
         resolve(containers);
       } catch (error) {
