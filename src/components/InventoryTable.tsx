@@ -32,22 +32,22 @@ interface InventoryTableProps {
 
 export function InventoryTable({ inventory, onItemEdit, onItemDelete }: InventoryTableProps) {
   
-  const getStatusBadge = (status: string) => {
-    const statusLower = status.toLowerCase();
+  const getStatusBadge = (status: string | undefined) => {
+    const statusLower = String(status || '').toLowerCase();
     
-    if (statusLower.includes("ric ok") || statusLower.includes("devolvido")) {
+    if (statusLower.includes("ric ok")) {
       // RIC OK / Devolvido
-      return <Badge className="bg-success text-white hover:bg-success/80">{status}</Badge>;
+      return <Badge className="bg-success text-white hover:bg-success/80">RIC OK</Badge>;
     }
-    if (statusLower.includes("aguardando devolução") || statusLower.includes("em uso")) {
+    if (statusLower.includes("aguardando devolução")) {
       // Aguardando Devolução / Em Uso (Considerado em estoque/uso)
-      return <Badge className="bg-warning text-white hover:bg-warning/80">{status}</Badge>;
+      return <Badge className="bg-warning text-white hover:bg-warning/80">Aguardando Devolução</Badge>;
     }
     if (statusLower.includes("em estoque")) {
       // Em Estoque
-      return <Badge variant="secondary">{status}</Badge>;
+      return <Badge variant="secondary">Em Estoque</Badge>;
     }
-    return <Badge variant="outline">{status}</Badge>;
+    return <Badge variant="outline">{status || 'Outro'}</Badge>;
   };
 
   return (

@@ -39,16 +39,20 @@ export function AnaliseInventario({ containers, inventory }: AnaliseInventarioPr
     const totalItems = inventory.length;
     const totalQuantity = inventory.reduce((sum, item) => sum + item.quantity, 0);
     
+    // Função auxiliar para normalizar o status
+    const normalizeStatus = (status: string | undefined) => String(status || '').toLowerCase();
+
     // Contagem de itens em estoque/uso (Em Estoque OU Aguardando Devolução)
-    const emEstoque = inventory.filter(item => 
-      String(item.status).toLowerCase() === "em estoque" || 
-      String(item.status).toLowerCase() === "aguardando devolução"
-    ).length;
+    const emEstoque = inventory.filter(item => {
+      const status = normalizeStatus(item.status);
+      return status === "em estoque" || status === "aguardando devolução";
+    }).length;
     
     // Contagem de itens devolvidos (RIC OK)
-    const devolvidos = inventory.filter(item => 
-      String(item.status).toLowerCase() === "ric ok"
-    ).length;
+    const devolvidos = inventory.filter(item => {
+      const status = normalizeStatus(item.status);
+      return status === "ric ok";
+    }).length;
 
     return {
       totalItems,
