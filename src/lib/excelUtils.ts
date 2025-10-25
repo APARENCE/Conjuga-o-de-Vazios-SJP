@@ -142,8 +142,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
           // Filtra linhas que são completamente vazias
           .filter(row => row.some(cell => String(cell || '').trim() !== ''))
           .map((row, index) => {
-            const container: Partial<Container> = {
-              id: `import-${Date.now()}-${index}`,
+            const partialContainer: Partial<Container> = {
               files: [],
             };
 
@@ -153,34 +152,37 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
 
               if (key === 'freeTime' || key === 'diasRestantes') {
                 const numericValue = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : Number(value);
-                container[key] = isNaN(numericValue) ? 0 : numericValue;
+                partialContainer[key] = isNaN(numericValue) ? 0 : numericValue;
               } else if (['dataOperacao', 'dataPorto', 'demurrage', 'dataDevolucao'].includes(key)) {
-                container[key] = excelDateToJSDate(value);
+                partialContainer[key] = excelDateToJSDate(value);
               } else {
-                container[key] = String(value).trim();
+                partialContainer[key] = String(value).trim();
               }
             });
 
+            // Usa o valor do container como ID, com fallback para um ID gerado
+            const id = String(partialContainer.container || '').trim() || `import-${Date.now()}-${index}`;
+
             // Garante que o objeto final tenha a estrutura completa de 'Container'
             return {
-              id: container.id!,
-              container: container.container || '',
-              armador: container.armador || '',
-              dataOperacao: container.dataOperacao || '',
-              dataPorto: container.dataPorto || '',
-              demurrage: container.demurrage || '',
-              freeTime: container.freeTime || 0,
-              diasRestantes: container.diasRestantes || 0,
-              placas: container.placas || '',
-              motorista: container.motorista || '',
-              origem: container.origem || '',
-              baixaPatio: container.baixaPatio || '',
-              containerTroca: container.containerTroca || '',
-              armadorTroca: container.armadorTroca || '',
-              depotDevolucao: container.depotDevolucao || '',
-              dataDevolucao: container.dataDevolucao || '',
-              status: container.status || '',
-              files: container.files || [],
+              id: id,
+              container: partialContainer.container || '',
+              armador: partialContainer.armador || '',
+              dataOperacao: partialContainer.dataOperacao || '',
+              dataPorto: partialContainer.dataPorto || '',
+              demurrage: partialContainer.demurrage || '',
+              freeTime: partialContainer.freeTime || 0,
+              diasRestantes: partialContainer.diasRestantes || 0,
+              placas: partialContainer.placas || '',
+              motorista: partialContainer.motorista || '',
+              origem: partialContainer.origem || '',
+              baixaPatio: partialContainer.baixaPatio || '',
+              containerTroca: partialContainer.containerTroca || '',
+              armadorTroca: partialContainer.armadorTroca || '',
+              depotDevolucao: partialContainer.depotDevolucao || '',
+              dataDevolucao: partialContainer.dataDevolucao || '',
+              status: partialContainer.status || '',
+              files: partialContainer.files || [],
             } as Container;
           });
         
