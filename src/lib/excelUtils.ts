@@ -56,7 +56,8 @@ const excelDateToJSDate = (serial: any): string => {
 const HEADER_MAP: { [key: string]: keyof Container } = {
   // Container Identification
   'container': 'container',
-  'conteinner': 'container',
+  'conteiner': 'container', // Adicionando a grafia com um 'N'
+  'conteinner': 'container', // Mantendo a grafia com dois 'N'
   'nº container': 'container',
   'n container': 'container',
   
@@ -212,7 +213,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
 export const exportToExcel = (containers: Container[]) => {
   const worksheet = XLSX.utils.json_to_sheet(
     containers.map(c => ({
-      'CONTEINNER': c.container,
+      'CONTAINER': c.container, // Padronizando para CONTAINER (um N)
       'ARMADOR': c.armador,
       'DATA OPERAÇÃO': c.dataOperacao,
       'DATA PORTO': c.dataPorto,
