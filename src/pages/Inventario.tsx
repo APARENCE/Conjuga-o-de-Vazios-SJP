@@ -1,32 +1,32 @@
-import { PackageOpen } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { InventoryItem } from "@/types/inventory";
+import { InventoryTable } from "@/components/InventoryTable";
+import { InventoryFormDialog } from "@/components/InventoryFormDialog";
 
-export default function Inventario() {
+interface InventarioProps {
+  inventory: InventoryItem[];
+  onItemAdd: (data: Omit<InventoryItem, 'id' | 'lastUpdated'>) => void;
+  onItemEdit: (id: string, data: Partial<InventoryItem>) => void;
+  onItemDelete: (id: string) => void;
+}
+
+export default function Inventario({ inventory, onItemAdd, onItemEdit, onItemDelete }: InventarioProps) {
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-foreground">Inventário</h1>
-        <p className="text-muted-foreground mt-1">
-          Gestão de itens e equipamentos relacionados aos containers.
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Inventário</h1>
+          <p className="text-muted-foreground mt-1">
+            Gestão de itens e equipamentos relacionados aos containers.
+          </p>
+        </div>
+        <InventoryFormDialog onSave={onItemAdd} />
       </div>
 
-      <Card className="border-l-4 border-l-secondary">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Em Desenvolvimento
-          </CardTitle>
-          <PackageOpen className="h-4 w-4 text-secondary" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-xl font-semibold text-foreground">
-            Esta página será implementada em breve.
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Aqui você poderá gerenciar o inventário de peças e equipamentos.
-          </p>
-        </CardContent>
-      </Card>
+      <InventoryTable 
+        inventory={inventory} 
+        onItemEdit={onItemEdit} 
+        onItemDelete={onItemDelete} 
+      />
     </div>
   );
 }
