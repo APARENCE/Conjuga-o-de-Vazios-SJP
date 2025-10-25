@@ -12,8 +12,9 @@ interface InventarioProps {
 
 export default function Inventario({ containers }: InventarioProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [itemTypeFilter, setItemTypeFilter] = useState<InventoryItem['itemType'] | ''>("");
-  const [statusFilter, setStatusFilter] = useState<InventoryItem['status'] | ''>("");
+  // Usamos 'all' como valor inicial para evitar o erro de string vazia no Select
+  const [itemTypeFilter, setItemTypeFilter] = useState<InventoryItem['itemType'] | 'all'>("all");
+  const [statusFilter, setStatusFilter] = useState<InventoryItem['status'] | 'all'>("all");
   
   // 1. Gera o inventário dinamicamente a partir dos containers
   const inventory: InventoryItem[] = useMemo(() => {
@@ -34,14 +35,15 @@ export default function Inventario({ containers }: InventarioProps) {
       if (!matchesSearch) return false;
 
       // Filtro por Tipo de Item
-      if (itemTypeFilter && item.itemType !== itemTypeFilter) return false;
+      if (itemTypeFilter !== 'all' && item.itemType !== itemTypeFilter) return false;
 
       // Filtro por Status
-      if (statusFilter) {
+      if (statusFilter !== 'all') {
         // Normaliza o status para comparação
         const itemStatusLower = String(item.status || '').toLowerCase();
         const filterStatusLower = String(statusFilter).toLowerCase();
         
+        // Lógica de correspondência de status
         if (filterStatusLower === 'em uso' && !itemStatusLower.includes('em uso')) return false;
         if (filterStatusLower === 'aguardando devolução' && !itemStatusLower.includes('aguardando devolução')) return false;
         if (filterStatusLower === 'devolvido (ric ok)' && !itemStatusLower.includes('devolvido (ric ok)')) return false;

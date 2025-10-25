@@ -14,9 +14,9 @@ interface InventoryFiltersProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   itemTypeFilter: string;
-  setItemTypeFilter: (type: InventoryItem['itemType'] | '') => void;
+  setItemTypeFilter: (type: InventoryItem['itemType'] | 'all') => void;
   statusFilter: string;
-  setStatusFilter: (status: InventoryItem['status'] | '') => void;
+  setStatusFilter: (status: InventoryItem['status'] | 'all') => void;
 }
 
 const itemTypes: InventoryItem['itemType'][] = ['Troca', 'Baixa Pátio', 'Devolução'];
@@ -33,11 +33,11 @@ export function InventoryFilters({
 
   const handleClearFilters = () => {
     setSearchTerm("");
-    setItemTypeFilter("");
-    setStatusFilter("");
+    setItemTypeFilter("all"); // Usar 'all' como valor padrão/limpo
+    setStatusFilter("all"); // Usar 'all' como valor padrão/limpo
   };
 
-  const isFiltered = searchTerm || itemTypeFilter || statusFilter;
+  const isFiltered = searchTerm || (itemTypeFilter !== 'all') || (statusFilter !== 'all');
 
   return (
     <div className="flex flex-col md:flex-row gap-4">
@@ -55,14 +55,14 @@ export function InventoryFilters({
       {/* Filtro por Tipo de Item */}
       <Select
         value={itemTypeFilter}
-        onValueChange={(value: InventoryItem['itemType'] | '') => setItemTypeFilter(value)}
+        onValueChange={(value: InventoryItem['itemType'] | 'all') => setItemTypeFilter(value)}
       >
         <SelectTrigger className="w-[180px]">
           <PackageOpen className="h-4 w-4 mr-2 text-muted-foreground" />
           <SelectValue placeholder="Filtrar por Tipo" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Todos os Tipos</SelectItem>
+          <SelectItem value="all">Todos os Tipos</SelectItem> {/* Alterado para 'all' */}
           {itemTypes.map(type => (
             <SelectItem key={type} value={type}>{type}</SelectItem>
           ))}
@@ -72,14 +72,14 @@ export function InventoryFilters({
       {/* Filtro por Status */}
       <Select
         value={statusFilter}
-        onValueChange={(value: InventoryItem['status'] | '') => setStatusFilter(value)}
+        onValueChange={(value: InventoryItem['status'] | 'all') => setStatusFilter(value)}
       >
         <SelectTrigger className="w-[200px]">
           <CheckCircle2 className="h-4 w-4 mr-2 text-muted-foreground" />
           <SelectValue placeholder="Filtrar por Status" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Todos os Status</SelectItem>
+          <SelectItem value="all">Todos os Status</SelectItem> {/* Alterado para 'all' */}
           {statuses.map(status => (
             <SelectItem key={status} value={status}>{status}</SelectItem>
           ))}
