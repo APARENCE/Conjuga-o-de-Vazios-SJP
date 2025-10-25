@@ -9,7 +9,6 @@ const excelDateToJSDate = (serial: any): string => {
 
   if (typeof serial === "number") {
     // Excel stores dates as numbers (days since 1900-01-01)
-    // Adjusting for Excel's 1900 leap year bug (25569 is the number of days from 1900-01-01 to 1970-01-01)
     const utc_days = Math.floor(serial - 25569);
     date = new Date(utc_days * 86400 * 1000);
   } else if (typeof serial === "string") {
@@ -60,12 +59,12 @@ const HEADER_MAP: { [key: string]: keyof Container } = {
   'conteinner': 'container',
   'nº container': 'container',
   'n container': 'container',
-  'CONTAINER': 'container', // Added uppercase variation
+  'CONTAINER': 'container', 
   
   // Armador/Shipping Line
   'armador': 'armador',
   'linha': 'armador',
-  'ARMADOR': 'armador', // Added uppercase variation
+  'ARMADOR': 'armador', 
   
   // Dates and Times
   'data de operação': 'dataOperacao',
@@ -113,22 +112,31 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
         const worksheet = workbook.Sheets[sheetName];
         
         // Read data including header
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false }) as any[][];
+        // Use defval: "" to ensure empty cells are read as empty strings, not undefined/null
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: "" }) as any[][];
         
         if (jsonData.length < 2) { // Need at least header + one data row
           return resolve([]);
         }
 
         // 1. Identify Header Row and create index map
-        const headerRow = jsonData[0].map(h => String(h || '').toLowerCase().trim());
+        const rawHeaderRow = jsonData[0];
         const columnMap: { [key: number]: keyof Container } = {};
 
-        headerRow.forEach((header, index) => {
-          // Check both normalized header and raw uppercase header (as a fallback)
+        rawHeaderRow.forEach((rawHeader, index) => {
+          const header = String(rawHeader || '').toLowerCase().trim();
+          
+          // Check against the normalized map
           if (HEADER_MAP[header]) {
             columnMap[index] = HEADER_MAP[header];
-          } else if (HEADER_MAP[String(jsonData[0][index] || '').toUpperCase().trim()]) {
-             columnMap[index] = HEADER_MAP[String(jsonData[0][index] || '').toUpperCase().trim()];
+          }
+          // Fallback check for common headers if the normalized one didn't match (e.g., if the header was just 'A' or 'B' in the sheet)
+          else if (index === 0 && !columnMap[index]) {
+             // If the first column is not mapped, assume it's 'container'
+             columnMap[index] = 'container';
+          } else if (index === 1 && !columnMap[index]) {
+             // If the second column is not mapped, assume it's 'armador'
+             columnMap[index] = 'armador';
           }
         });
         
@@ -147,7 +155,8 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
             Object.keys(columnMap).forEach(colIndexStr => {
               const colIndex = parseInt(colIndexStr);
               const key = columnMap[colIndex];
-              let value = row[colIndex];
+              // Ensure value is read, defaulting to empty string if null/undefined
+              let value = row[colIndex] ?? ""; 
 
               // Tratamento de valor: Garante que o valor é uma string limpa, a menos que seja um campo numérico ou de data.
               if (key === 'freeTime' || key === 'diasRestantes') {
@@ -159,7 +168,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
                 container[key] = excelDateToJSDate(value);
               } else {
                 // Trata todos os outros campos como strings, garantindo que sejam limpos
-                container[key] = String(value || '').trim();
+                container[key] = String(value).trim();
               }
             });
 
