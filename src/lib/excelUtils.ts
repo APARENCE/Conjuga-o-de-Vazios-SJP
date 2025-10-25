@@ -66,8 +66,12 @@ const HEADER_MAP: { [key: string]: keyof Container } = {
   'troca conteinner': 'containerTroca',
   
   // Armador/Shipping Line
-  'armador': 'armador',
+  'armador': 'armador', // Coluna B
   'linha': 'armador',
+  
+  // Armador Troca
+  'armador troca': 'armadorTroca', // Coluna N
+  'troca armador': 'armadorTroca',
   
   // Dates and Times
   'data de operação': 'dataOperacao',
@@ -99,8 +103,6 @@ const HEADER_MAP: { [key: string]: keyof Container } = {
   'baixa pátio sjp': 'baixaPatio',
   'baixa patio': 'baixaPatio',
   'baixa pátio': 'baixaPatio',
-  'armador troca': 'armadorTroca',
-  'troca armador': 'armadorTroca',
   'depot de devolução': 'depotDevolucao',
   'depot devolução': 'depotDevolucao',
   'depot devolucao': 'depotDevolucao',
@@ -130,7 +132,6 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
         const rawHeaderRow = jsonData[0];
         const columnMap: { [key: number]: keyof Container } = {};
         let containerColumnIndex: number | null = null;
-        let armadorColumnIndex: number | null = null;
 
 
         rawHeaderRow.forEach((rawHeader, index) => {
@@ -140,28 +141,18 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
           if (mappedKey) {
             columnMap[index] = mappedKey;
             
-            // Rastreia os índices das colunas principais
+            // Rastreia o índice da coluna principal do container
             if (mappedKey === 'container' && containerColumnIndex === null) {
                 containerColumnIndex = index;
-            }
-            if (mappedKey === 'armador' && armadorColumnIndex === null) {
-                armadorColumnIndex = index;
             }
           }
         });
         
-        // Fallback: Se as colunas principais não foram mapeadas pelo nome do cabeçalho,
-        // assume-se que as colunas A (índice 0) e B (índice 1) são 'container' e 'armador'.
+        // Fallback: Se a coluna A (índice 0) não foi mapeada pelo nome do cabeçalho,
+        // assume-se que é 'container' por padrão.
         if (containerColumnIndex === null) {
           columnMap[0] = 'container';
           containerColumnIndex = 0;
-        }
-        if (armadorColumnIndex === null) {
-          // Garante que o armador não sobrescreva o container se ambos caírem no índice 1
-          if (columnMap[1] !== 'container') {
-            columnMap[1] = 'armador';
-            armadorColumnIndex = 1;
-          }
         }
         
         // 2. Processamento das Linhas de Dados
