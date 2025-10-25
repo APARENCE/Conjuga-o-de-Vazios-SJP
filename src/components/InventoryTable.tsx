@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 
 interface InventoryTableProps {
   inventory: InventoryItem[];
@@ -30,6 +31,25 @@ interface InventoryTableProps {
 }
 
 export function InventoryTable({ inventory, onItemEdit, onItemDelete }: InventoryTableProps) {
+  
+  const getStatusBadge = (status: string) => {
+    const statusLower = status.toLowerCase();
+    
+    if (statusLower.includes("ric ok") || statusLower.includes("devolvido")) {
+      // RIC OK / Devolvido
+      return <Badge className="bg-success text-white hover:bg-success/80">{status}</Badge>;
+    }
+    if (statusLower.includes("aguardando devolução") || statusLower.includes("em uso")) {
+      // Aguardando Devolução / Em Uso (Considerado em estoque/uso)
+      return <Badge className="bg-warning text-white hover:bg-warning/80">{status}</Badge>;
+    }
+    if (statusLower.includes("em estoque")) {
+      // Em Estoque
+      return <Badge variant="secondary">{status}</Badge>;
+    }
+    return <Badge variant="outline">{status}</Badge>;
+  };
+
   return (
     <Card className="border-0 shadow-sm">
       <div className="overflow-x-auto">
@@ -40,6 +60,7 @@ export function InventoryTable({ inventory, onItemEdit, onItemDelete }: Inventor
               <TableHead className="font-semibold">SKU</TableHead>
               <TableHead className="font-semibold text-center">Quantidade</TableHead>
               <TableHead className="font-semibold">Localização</TableHead>
+              <TableHead className="font-semibold">Status</TableHead>
               <TableHead className="font-semibold">Última Atualização</TableHead>
               <TableHead className="font-semibold text-center">Ações</TableHead>
             </TableRow>
@@ -47,7 +68,7 @@ export function InventoryTable({ inventory, onItemEdit, onItemDelete }: Inventor
           <TableBody>
           {inventory.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   Nenhum item no inventário. Adicione um novo item para começar.
                 </TableCell>
@@ -59,6 +80,7 @@ export function InventoryTable({ inventory, onItemEdit, onItemDelete }: Inventor
                   <TableCell>{item.sku}</TableCell>
                   <TableCell className="text-center font-bold text-primary">{item.quantity}</TableCell>
                   <TableCell>{item.location}</TableCell>
+                  <TableCell>{getStatusBadge(item.status)}</TableCell>
                   <TableCell>{new Date(item.lastUpdated).toLocaleString('pt-BR')}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2 justify-center">

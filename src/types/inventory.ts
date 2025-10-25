@@ -5,4 +5,5 @@ export interface InventoryItem {
   quantity: number;
   location: string;
   lastUpdated: string;
+  status: 'Em Estoque' | 'Aguardando Devolução' | 'RIC OK' | string;
 }
