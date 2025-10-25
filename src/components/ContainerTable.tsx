@@ -54,7 +54,8 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
   };
 
   // Classes para colunas fixas
-  const fixedColumnClasses = "sticky bg-background z-20";
+  // Aumentando o z-index para garantir que fiquem acima do conteúdo rolante
+  const fixedColumnClasses = "sticky bg-background z-20"; 
   const fixedHeaderClasses = "sticky top-0 z-30 bg-muted/50 shadow-sm"; 
 
   // Larguras fixas para as colunas fixas

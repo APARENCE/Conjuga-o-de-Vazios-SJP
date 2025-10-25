@@ -43,7 +43,7 @@ export function InventoryTable({ inventory }: InventoryTableProps) {
               <TableHead className="font-semibold min-w-[140px]">Container</TableHead>
               <TableHead className="font-semibold min-w-[120px]">Armador</TableHead>
               <TableHead className="font-semibold min-w-[120px]">Tipo de Item</TableHead>
-              <TableHead className="font-semibold min-w-[250px]">Detalhes</TableHead>
+              <TableHead className="font-semibold min-w-[350px]">Detalhes</TableHead> {/* Aumentado para 350px */}
               <TableHead className="font-semibold min-w-[150px]">Status</TableHead>
               <TableHead className="font-semibold min-w-[180px]">Última Atualização</TableHead>
             </TableRow>
@@ -62,7 +62,7 @@ export function InventoryTable({ inventory }: InventoryTableProps) {
                   <TableCell className="font-bold min-w-[140px]">{item.container}</TableCell>
                   <TableCell className="min-w-[120px]">{item.armador}</TableCell>
                   <TableCell className="font-medium min-w-[120px]">{item.itemType}</TableCell>
-                  <TableCell className="max-w-[300px] truncate text-sm text-muted-foreground min-w-[250px]">{item.details}</TableCell>
+                  <TableCell className="max-w-[400px] truncate text-sm text-muted-foreground min-w-[350px]">{item.details}</TableCell> {/* Aumentado max-w */}
                   <TableCell className="min-w-[150px]">{getStatusBadge(item.status)}</TableCell>
                   <TableCell className="min-w-[180px]">{new Date(item.lastUpdated).toLocaleString('pt-BR')}</TableCell>
                 </TableRow>
