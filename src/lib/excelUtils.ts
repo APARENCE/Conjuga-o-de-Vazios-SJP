@@ -1,30 +1,51 @@
 import * as XLSX from 'xlsx';
 import { Container } from '@/types/container';
 
-// Helper function to convert Excel date serial number to date string
+// Helper function to convert Excel date serial number or string date to DD/MM/YYYY format
 const excelDateToJSDate = (serial: any): string => {
   if (!serial || serial === "-" || serial === "") return "";
   
-  // If it's already a string date, return it
-  if (typeof serial === "string") {
-    // Tenta normalizar strings que já parecem datas (ex: 2024-01-01) para DD/MM/YYYY
-    const dateMatch = serial.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (dateMatch) {
-      return `${dateMatch[3]}/${dateMatch[2]}/${dateMatch[1]}`;
-    }
-    return serial;
-  }
-  
-  // Excel stores dates as numbers (days since 1900-01-01)
+  let date: Date | null = null;
+
   if (typeof serial === "number") {
+    // Excel stores dates as numbers (days since 1900-01-01)
     // Adjusting for Excel's 1900 leap year bug (25569 is the number of days from 1900-01-01 to 1970-01-01)
     const utc_days = Math.floor(serial - 25569);
-    const date_info = new Date(utc_days * 86400 * 1000);
+    date = new Date(utc_days * 86400 * 1000);
+  } else if (typeof serial === "string") {
+    // Tenta parsear strings comuns de data
     
-    // Format DD/MM/YYYY
-    const day = String(date_info.getDate()).padStart(2, '0');
-    const month = String(date_info.getMonth() + 1).padStart(2, '0');
-    const year = String(date_info.getFullYear()); // Use full year
+    // 1. Formato ISO (YYYY-MM-DD)
+    const isoMatch = serial.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (isoMatch) {
+      date = new Date(serial);
+    } 
+    
+    // 2. Formato Americano (MM/DD/YYYY ou MM/DD/YY)
+    const usMatch = serial.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if (usMatch) {
+      // Tenta criar a data no formato MM/DD/YYYY
+      date = new Date(`${usMatch[1]}/${usMatch[2]}/${usMatch[3]}`);
+    }
+    
+    // 3. Formato Brasileiro (DD/MM/YYYY ou DD/MM/YY) - Se já estiver nesse formato, apenas retorna
+    const brMatch = serial.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if (brMatch && !date) {
+        // Se não foi reconhecido como US, assume BR e retorna a string original
+        return serial;
+    }
+
+    // Se não conseguiu parsear como data, retorna a string original
+    if (!date || isNaN(date.getTime())) {
+        return serial;
+    }
+  }
+
+  if (date && !isNaN(date.getTime())) {
+    // Formata DD/MM/YYYY
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear());
     
     return `${day}/${month}/${year}`;
   }
@@ -134,7 +155,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
                 const numericValue = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : Number(value);
                 container[key] = isNaN(numericValue) ? 0 : numericValue;
               } else if (key === 'dataOperacao' || key === 'dataPorto' || key === 'demurrage' || key === 'dataDevolucao') {
-                // Converte data serial do Excel para string DD/MM/YYYY
+                // Converte data serial do Excel ou string de data para DD/MM/YYYY
                 container[key] = excelDateToJSDate(value);
               } else {
                 // Trata todos os outros campos como strings, garantindo que sejam limpos
