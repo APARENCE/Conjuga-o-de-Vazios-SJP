@@ -88,8 +88,8 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
             ) : (
               containers.map((container) => (
                 <TableRow key={container.id} className="hover:bg-muted/30">
-                  <TableCell className="font-medium">{container.container}</TableCell>
-                  <TableCell>{container.armador}</TableCell>
+                  <TableCell className="font-bold">{container.container}</TableCell>
+                  <TableCell className="font-bold">{container.armador}</TableCell>
                   <TableCell>{container.dataOperacao}</TableCell>
                   <TableCell>{container.dataPorto}</TableCell>
                   <TableCell>{container.demurrage}</TableCell>
