@@ -29,8 +29,8 @@ export function AppSidebar({ onImport, onExport }: AppSidebarProps) {
   return (
     <Sidebar className="border-r border-border">
       <SidebarHeader className="border-b border-border p-4">
-        <h2 className="text-lg font-bold text-primary">Sistema CAS</h2>
-        <p className="text-xs text-muted-foreground">Gestão de Containers</p>
+        <h2 className="text-lg font-bold text-primary">Conjugação de vazios</h2>
+        <p className="text-xs text-muted-foreground">Patio- SJP</p>
       </SidebarHeader>
 
       <SidebarContent>
