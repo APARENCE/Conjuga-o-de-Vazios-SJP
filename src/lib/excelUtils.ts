@@ -59,12 +59,10 @@ const HEADER_MAP: { [key: string]: keyof Container } = {
   'conteinner': 'container',
   'nº container': 'container',
   'n container': 'container',
-  'CONTAINER': 'container', 
   
   // Armador/Shipping Line
   'armador': 'armador',
   'linha': 'armador',
-  'ARMADOR': 'armador', 
   
   // Dates and Times
   'data de operação': 'dataOperacao',
@@ -131,11 +129,19 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
             columnMap[index] = HEADER_MAP[header];
           }
           
-          // 2. Mapeamento obrigatório para as primeiras colunas (A e B) se o mapeamento falhar
-          if (index === 0 && !columnMap[index]) {
+          // 2. Mapeamento de fallback para as colunas A e B (índices 0 e 1)
+          // Se o cabeçalho for exatamente 'Container' ou 'Armador' (case-insensitive)
+          if (index === 0 && header === 'container') {
              columnMap[index] = 'container';
-          } else if (index === 1 && !columnMap[index]) {
+          } else if (index === 1 && header === 'armador') {
              columnMap[index] = 'armador';
+          }
+          
+          // Se o cabeçalho não foi mapeado, mas está nas primeiras posições, tentamos forçar o mapeamento
+          // Isso é útil se o cabeçalho estiver vazio ou for muito diferente, mas a estrutura da planilha for fixa.
+          if (!columnMap[index]) {
+             if (index === 0) columnMap[index] = 'container';
+             if (index === 1) columnMap[index] = 'armador';
           }
         });
         
