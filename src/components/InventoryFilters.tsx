@@ -40,7 +40,7 @@ export function InventoryFilters({
   const isFiltered = searchTerm || (itemTypeFilter !== 'all') || (statusFilter !== 'all');
 
   return (
-    <div className="flex flex-col md:flex-row gap-4">
+    <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
       {/* Pesquisa de Texto Livre */}
       <div className="relative flex-1 min-w-[200px]">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -57,7 +57,7 @@ export function InventoryFilters({
         value={itemTypeFilter}
         onValueChange={(value: InventoryItem['itemType'] | 'all') => setItemTypeFilter(value)}
       >
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-full sm:w-[180px]">
           <PackageOpen className="h-4 w-4 mr-2 text-muted-foreground" />
           <SelectValue placeholder="Filtrar por Tipo" />
         </SelectTrigger>
@@ -74,7 +74,7 @@ export function InventoryFilters({
         value={statusFilter}
         onValueChange={(value: InventoryItem['status'] | 'all') => setStatusFilter(value)}
       >
-        <SelectTrigger className="w-[200px]">
+        <SelectTrigger className="w-full sm:w-[200px]">
           <CheckCircle2 className="h-4 w-4 mr-2 text-muted-foreground" />
           <SelectValue placeholder="Filtrar por Status" />
         </SelectTrigger>
@@ -88,7 +88,7 @@ export function InventoryFilters({
 
       {/* Botão de Limpar Filtros */}
       {isFiltered && (
-        <Button variant="outline" onClick={handleClearFilters} className="shrink-0">
+        <Button variant="outline" onClick={handleClearFilters} className="shrink-0 w-full sm:w-auto">
           <X className="h-4 w-4 mr-2" />
           Limpar
         </Button>
