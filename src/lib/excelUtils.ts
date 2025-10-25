@@ -27,6 +27,7 @@ const excelDateToJSDate = (serial: any): string => {
 // Mapping of expected header names (case-insensitive, trimmed) to Container keys
 const HEADER_MAP: { [key: string]: keyof Container } = {
   'container': 'container',
+  'conteinner': 'container', // Adicionado mapeamento para 'conteinner'
   'armador': 'armador',
   'data de operação': 'dataOperacao',
   'data porto': 'dataPorto',
