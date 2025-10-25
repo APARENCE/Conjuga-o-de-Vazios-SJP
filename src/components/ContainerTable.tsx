@@ -60,7 +60,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
             <TableRow className="bg-muted/50">
               <TableHead className="font-semibold">Conteinner</TableHead>
               <TableHead className="font-semibold">Armador</TableHead>
-              <TableHead className="font-semibold">Data de Operação</TableHead>
+              <TableHead className="font-semibold">Data Operação</TableHead>
               <TableHead className="font-semibold">Data Porto</TableHead>
               <TableHead className="font-semibold">Demurrage</TableHead>
               <TableHead className="font-semibold text-center">Free Time</TableHead>
@@ -71,8 +71,8 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               <TableHead className="font-semibold">Baixa Pátio SJP</TableHead>
               <TableHead className="font-semibold">Container (Troca)</TableHead>
               <TableHead className="font-semibold">Armador (Troca)</TableHead>
-              <TableHead className="font-semibold">Depot de Devolução</TableHead>
-              <TableHead className="font-semibold">Data de Devolução</TableHead>
+              <TableHead className="font-semibold">Depot Devolução</TableHead>
+              <TableHead className="font-semibold">Data Devolução</TableHead>
               <TableHead className="font-semibold">Status</TableHead>
               <TableHead className="font-semibold">Arquivos</TableHead>
               <TableHead className="font-semibold text-center">Ações</TableHead>
