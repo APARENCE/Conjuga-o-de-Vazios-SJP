@@ -56,22 +56,23 @@ const excelDateToJSDate = (serial: any): string => {
 const HEADER_MAP: { [key: string]: keyof Container } = {
   // Container Identification
   'container': 'container',
-  'conteiner': 'container', // Mapeia 'conteiner' (1 N) para o campo principal
+  'conteiner': 'container', // Coluna A (Principal)
   'nº container': 'container',
   'n container': 'container',
   
   // Container Troca
-  'conteinner': 'containerTroca', // Mapeia 'conteinner' (2 N) para o campo de troca
+  'conteinner': 'containerTroca', // Coluna M (Troca)
   'container troca': 'containerTroca',
   'troca conteinner': 'containerTroca',
   
   // Armador/Shipping Line
-  'armador': 'armador', // Coluna B
+  'armador': 'armador', // Coluna B (Principal)
   'linha': 'armador',
   
   // Armador Troca
-  'armador troca': 'armadorTroca', // Coluna N
+  'armador troca': 'armadorTroca', // Coluna N (Troca)
   'troca armador': 'armadorTroca',
+  'armadortroca': 'armadorTroca', // Variação sem espaço
   
   // Dates and Times
   'data de operação': 'dataOperacao',
