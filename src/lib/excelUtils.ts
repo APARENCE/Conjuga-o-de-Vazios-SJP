@@ -80,6 +80,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
         }
 
         // 1. Identify Header Row and create index map
+        // Normalize header names: convert to string, lowercase, and trim whitespace
         const headerRow = jsonData[0].map(h => String(h || '').toLowerCase().trim());
         const columnMap: { [key: number]: keyof Container } = {};
 
@@ -93,16 +94,13 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
         const rows = jsonData.slice(1);
         
         const containers: Container[] = rows
-          // REMOVIDO: Filtro baseado apenas na primeira coluna (row[0])
+          // Filtra linhas que são completamente vazias (todos os valores são nulos ou strings vazias)
+          .filter(row => row.some(cell => String(cell || '').trim() !== ''))
           .map((row, index) => {
             const container: Partial<Container> = {
               id: `import-${Date.now()}-${index}`, // Generate unique ID
               files: [],
             };
-
-            // Se a linha inteira estiver vazia, o map ainda a processará, mas os campos serão vazios.
-            // Se o container (coluna A) e armador (coluna B) estiverem vazios, a linha será ignorada na visualização, mas estará no estado.
-            // Vamos garantir que pelo menos o ID seja gerado.
 
             Object.keys(columnMap).forEach(colIndexStr => {
               const colIndex = parseInt(colIndexStr);
@@ -144,7 +142,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
               files: container.files,
             } as Container;
           })
-          // Adicionando um filtro final para remover linhas que não resultaram em nenhum dado útil (ex: linhas totalmente vazias)
+          // Filtro final para remover linhas que não resultaram em nenhum dado útil (ex: linhas totalmente vazias)
           .filter(c => c.container || c.armador);
         
         resolve(containers);
