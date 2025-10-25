@@ -3,22 +3,53 @@ import { InventoryItem } from "@/types/inventory";
 import { InventoryTable } from "@/components/InventoryTable";
 import { AnaliseInventario } from "@/components/AnaliseInventario";
 import { generateInventoryFromContainers } from "@/lib/inventoryGenerator";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { InventoryFilters } from "@/components/InventoryFilters";
 
 interface InventarioProps {
   containers: Container[];
-  // Handlers de CRUD removidos, pois o inventário é gerado automaticamente
 }
 
 export default function Inventario({ containers }: InventarioProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [itemTypeFilter, setItemTypeFilter] = useState<InventoryItem['itemType'] | ''>("");
+  const [statusFilter, setStatusFilter] = useState<InventoryItem['status'] | ''>("");
   
-  // Gera o inventário dinamicamente a partir dos containers
+  // 1. Gera o inventário dinamicamente a partir dos containers
   const inventory: InventoryItem[] = useMemo(() => {
     return generateInventoryFromContainers(containers);
   }, [containers]);
 
-  // Nota: O InventoryFormDialog e os handlers de CRUD foram removidos, pois o inventário é derivado.
-  // Se o usuário precisar de um inventário manual, essa página precisará ser revertida.
+  // 2. Aplica a filtragem
+  const filteredInventory = useMemo(() => {
+    const searchLower = searchTerm.toLowerCase();
+    
+    return inventory.filter(item => {
+      // Filtro de Pesquisa de Texto Livre
+      const matchesSearch = 
+        item.container.toLowerCase().includes(searchLower) ||
+        item.armador.toLowerCase().includes(searchLower) ||
+        item.details.toLowerCase().includes(searchLower);
+
+      if (!matchesSearch) return false;
+
+      // Filtro por Tipo de Item
+      if (itemTypeFilter && item.itemType !== itemTypeFilter) return false;
+
+      // Filtro por Status
+      if (statusFilter) {
+        // Normaliza o status para comparação
+        const itemStatusLower = String(item.status || '').toLowerCase();
+        const filterStatusLower = String(statusFilter).toLowerCase();
+        
+        if (filterStatusLower === 'em uso' && !itemStatusLower.includes('em uso')) return false;
+        if (filterStatusLower === 'aguardando devolução' && !itemStatusLower.includes('aguardando devolução')) return false;
+        if (filterStatusLower === 'devolvido (ric ok)' && !itemStatusLower.includes('devolvido (ric ok)')) return false;
+      }
+
+      return true;
+    });
+  }, [inventory, searchTerm, itemTypeFilter, statusFilter]);
 
   return (
     <div className="space-y-6">
@@ -29,14 +60,21 @@ export default function Inventario({ containers }: InventarioProps) {
             Rastreamento automático de itens de troca, baixa e devolução associados aos containers.
           </p>
         </div>
-        {/* Botão de Novo Item removido, pois o inventário é gerado */}
       </div>
 
       <AnaliseInventario containers={containers} inventory={inventory} />
+      
+      <InventoryFilters
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        itemTypeFilter={itemTypeFilter}
+        setItemTypeFilter={setItemTypeFilter}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+      />
 
       <InventoryTable 
-        inventory={inventory} 
-        // Handlers de edição e exclusão removidos
+        inventory={filteredInventory} 
       />
     </div>
   );
