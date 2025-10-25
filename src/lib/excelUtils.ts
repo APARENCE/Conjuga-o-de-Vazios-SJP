@@ -32,10 +32,12 @@ const HEADER_MAP: { [key: string]: keyof Container } = {
   'conteinner': 'container',
   'nº container': 'container',
   'n container': 'container',
+  'CONTAINER': 'container', // Added uppercase variation
   
   // Armador/Shipping Line
   'armador': 'armador',
   'linha': 'armador',
+  'ARMADOR': 'armador', // Added uppercase variation
   
   // Dates and Times
   'data de operação': 'dataOperacao',
@@ -77,7 +79,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
     reader.onload = (e) => {
       try {
         const data = e.target?.result;
-        // Use raw: false to keep formatted strings, but still use cellDates for date conversion
+        // Use raw: false to keep formatted strings (results of formulas), and cellDates for date conversion
         const workbook = XLSX.read(data, { type: 'binary', cellDates: true, raw: false });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
@@ -94,8 +96,11 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
         const columnMap: { [key: number]: keyof Container } = {};
 
         headerRow.forEach((header, index) => {
+          // Check both normalized header and raw uppercase header (as a fallback)
           if (HEADER_MAP[header]) {
             columnMap[index] = HEADER_MAP[header];
+          } else if (HEADER_MAP[String(jsonData[0][index] || '').toUpperCase().trim()]) {
+             columnMap[index] = HEADER_MAP[String(jsonData[0][index] || '').toUpperCase().trim()];
           }
         });
         
