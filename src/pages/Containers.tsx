@@ -27,6 +27,9 @@ export default function Containers({
   const filteredContainers = containers.filter(c => {
     const search = searchTerm.toLowerCase();
     
+    // Se o termo de pesquisa estiver vazio, retorna todos os containers
+    if (!search) return true;
+
     // Função auxiliar para garantir que o valor é uma string minúscula
     const safeString = (value: string | number | undefined | null) => 
       String(value || '').toLowerCase();
@@ -38,6 +41,10 @@ export default function Containers({
       safeString(c.motorista).includes(search)
     );
   });
+  
+  // Log para depuração
+  console.log(`Termo de pesquisa: "${searchTerm}", Containers filtrados: ${filteredContainers.length}`);
+
 
   const stats = {
     total: containers.length,
