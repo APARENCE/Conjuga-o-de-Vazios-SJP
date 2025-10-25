@@ -5,13 +5,13 @@ import { Package, AlertTriangle, CheckCircle2, Clock, Warehouse } from "lucide-r
 import { useMemo } from "react";
 
 interface AnaliseInventarioProps {
-  containers: Container[];
-  inventory: InventoryItem[]; // Agora é o inventário derivado
+  containers: Container[]; // Containers totais (para KPIs globais)
+  inventory: InventoryItem[]; // Inventário filtrado (para KPIs contextuais)
 }
 
-export function AnaliseInventario({ containers, inventory }: AnaliseInventarioProps) {
+export function AnaliseInventario({ containers, inventory: filteredInventory }: AnaliseInventarioProps) {
   
-  // --- Análise de Containers (Mantida) ---
+  // --- Análise de Containers (GLOBAL - Não Filtrada) ---
   const containerStats = useMemo(() => {
     const devolvidos = containers.filter(c => {
       const status = String(c.status || '').toLowerCase();
@@ -34,27 +34,27 @@ export function AnaliseInventario({ containers, inventory }: AnaliseInventarioPr
     };
   }, [containers]);
 
-  // --- Análise de Inventário Derivado ---
+  // --- Análise de Inventário Derivado (CONTEXTUAL - Filtrada) ---
   const inventoryStats = useMemo(() => {
-    const totalItems = inventory.length;
+    const totalItems = filteredInventory.length;
     
     // Função auxiliar para normalizar o status
     const normalizeStatus = (status: string | undefined) => String(status || '').toLowerCase();
 
     // Contagem de itens em uso/aguardando devolução
-    const emUso = inventory.filter(item => {
+    const emUso = filteredInventory.filter(item => {
       const status = normalizeStatus(item.status);
       return status.includes("em uso") || status.includes("aguardando devolução");
     }).length;
     
     // Contagem de itens devolvidos (RIC OK)
-    const devolvidos = inventory.filter(item => {
+    const devolvidos = filteredInventory.filter(item => {
       const status = normalizeStatus(item.status);
       return status.includes("ric ok") || status.includes("devolvido");
     }).length;
 
     // Contagem de tipos de itens
-    const totalTrocas = inventory.filter(item => item.itemType === 'Troca').length;
+    const totalTrocas = filteredInventory.filter(item => item.itemType === 'Troca').length;
     
     return {
       totalItems,
@@ -62,17 +62,17 @@ export function AnaliseInventario({ containers, inventory }: AnaliseInventarioPr
       devolvidos,
       totalTrocas,
     };
-  }, [inventory]);
+  }, [filteredInventory]); // Depende do inventário filtrado
 
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-semibold tracking-tight">Visão Geral</h2>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         
-        {/* KPI 1: Total de Containers */}
+        {/* KPI 1: Total de Containers (GLOBAL) */}
         <Card className="border-l-4 border-l-primary">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Containers Ativos</CardTitle>
+            <CardTitle className="text-sm font-medium">Containers Ativos (Total)</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -83,10 +83,10 @@ export function AnaliseInventario({ containers, inventory }: AnaliseInventarioPr
           </CardContent>
         </Card>
 
-        {/* KPI 2: Containers Vencidos */}
+        {/* KPI 2: Containers Vencidos (GLOBAL) */}
         <Card className="border-l-4 border-l-danger">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Containers Vencidos</CardTitle>
+            <CardTitle className="text-sm font-medium">Containers Vencidos (Total)</CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -97,30 +97,30 @@ export function AnaliseInventario({ containers, inventory }: AnaliseInventarioPr
           </CardContent>
         </Card>
         
-        {/* KPI 3: Itens de Inventário em Uso/Aguardando */}
+        {/* KPI 3: Itens de Rastreio Ativos (FILTRADO) */}
         <Card className="border-l-4 border-l-warning">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Itens de Rastreio Ativos</CardTitle>
+            <CardTitle className="text-sm font-medium">Itens Rastreio Ativos (Filtro)</CardTitle>
             <Warehouse className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{inventoryStats.emUso}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {inventoryStats.totalTrocas} itens de troca rastreados
+              {inventoryStats.totalTrocas} itens de troca rastreados no filtro
             </p>
           </CardContent>
         </Card>
 
-        {/* KPI 4: Itens de Inventário Devolvidos (RIC OK) */}
+        {/* KPI 4: Itens Rastreio Concluídos (FILTRADO) */}
         <Card className="border-l-4 border-l-success">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Itens Rastreio Concluídos</CardTitle>
+            <CardTitle className="text-sm font-medium">Itens Rastreio Concluídos (Filtro)</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{inventoryStats.devolvidos}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Itens com status Devolvido (RIC OK)
+              Itens com status Devolvido (RIC OK) no filtro
             </p>
           </CardContent>
         </Card>

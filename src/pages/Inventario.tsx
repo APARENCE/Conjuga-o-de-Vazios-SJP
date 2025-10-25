@@ -64,7 +64,8 @@ export default function Inventario({ containers }: InventarioProps) {
         </div>
       </div>
 
-      <AnaliseInventario containers={containers} inventory={inventory} />
+      {/* Passamos o inventário filtrado para a análise */}
+      <AnaliseInventario containers={containers} inventory={filteredInventory} />
       
       <InventoryFilters
         searchTerm={searchTerm}
