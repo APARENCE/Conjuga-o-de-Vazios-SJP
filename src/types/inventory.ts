@@ -6,4 +6,5 @@ export interface InventoryItem {
   location: string;
   lastUpdated: string;
   status: 'Em Estoque' | 'Aguardando Devolução' | 'RIC OK' | string;
+  associatedContainer?: string; // Novo campo para ligar ao container
 }

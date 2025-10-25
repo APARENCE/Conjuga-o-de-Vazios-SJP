@@ -58,6 +58,7 @@ export function InventoryTable({ inventory, onItemEdit, onItemDelete }: Inventor
             <TableRow className="bg-muted/50">
               <TableHead className="font-semibold">Nome do Item</TableHead>
               <TableHead className="font-semibold">SKU</TableHead>
+              <TableHead className="font-semibold">Container Associado</TableHead> {/* NOVA COLUNA */}
               <TableHead className="font-semibold text-center">Quantidade</TableHead>
               <TableHead className="font-semibold">Localização</TableHead>
               <TableHead className="font-semibold">Status</TableHead>
@@ -68,7 +69,7 @@ export function InventoryTable({ inventory, onItemEdit, onItemDelete }: Inventor
           <TableBody>
           {inventory.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   Nenhum item no inventário. Adicione um novo item para começar.
                 </TableCell>
@@ -78,6 +79,7 @@ export function InventoryTable({ inventory, onItemEdit, onItemDelete }: Inventor
                 <TableRow key={item.id} className="hover:bg-muted/30">
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell>{item.sku}</TableCell>
+                  <TableCell className="font-bold">{item.associatedContainer || '-'}</TableCell> {/* DADO */}
                   <TableCell className="text-center font-bold text-primary">{item.quantity}</TableCell>
                   <TableCell>{item.location}</TableCell>
                   <TableCell>{getStatusBadge(item.status)}</TableCell>

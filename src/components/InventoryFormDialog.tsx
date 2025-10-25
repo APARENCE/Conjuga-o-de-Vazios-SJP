@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 const InventorySchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -30,6 +30,7 @@ const InventorySchema = z.object({
   quantity: z.number().min(0, "Quantidade não pode ser negativa"),
   location: z.string().min(1, "Localização é obrigatória"),
   status: z.enum(['Em Estoque', 'Aguardando Devolução', 'RIC OK', 'Outro']),
+  associatedContainer: z.string().optional(), // Novo campo
 });
 
 type InventoryFormData = z.infer<typeof InventorySchema>;
@@ -51,6 +52,7 @@ export function InventoryFormDialog({ item, onSave, trigger }: InventoryFormDial
       quantity: item?.quantity || 0,
       location: item?.location || "",
       status: (item?.status as InventoryFormData['status']) || "Em Estoque",
+      associatedContainer: item?.associatedContainer || "", // Novo default
     },
   });
 
@@ -62,6 +64,7 @@ export function InventoryFormDialog({ item, onSave, trigger }: InventoryFormDial
         quantity: item.quantity,
         location: item.location,
         status: (item.status as InventoryFormData['status']) || "Em Estoque",
+        associatedContainer: item.associatedContainer || "", // Novo reset
       });
     } else {
       form.reset({
@@ -70,6 +73,7 @@ export function InventoryFormDialog({ item, onSave, trigger }: InventoryFormDial
         quantity: 0,
         location: "",
         status: "Em Estoque",
+        associatedContainer: "",
       });
     }
   }, [item, form, open]);
@@ -93,86 +97,101 @@ export function InventoryFormDialog({ item, onSave, trigger }: InventoryFormDial
         <DialogHeader>
           <DialogTitle>{item ? "Editar Item" : "Novo Item de Inventário"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome do Item *</Label>
-            <Input
-              id="name"
-              {...form.register("name")}
-              placeholder="Ex: Pneu 205/55 R16"
-            />
-            {form.formState.errors.name && (
-              <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="sku">SKU *</Label>
-            <Input
-              id="sku"
-              {...form.register("sku")}
-              placeholder="Ex: PN-20555R16"
-            />
-            {form.formState.errors.sku && (
-              <p className="text-xs text-destructive">{form.formState.errors.sku.message}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="quantity">Quantidade *</Label>
-            <Input
-              id="quantity"
-              type="number"
-              {...form.register("quantity", { valueAsNumber: true })}
-            />
-            {form.formState.errors.quantity && (
-              <p className="text-xs text-destructive">{form.formState.errors.quantity.message}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="location">Localização *</Label>
-            <Input
-              id="location"
-              {...form.register("location")}
-              placeholder="Ex: Armazém A, Prateleira 3"
-            />
-            {form.formState.errors.location && (
-              <p className="text-xs text-destructive">{form.formState.errors.location.message}</p>
-            )}
-          </div>
-          
-          {/* Novo Campo de Status */}
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o status do item" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Em Estoque">Em Estoque</SelectItem>
-                    <SelectItem value="Aguardando Devolução">Aguardando Devolução</SelectItem>
-                    <SelectItem value="RIC OK">RIC OK (Devolvido)</SelectItem>
-                    <SelectItem value="Outro">Outro</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome do Item *</Label>
+              <Input
+                id="name"
+                {...form.register("name")}
+                placeholder="Ex: Pneu 205/55 R16"
+              />
+              {form.formState.errors.name && (
+                <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sku">SKU *</Label>
+              <Input
+                id="sku"
+                {...form.register("sku")}
+                placeholder="Ex: PN-20555R16"
+              />
+              {form.formState.errors.sku && (
+                <p className="text-xs text-destructive">{form.formState.errors.sku.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Quantidade *</Label>
+              <Input
+                id="quantity"
+                type="number"
+                {...form.register("quantity", { valueAsNumber: true })}
+              />
+              {form.formState.errors.quantity && (
+                <p className="text-xs text-destructive">{form.formState.errors.quantity.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="location">Localização *</Label>
+              <Input
+                id="location"
+                {...form.register("location")}
+                placeholder="Ex: Armazém A, Prateleira 3"
+              />
+              {form.formState.errors.location && (
+                <p className="text-xs text-destructive">{form.formState.errors.location.message}</p>
+              )}
+            </div>
+            
+            {/* Novo Campo: Container Associado */}
+            <div className="space-y-2">
+              <Label htmlFor="associatedContainer">Container Associado (Opcional)</Label>
+              <Input
+                id="associatedContainer"
+                {...form.register("associatedContainer")}
+                placeholder="Ex: ABCU1234567"
+              />
+              {form.formState.errors.associatedContainer && (
+                <p className="text-xs text-destructive">{form.formState.errors.associatedContainer.message}</p>
+              )}
+            </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              Salvar
-            </Button>
-          </DialogFooter>
-        </form>
+            {/* Campo de Status */}
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o status do item" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Em Estoque">Em Estoque</SelectItem>
+                      <SelectItem value="Aguardando Devolução">Aguardando Devolução</SelectItem>
+                      <SelectItem value="RIC OK">RIC OK (Devolvido)</SelectItem>
+                      <SelectItem value="Outro">Outro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                Salvar
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
