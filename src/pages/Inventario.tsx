@@ -39,14 +39,13 @@ export default function Inventario({ containers }: InventarioProps) {
 
       // Filtro por Status
       if (statusFilter !== 'all') {
-        // Normaliza o status para comparação
+        // Normaliza o status do item e do filtro para comparação
         const itemStatusLower = String(item.status || '').toLowerCase();
         const filterStatusLower = String(statusFilter).toLowerCase();
         
-        // Lógica de correspondência de status
-        if (filterStatusLower === 'em uso' && !itemStatusLower.includes('em uso')) return false;
-        if (filterStatusLower === 'aguardando devolução' && !itemStatusLower.includes('aguardando devolução')) return false;
-        if (filterStatusLower === 'devolvido (ric ok)' && !itemStatusLower.includes('devolvido (ric ok)')) return false;
+        // Verifica se o status do item corresponde exatamente ao status do filtro
+        // Usamos includes() para ser mais flexível, já que o status do item pode ser 'Devolvido (RIC OK)'
+        if (!itemStatusLower.includes(filterStatusLower)) return false;
       }
 
       return true;
