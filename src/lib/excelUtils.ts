@@ -126,16 +126,15 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
         rawHeaderRow.forEach((rawHeader, index) => {
           const header = String(rawHeader || '').toLowerCase().trim();
           
-          // Check against the normalized map
+          // 1. Tenta mapear pelo nome do cabeçalho
           if (HEADER_MAP[header]) {
             columnMap[index] = HEADER_MAP[header];
           }
-          // Fallback check for common headers if the normalized one didn't match (e.g., if the header was just 'A' or 'B' in the sheet)
-          else if (index === 0 && !columnMap[index]) {
-             // If the first column is not mapped, assume it's 'container'
+          
+          // 2. Mapeamento obrigatório para as primeiras colunas (A e B) se o mapeamento falhar
+          if (index === 0 && !columnMap[index]) {
              columnMap[index] = 'container';
           } else if (index === 1 && !columnMap[index]) {
-             // If the second column is not mapped, assume it's 'armador'
              columnMap[index] = 'armador';
           }
         });
