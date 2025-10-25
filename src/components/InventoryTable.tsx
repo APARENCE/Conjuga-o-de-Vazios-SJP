@@ -35,16 +35,17 @@ export function InventoryTable({ inventory }: InventoryTableProps) {
 
   return (
     <Card className="border-0 shadow-sm">
-      <div className="overflow-x-auto">
+      {/* Adicionando altura máxima para rolagem interna */}
+      <div className="overflow-x-auto max-h-[75vh] lg:max-h-[85vh]">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 z-10 bg-muted/50 shadow-sm">
             <TableRow className="bg-muted/50">
-              <TableHead className="font-semibold">Container</TableHead>
-              <TableHead className="font-semibold">Armador</TableHead>
-              <TableHead className="font-semibold">Tipo de Item</TableHead>
-              <TableHead className="font-semibold">Detalhes</TableHead>
-              <TableHead className="font-semibold">Status</TableHead>
-              <TableHead className="font-semibold">Última Atualização</TableHead>
+              <TableHead className="font-semibold min-w-[140px]">Container</TableHead>
+              <TableHead className="font-semibold min-w-[120px]">Armador</TableHead>
+              <TableHead className="font-semibold min-w-[120px]">Tipo de Item</TableHead>
+              <TableHead className="font-semibold min-w-[250px]">Detalhes</TableHead>
+              <TableHead className="font-semibold min-w-[150px]">Status</TableHead>
+              <TableHead className="font-semibold min-w-[180px]">Última Atualização</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -58,12 +59,12 @@ export function InventoryTable({ inventory }: InventoryTableProps) {
             ) : (
               inventory.map((item) => (
                 <TableRow key={item.id + item.itemType} className="hover:bg-muted/30">
-                  <TableCell className="font-bold">{item.container}</TableCell>
-                  <TableCell>{item.armador}</TableCell>
-                  <TableCell className="font-medium">{item.itemType}</TableCell>
-                  <TableCell className="max-w-[300px] truncate text-sm text-muted-foreground">{item.details}</TableCell>
-                  <TableCell>{getStatusBadge(item.status)}</TableCell>
-                  <TableCell>{new Date(item.lastUpdated).toLocaleString('pt-BR')}</TableCell>
+                  <TableCell className="font-bold min-w-[140px]">{item.container}</TableCell>
+                  <TableCell className="min-w-[120px]">{item.armador}</TableCell>
+                  <TableCell className="font-medium min-w-[120px]">{item.itemType}</TableCell>
+                  <TableCell className="max-w-[300px] truncate text-sm text-muted-foreground min-w-[250px]">{item.details}</TableCell>
+                  <TableCell className="min-w-[150px]">{getStatusBadge(item.status)}</TableCell>
+                  <TableCell className="min-w-[180px]">{new Date(item.lastUpdated).toLocaleString('pt-BR')}</TableCell>
                 </TableRow>
               ))
             )}

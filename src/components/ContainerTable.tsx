@@ -55,38 +55,43 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
 
   // Classes para colunas fixas
   const fixedColumnClasses = "sticky bg-background z-20";
-  const fixedHeaderClasses = "sticky top-0 z-30 bg-muted/50 shadow-sm"; // Z-index maior para o cabeçalho fixo
+  const fixedHeaderClasses = "sticky top-0 z-30 bg-muted/50 shadow-sm"; 
+
+  // Larguras fixas para as colunas fixas
+  const containerWidth = "w-[140px] min-w-[140px]";
+  const armadorWidth = "w-[120px] min-w-[120px]";
+  const armadorLeft = "left-[140px]"; // Começa após a coluna Container (140px)
 
   return (
     <Card className="border-0 shadow-sm">
-      {/* Envolve a tabela em um div com altura máxima e overflow para permitir a rolagem interna */}
-      <div className="overflow-x-auto max-h-[70vh] lg:max-h-[80vh]">
+      {/* Aumentando a altura máxima para melhor aproveitamento da tela */}
+      <div className="overflow-x-auto max-h-[75vh] lg:max-h-[85vh]">
         <Table>
           {/* Aplicamos sticky, top-0 e bg-background ao TableHeader */}
           <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
             <TableRow className="bg-muted/50 hover:bg-muted/50">
               {/* Coluna 1: Container (Fixo na esquerda) */}
-              <TableHead className={cn("font-semibold left-0", fixedHeaderClasses)}>Container</TableHead>
+              <TableHead className={cn("font-semibold left-0", fixedHeaderClasses, containerWidth)}>Container</TableHead>
               
               {/* Coluna 2: Armador (Fixo na esquerda, deslocado) */}
-              <TableHead className={cn("font-semibold left-[120px]", fixedHeaderClasses)}>Armador</TableHead>
+              <TableHead className={cn("font-semibold", armadorLeft, fixedHeaderClasses, armadorWidth)}>Armador</TableHead>
               
-              <TableHead className="font-semibold">Data Operação</TableHead>
-              <TableHead className="font-semibold">Data Porto</TableHead>
-              <TableHead className="font-semibold">Demurrage</TableHead>
-              <TableHead className="font-semibold text-center">Free Time</TableHead>
-              <TableHead className="font-semibold text-center">Dias Restantes</TableHead>
-              <TableHead className="font-semibold">Placas</TableHead>
-              <TableHead className="font-semibold">Motorista</TableHead>
-              <TableHead className="font-semibold">Origem</TableHead>
-              <TableHead className="font-semibold">Baixa Pátio SJP</TableHead>
-              <TableHead className="font-semibold">Container Troca</TableHead>
-              <TableHead className="font-semibold">Armador Troca</TableHead>
-              <TableHead className="font-semibold">Depot Devolução</TableHead>
-              <TableHead className="font-semibold">Data Devolução</TableHead>
-              <TableHead className="font-semibold">Status</TableHead>
-              <TableHead className="font-semibold">Arquivos</TableHead>
-              <TableHead className="font-semibold text-center">Ações</TableHead>
+              <TableHead className="font-semibold w-[120px] min-w-[120px]">Data Operação</TableHead>
+              <TableHead className="font-semibold w-[120px] min-w-[120px]">Data Porto</TableHead>
+              <TableHead className="font-semibold w-[120px] min-w-[120px]">Demurrage</TableHead>
+              <TableHead className="font-semibold text-center w-[100px] min-w-[100px]">Free Time</TableHead>
+              <TableHead className="font-semibold text-center w-[120px] min-w-[120px]">Dias Restantes</TableHead>
+              <TableHead className="font-semibold w-[100px] min-w-[100px]">Placas</TableHead>
+              <TableHead className="font-semibold w-[150px] min-w-[150px]">Motorista</TableHead>
+              <TableHead className="font-semibold w-[100px] min-w-[100px]">Origem</TableHead>
+              <TableHead className="font-semibold w-[120px] min-w-[120px]">Baixa Pátio SJP</TableHead>
+              <TableHead className="font-semibold w-[140px] min-w-[140px]">Container Troca</TableHead>
+              <TableHead className="font-semibold w-[120px] min-w-[120px]">Armador Troca</TableHead>
+              <TableHead className="font-semibold w-[150px] min-w-[150px]">Depot Devolução</TableHead>
+              <TableHead className="font-semibold w-[120px] min-w-[120px]">Data Devolução</TableHead>
+              <TableHead className="font-semibold w-[150px] min-w-[150px]">Status</TableHead>
+              <TableHead className="font-semibold text-center w-[100px] min-w-[100px]">Arquivos</TableHead>
+              <TableHead className="font-semibold text-center w-[100px] min-w-[100px]">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -100,52 +105,52 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               containers.map((container) => (
                 <TableRow key={container.id} className="hover:bg-muted/30">
                   {/* Coluna 1: Container (Fixo na esquerda) */}
-                  <TableCell className={cn("font-bold left-0 w-[120px]", fixedColumnClasses)}>
+                  <TableCell className={cn("font-bold left-0", fixedColumnClasses, containerWidth)}>
                     {container.container}
                   </TableCell>
                   
                   {/* Coluna 2: Armador (Fixo na esquerda, deslocado) */}
-                  <TableCell className={cn("font-bold left-[120px] w-[120px]", fixedColumnClasses)}>
+                  <TableCell className={cn("font-bold", armadorLeft, fixedColumnClasses, armadorWidth)}>
                     {container.armador}
                   </TableCell>
                   
-                  <TableCell>{container.dataOperacao}</TableCell>
-                  <TableCell>{container.dataPorto}</TableCell>
-                  <TableCell>{container.demurrage}</TableCell>
-                  <TableCell className="text-center">{container.freeTime || "-"}</TableCell>
-                  <TableCell className={`text-center ${getDiasRestantesColor(container.diasRestantes)}`}>
+                  <TableCell className="w-[120px] min-w-[120px]">{container.dataOperacao}</TableCell>
+                  <TableCell className="w-[120px] min-w-[120px]">{container.dataPorto}</TableCell>
+                  <TableCell className="w-[120px] min-w-[120px]">{container.demurrage}</TableCell>
+                  <TableCell className="text-center w-[100px] min-w-[100px]">{container.freeTime || "-"}</TableCell>
+                  <TableCell className={cn("text-center w-[120px] min-w-[120px]", getDiasRestantesColor(container.diasRestantes))}>
                     {container.diasRestantes}
                   </TableCell>
-                  <TableCell>{container.placas}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">{container.motorista}</TableCell>
-                  <TableCell>{container.origem}</TableCell>
-                  <TableCell>{container.baixaPatio || "-"}</TableCell>
-                  <TableCell>{container.containerTroca || "-"}</TableCell>
-                  <TableCell>{container.armadorTroca || "-"}</TableCell>
-                  <TableCell>{container.depotDevolucao}</TableCell>
-                  <TableCell>{container.dataDevolucao}</TableCell>
-                  <TableCell>{getStatusBadge(container.status)}</TableCell>
-                  <TableCell>
+                  <TableCell className="w-[100px] min-w-[100px]">{container.placas}</TableCell>
+                  <TableCell className="w-[150px] min-w-[150px] truncate">{container.motorista}</TableCell>
+                  <TableCell className="w-[100px] min-w-[100px]">{container.origem}</TableCell>
+                  <TableCell className="w-[120px] min-w-[120px]">{container.baixaPatio || "-"}</TableCell>
+                  <TableCell className="w-[140px] min-w-[140px]">{container.containerTroca || "-"}</TableCell>
+                  <TableCell className="w-[120px] min-w-[120px]">{container.armadorTroca || "-"}</TableCell>
+                  <TableCell className="w-[150px] min-w-[150px]">{container.depotDevolucao}</TableCell>
+                  <TableCell className="w-[120px] min-w-[120px]">{container.dataDevolucao}</TableCell>
+                  <TableCell className="w-[150px] min-w-[150px]">{getStatusBadge(container.status)}</TableCell>
+                  <TableCell className="text-center w-[100px] min-w-[100px]">
                     <FileUploadDialog
                       containerId={container.id}
                       files={container.files || []}
                       onFilesChange={(files) => onContainerUpdate(container.id, files)}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="w-[100px] min-w-[100px]">
                     <div className="flex items-center gap-2 justify-center">
                       <ContainerFormDialog
                         container={container}
                         onSave={(data) => onContainerEdit(container.id, data)}
                         trigger={
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" title="Editar">
                             <Pencil className="h-4 w-4" />
                           </Button>
                         }
                       />
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" title="Excluir">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </AlertDialogTrigger>
