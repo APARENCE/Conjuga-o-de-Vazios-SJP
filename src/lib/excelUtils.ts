@@ -30,16 +30,21 @@ const HEADER_MAP: { [key: string]: keyof Container } = {
   // Container Identification
   'container': 'container',
   'conteinner': 'container',
+  'nº container': 'container',
+  'n container': 'container',
   
   // Armador/Shipping Line
   'armador': 'armador',
+  'linha': 'armador',
   
   // Dates and Times
   'data de operação': 'dataOperacao',
   'data operacao': 'dataOperacao',
+  'data op': 'dataOperacao',
   'data porto': 'dataPorto',
   'data de devolução': 'dataDevolucao',
   'data devolucao': 'dataDevolucao',
+  'data dev': 'dataDevolucao',
   
   // Financial/Time Metrics
   'demurrage': 'demurrage',
@@ -47,9 +52,11 @@ const HEADER_MAP: { [key: string]: keyof Container } = {
   'freetime': 'freeTime',
   'dias restantes': 'diasRestantes',
   'diasrestantes': 'diasRestantes',
+  'dias free': 'diasRestantes',
   
   // Logistics
   'placas': 'placas',
+  'placa': 'placas',
   'motorista': 'motorista',
   'origem': 'origem',
   'baixa patio sjp': 'baixaPatio',
@@ -58,7 +65,9 @@ const HEADER_MAP: { [key: string]: keyof Container } = {
   'armador troca': 'armadorTroca',
   'depot de devolução': 'depotDevolucao',
   'depot devolucao': 'depotDevolucao',
+  'depot': 'depotDevolucao',
   'status': 'status',
+  'situação': 'status',
 };
 
 export const parseExcelFile = (file: File): Promise<Container[]> => {
@@ -68,7 +77,8 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
     reader.onload = (e) => {
       try {
         const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
+        // Use raw: false to keep formatted strings, but still use cellDates for date conversion
+        const workbook = XLSX.read(data, { type: 'binary', cellDates: true, raw: false });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
@@ -80,7 +90,6 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
         }
 
         // 1. Identify Header Row and create index map
-        // Normalize header names: convert to string, lowercase, and trim whitespace
         const headerRow = jsonData[0].map(h => String(h || '').toLowerCase().trim());
         const columnMap: { [key: number]: keyof Container } = {};
 
@@ -94,7 +103,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
         const rows = jsonData.slice(1);
         
         const containers: Container[] = rows
-          // Filtra linhas que são completamente vazias (todos os valores são nulos ou strings vazias)
+          // Filtra linhas que são completamente vazias
           .filter(row => row.some(cell => String(cell || '').trim() !== ''))
           .map((row, index) => {
             const container: Partial<Container> = {
@@ -107,16 +116,17 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
               const key = columnMap[colIndex];
               let value = row[colIndex];
 
-              // Special handling for numeric fields and dates
+              // Tratamento de valor: Garante que o valor é uma string limpa, a menos que seja um campo numérico ou de data.
               if (key === 'freeTime' || key === 'diasRestantes') {
-                // Ensure value is treated as a number, defaulting to 0 if invalid
-                container[key] = Number(value) || 0;
+                // Tenta converter para número. Se for string, tenta parsear.
+                const numericValue = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : Number(value);
+                container[key] = isNaN(numericValue) ? 0 : numericValue;
               } else if (key === 'dataOperacao' || key === 'dataPorto' || key === 'demurrage' || key === 'dataDevolucao') {
-                // Convert Excel date serial to DD/MM/YY string
+                // Converte data serial do Excel para string DD/MM/YY
                 container[key] = excelDateToJSDate(value);
               } else {
-                // Treat all other fields as strings
-                container[key] = String(value || '');
+                // Trata todos os outros campos como strings, garantindo que sejam limpos
+                container[key] = String(value || '').trim();
               }
             });
 
@@ -142,7 +152,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
               files: container.files,
             } as Container;
           })
-          // Filtro final para remover linhas que não resultaram em nenhum dado útil (ex: linhas totalmente vazias)
+          // Filtro final: requer pelo menos o container OU armador preenchido
           .filter(c => c.container || c.armador);
         
         resolve(containers);
