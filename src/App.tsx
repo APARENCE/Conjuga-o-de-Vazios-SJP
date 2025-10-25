@@ -11,7 +11,6 @@ import Analise from "./pages/Analise";
 import Inventario from "./pages/Inventario";
 import NotFound from "./pages/NotFound";
 import { Container, ContainerFile } from "@/types/container";
-import { InventoryItem } from "@/types/inventory";
 import { parseExcelFile, exportToExcel } from "@/lib/excelUtils";
 import { toast } from "@/hooks/use-toast";
 
@@ -19,7 +18,7 @@ const queryClient = new QueryClient();
 
 const App = () => {
   const [containers, setContainers] = useState<Container[]>([]);
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  // O estado 'inventory' e seus handlers foram removidos, pois o inventário agora é derivado dos containers.
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImport = () => {
@@ -127,39 +126,8 @@ const App = () => {
     });
   };
   
-  // --- Inventory Handlers ---
-  const handleInventoryAdd = (itemData: Omit<InventoryItem, 'id' | 'lastUpdated'>) => {
-    const newItem: InventoryItem = {
-      id: `item-${Date.now()}`,
-      ...itemData,
-      lastUpdated: new Date().toISOString(),
-    };
-    setInventory((prev) => [...prev, newItem]);
-    toast({
-      title: "Item adicionado!",
-      description: `O item ${newItem.name} foi adicionado ao inventário.`,
-    });
-  };
-
-  const handleInventoryEdit = (id: string, itemData: Partial<InventoryItem>) => {
-    setInventory((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, ...itemData, lastUpdated: new Date().toISOString() } : item
-      )
-    );
-    toast({
-      title: "Item atualizado!",
-      description: "O item do inventário foi atualizado com sucesso.",
-    });
-  };
-
-  const handleInventoryDelete = (id: string) => {
-    setInventory((prev) => prev.filter((item) => item.id !== id));
-    toast({
-      title: "Item excluído!",
-      description: "O item foi removido do inventário.",
-    });
-  };
+  // --- Inventory Handlers REMOVED ---
+  // Os handlers de inventário foram removidos, pois o inventário agora é derivado.
   // --------------------------
 
   return (
@@ -194,11 +162,7 @@ const App = () => {
                       path="/inventario" 
                       element={
                         <Inventario 
-                          inventory={inventory} 
-                          containers={containers} // Passando containers
-                          onItemAdd={handleInventoryAdd}
-                          onItemEdit={handleInventoryEdit}
-                          onItemDelete={handleInventoryDelete}
+                          containers={containers} 
                         />
                       } 
                     />

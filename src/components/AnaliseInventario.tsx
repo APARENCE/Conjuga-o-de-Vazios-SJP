@@ -6,12 +6,12 @@ import { useMemo } from "react";
 
 interface AnaliseInventarioProps {
   containers: Container[];
-  inventory: InventoryItem[];
+  inventory: InventoryItem[]; // Agora é o inventário derivado
 }
 
 export function AnaliseInventario({ containers, inventory }: AnaliseInventarioProps) {
   
-  // --- Análise de Containers (Reutilizando lógica de Containers.tsx/Analise.tsx) ---
+  // --- Análise de Containers (Mantida) ---
   const containerStats = useMemo(() => {
     const devolvidos = containers.filter(c => {
       const status = String(c.status || '').toLowerCase();
@@ -34,31 +34,33 @@ export function AnaliseInventario({ containers, inventory }: AnaliseInventarioPr
     };
   }, [containers]);
 
-  // --- Análise de Inventário ---
+  // --- Análise de Inventário Derivado ---
   const inventoryStats = useMemo(() => {
     const totalItems = inventory.length;
-    const totalQuantity = inventory.reduce((sum, item) => sum + item.quantity, 0);
     
     // Função auxiliar para normalizar o status
     const normalizeStatus = (status: string | undefined) => String(status || '').toLowerCase();
 
-    // Contagem de itens em estoque/uso (Em Estoque OU Aguardando Devolução)
-    const emEstoque = inventory.filter(item => {
+    // Contagem de itens em uso/aguardando devolução
+    const emUso = inventory.filter(item => {
       const status = normalizeStatus(item.status);
-      return status === "em estoque" || status === "aguardando devolução";
+      return status.includes("em uso") || status.includes("aguardando devolução");
     }).length;
     
     // Contagem de itens devolvidos (RIC OK)
     const devolvidos = inventory.filter(item => {
       const status = normalizeStatus(item.status);
-      return status === "ric ok";
+      return status.includes("ric ok") || status.includes("devolvido");
     }).length;
 
+    // Contagem de tipos de itens
+    const totalTrocas = inventory.filter(item => item.itemType === 'Troca').length;
+    
     return {
       totalItems,
-      totalQuantity,
-      emEstoque,
+      emUso,
       devolvidos,
+      totalTrocas,
     };
   }, [inventory]);
 
@@ -95,16 +97,16 @@ export function AnaliseInventario({ containers, inventory }: AnaliseInventarioPr
           </CardContent>
         </Card>
         
-        {/* KPI 3: Itens de Inventário em Estoque/Uso */}
+        {/* KPI 3: Itens de Inventário em Uso/Aguardando */}
         <Card className="border-l-4 border-l-warning">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Itens em Estoque/Uso</CardTitle>
+            <CardTitle className="text-sm font-medium">Itens de Rastreio Ativos</CardTitle>
             <Warehouse className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{inventoryStats.emEstoque}</div>
+            <div className="text-3xl font-bold">{inventoryStats.emUso}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {inventoryStats.totalQuantity} unidades no total
+              {inventoryStats.totalTrocas} itens de troca rastreados
             </p>
           </CardContent>
         </Card>
@@ -112,13 +114,13 @@ export function AnaliseInventario({ containers, inventory }: AnaliseInventarioPr
         {/* KPI 4: Itens de Inventário Devolvidos (RIC OK) */}
         <Card className="border-l-4 border-l-success">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Itens Devolvidos (RIC OK)</CardTitle>
+            <CardTitle className="text-sm font-medium">Itens Rastreio Concluídos</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{inventoryStats.devolvidos}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Itens com status RIC OK
+              Itens com status Devolvido (RIC OK)
             </p>
           </CardContent>
         </Card>
