@@ -25,21 +25,15 @@ export default function Containers({
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredContainers = containers.filter(c => {
-    const search = searchTerm.toLowerCase();
+    const search = searchTerm.toLowerCase().trim();
     
     // Se o termo de pesquisa estiver vazio, retorna todos os containers
     if (!search) return true;
 
-    // Função auxiliar para garantir que o valor é uma string minúscula
-    const safeString = (value: string | number | undefined | null) => 
-      String(value || '').toLowerCase();
+    // Foco na busca: Apenas filtra pelo campo 'container' (coluna A da planilha)
+    const containerNumber = String(c.container || '').toLowerCase();
 
-    return (
-      safeString(c.container).includes(search) ||
-      safeString(c.armador).includes(search) ||
-      safeString(c.status).includes(search) ||
-      safeString(c.motorista).includes(search)
-    );
+    return containerNumber.includes(search);
   });
   
   // Log para depuração
@@ -78,7 +72,7 @@ export default function Containers({
       <div className="relative shrink-0">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Pesquisar por container, armador, status ou motorista..."
+          placeholder="Pesquisar pelo número do container (Coluna A)..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
