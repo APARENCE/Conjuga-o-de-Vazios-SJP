@@ -64,7 +64,8 @@ export default function Containers({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
+      {/* Título e Botão de Adicionar */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Gestão de Containers</h1>
           <p className="text-muted-foreground mt-1">
@@ -74,6 +75,7 @@ export default function Containers({
         <ContainerFormDialog onSave={onContainerAdd} />
       </div>
 
+      {/* Barra de Pesquisa */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
