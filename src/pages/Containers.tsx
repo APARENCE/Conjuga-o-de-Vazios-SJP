@@ -63,20 +63,19 @@ export default function Containers({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full space-y-6"> {/* Alterado para flex-col h-full */}
       {/* Título */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 shrink-0">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Gestão de Containers</h1>
           <p className="text-muted-foreground mt-1">
             Controle de entrada e saída de containers CAS
           </p>
         </div>
-        {/* Botão Novo Container removido daqui */}
       </div>
 
       {/* Barra de Pesquisa */}
-      <div className="relative">
+      <div className="relative shrink-0">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Pesquisar por container, armador, status ou motorista..."
@@ -86,7 +85,8 @@ export default function Containers({
         />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* KPIs */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 shrink-0">
         <Card className="border-l-4 border-l-primary">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -136,12 +136,15 @@ export default function Containers({
         </Card>
       </div>
 
-      <ContainerTable 
-        containers={filteredContainers} 
-        onContainerUpdate={onContainerUpdate}
-        onContainerEdit={onContainerEdit}
-        onContainerDelete={onContainerDelete}
-      />
+      {/* Tabela de Containers - Ocupa o espaço restante */}
+      <div className="flex-1 min-h-0"> {/* Adicionado flex-1 e min-h-0 para forçar a tabela a usar o espaço restante */}
+        <ContainerTable 
+          containers={filteredContainers} 
+          onContainerUpdate={onContainerUpdate}
+          onContainerEdit={onContainerEdit}
+          onContainerDelete={onContainerDelete}
+        />
+      </div>
     </div>
   );
 }

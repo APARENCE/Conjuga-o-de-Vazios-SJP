@@ -54,7 +54,6 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
   };
 
   // Classes para colunas fixas
-  // Aumentando o z-index para garantir que fiquem acima do conteúdo rolante
   const fixedColumnClasses = "sticky bg-background z-20"; 
   const fixedHeaderClasses = "sticky top-0 z-30 bg-muted/50 shadow-sm"; 
 
@@ -65,8 +64,8 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
 
   return (
     <Card className="border-0 shadow-sm">
-      {/* Aumentando a altura máxima para melhor aproveitamento da tela */}
-      <div className="overflow-x-auto max-h-[75vh] lg:max-h-[85vh]">
+      {/* Removendo max-h fixo e usando flex-1 no layout principal para que a tabela use o espaço restante */}
+      <div className="overflow-x-auto overflow-y-auto">
         <Table>
           {/* Aplicamos sticky, top-0 e bg-background ao TableHeader */}
           <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">

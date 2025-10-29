@@ -143,11 +143,11 @@ const App = () => {
                 onExport={handleExport} 
                 onContainerAdd={handleContainerAdd} // Adicionado
               />
-              <div className="flex-1 flex flex-col">
-                <header className="h-14 border-b border-border bg-card flex items-center px-4">
+              <div className="flex-1 flex flex-col h-screen"> {/* Adicionado h-screen aqui */}
+                <header className="h-14 border-b border-border bg-card flex items-center px-4 shrink-0"> {/* Adicionado shrink-0 */}
                   <SidebarTrigger />
                 </header>
-                <main className="flex-1 p-6 overflow-auto">
+                <main className="flex-1 p-6 overflow-y-auto"> {/* flex-1 e overflow-y-auto para rolagem do conteúdo */}
                   <Routes>
                     <Route 
                       path="/" 
