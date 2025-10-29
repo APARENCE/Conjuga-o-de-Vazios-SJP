@@ -43,15 +43,15 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
-    /* Sidebar - Light Mode (Mais claro e limpo) */
-    --sidebar-background: 0 0% 100%; /* Branco */
-    --sidebar-foreground: 215 25% 15%; /* Foreground escuro */
-    --sidebar-primary: 217 91% 45%; /* Cor primária para destaque do título */
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96%; /* Muted/Hover */
-    --sidebar-accent-foreground: 215 25% 15%;
-    --sidebar-border: 214 32% 88%;
-    --sidebar-ring: 217 91% 45%;
+    /* Sidebar - Light Mode (Usando cores padrão) */
+    --sidebar-background: var(--background);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--muted);
+    --sidebar-accent-foreground: var(--foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
   }
 
   .dark {
@@ -88,15 +88,15 @@ All colors MUST be HSL.
     --input: 215 25% 25%;
     --ring: 217 91% 55%;
     
-    /* Sidebar - Dark Mode (Fundo escuro, texto claro) */
-    --sidebar-background: 215 28% 12%; /* Fundo escuro */
-    --sidebar-foreground: 210 20% 98%; /* Texto claro */
-    --sidebar-primary: 217 91% 55%; /* Cor primária */
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 20%; /* Muted/Hover */
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 215 25% 25%;
-    --sidebar-ring: 217 91% 55%;
+    /* Sidebar - Dark Mode (Usando cores padrão) */
+    --sidebar-background: var(--background);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--muted);
+    --sidebar-accent-foreground: var(--foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
   }
 }
 

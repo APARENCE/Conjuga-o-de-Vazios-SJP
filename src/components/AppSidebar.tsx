@@ -30,17 +30,15 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
   ];
 
   return (
-    <Sidebar className="border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
-        <h2 className="text-xl font-extrabold text-sidebar-primary tracking-tight">CAS System</h2>
-        <p className="text-xs text-sidebar-foreground/70">Gestão de Containers</p>
+    <Sidebar className="border-r border-border w-56">
+      <SidebarHeader className="border-b border-border p-4">
+        <h2 className="text-lg font-bold text-primary">Conjugação de vazios</h2>
+        <p className="text-xs text-muted-foreground">Patio- SJP</p>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
-            Navegação
-          </SidebarGroupLabel>
+          <SidebarGroupLabel>Navegação</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -50,8 +48,8 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
                       to={item.url}
                       className={({ isActive }) =>
                         isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                          : "hover:bg-sidebar-accent/50"
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "hover:bg-muted/50"
                       }
                     >
                       <item.icon className="h-4 w-4" />
@@ -65,9 +63,7 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
-            Ações
-          </SidebarGroupLabel>
+          <SidebarGroupLabel>Ações</SidebarGroupLabel>
           <SidebarGroupContent className="space-y-2 px-2">
             <ContainerFormDialog 
               onSave={onContainerAdd} 
@@ -85,7 +81,7 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
             <Button
               variant="outline"
               size="sm"
-              className="w-full justify-start bg-sidebar-background hover:bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground"
+              className="w-full justify-start"
               onClick={onImport}
             >
               <Upload className="h-4 w-4 mr-2" />
@@ -94,7 +90,7 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
             <Button
               variant="outline"
               size="sm"
-              className="w-full justify-start bg-sidebar-background hover:bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground"
+              className="w-full justify-start"
               onClick={onExport}
             >
               <Download className="h-4 w-4 mr-2" />
@@ -104,8 +100,8 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-4">
-        <p className="text-xs text-sidebar-foreground/50">v1.0.0</p>
+      <SidebarFooter className="border-t border-border p-4">
+        <p className="text-xs text-muted-foreground">v1.0.0</p>
       </SidebarFooter>
     </Sidebar>
   );
