@@ -138,7 +138,11 @@ const App = () => {
         <BrowserRouter>
           <SidebarProvider>
             <div className="min-h-screen flex w-full bg-background">
-              <AppSidebar onImport={handleImport} onExport={handleExport} />
+              <AppSidebar 
+                onImport={handleImport} 
+                onExport={handleExport} 
+                onContainerAdd={handleContainerAdd} // Adicionado
+              />
               <div className="flex-1 flex flex-col">
                 <header className="h-14 border-b border-border bg-card flex items-center px-4">
                   <SidebarTrigger />

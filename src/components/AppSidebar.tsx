@@ -1,4 +1,4 @@
-import { Home, BarChart3, Upload, Download, PackageOpen } from "lucide-react";
+import { Home, BarChart3, Upload, Download, PackageOpen, Plus } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -13,13 +13,16 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { ContainerFormDialog } from "./ContainerFormDialog";
+import { Container } from "@/types/container";
 
 interface AppSidebarProps {
   onImport: () => void;
   onExport: () => void;
+  onContainerAdd: (container: Partial<Container>) => void;
 }
 
-export function AppSidebar({ onImport, onExport }: AppSidebarProps) {
+export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarProps) {
   const menuItems = [
     { title: "Containers", url: "/", icon: Home },
     { title: "Análise", url: "/analise", icon: BarChart3 },
@@ -62,6 +65,19 @@ export function AppSidebar({ onImport, onExport }: AppSidebarProps) {
         <SidebarGroup>
           <SidebarGroupLabel>Ações</SidebarGroupLabel>
           <SidebarGroupContent className="space-y-2 px-2">
+            <ContainerFormDialog 
+              onSave={onContainerAdd} 
+              trigger={
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="w-full justify-start bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Novo Container
+                </Button>
+              }
+            />
             <Button
               variant="outline"
               size="sm"

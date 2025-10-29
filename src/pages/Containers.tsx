@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { ContainerFormDialog } from "@/components/ContainerFormDialog";
+// ContainerFormDialog não é mais necessário aqui
 
 interface ContainersPageProps {
   containers: Container[];
@@ -64,7 +64,7 @@ export default function Containers({
 
   return (
     <div className="space-y-6">
-      {/* Título e Botão de Adicionar */}
+      {/* Título */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Gestão de Containers</h1>
@@ -72,7 +72,7 @@ export default function Containers({
             Controle de entrada e saída de containers CAS
           </p>
         </div>
-        <ContainerFormDialog onSave={onContainerAdd} />
+        {/* Botão Novo Container removido daqui */}
       </div>
 
       {/* Barra de Pesquisa */}
