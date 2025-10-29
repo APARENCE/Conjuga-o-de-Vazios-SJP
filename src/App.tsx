@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import Containers from "./pages/Containers";
 import Analise from "./pages/Analise";
 import Inventario from "./pages/Inventario";
+import Portaria from "./pages/Portaria"; // Importando a nova página
 import NotFound from "./pages/NotFound";
 import { Container, ContainerFile } from "@/types/container";
 import { parseExcelFile, exportToExcel } from "@/lib/excelUtils";
@@ -18,7 +19,6 @@ const queryClient = new QueryClient();
 
 const App = () => {
   const [containers, setContainers] = useState<Container[]>([]);
-  // O estado 'inventory' e seus handlers foram removidos, pois o inventário agora é derivado dos containers.
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImport = () => {
@@ -77,6 +77,16 @@ const App = () => {
       )
     );
   };
+  
+  // Handler unificado para edição/atualização de dados (usado pela Portaria)
+  const handleContainerEdit = (id: string, containerData: Partial<Container>) => {
+    setContainers((prev) =>
+      prev.map((container) =>
+        container.id === id ? { ...container, ...containerData } : container
+      )
+    );
+    // A Portaria já exibe o toast, então não precisamos repetir aqui.
+  };
 
   const handleContainerAdd = (containerData: Partial<Container>) => {
     const newContainer: Container = {
@@ -106,18 +116,6 @@ const App = () => {
     });
   };
 
-  const handleContainerEdit = (id: string, containerData: Partial<Container>) => {
-    setContainers((prev) =>
-      prev.map((container) =>
-        container.id === id ? { ...container, ...containerData } : container
-      )
-    );
-    toast({
-      title: "Container atualizado!",
-      description: "O container foi atualizado com sucesso.",
-    });
-  };
-
   const handleContainerDelete = (id: string) => {
     setContainers((prev) => prev.filter((container) => container.id !== id));
     toast({
@@ -126,9 +124,18 @@ const App = () => {
     });
   };
   
-  // --- Inventory Handlers REMOVED ---
-  // Os handlers de inventário foram removidos, pois o inventário agora é derivado.
-  // --------------------------
+  // Handler para Portaria: Atualiza dados e arquivos
+  const handlePortariaUpdate = (id: string, data: Partial<Container>) => {
+    setContainers((prev) =>
+      prev.map((container) => {
+        if (container.id === id) {
+          // Mescla os dados existentes com os novos dados (incluindo 'files')
+          return { ...container, ...data };
+        }
+        return container;
+      })
+    );
+  };
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -141,13 +148,13 @@ const App = () => {
               <AppSidebar 
                 onImport={handleImport} 
                 onExport={handleExport} 
-                onContainerAdd={handleContainerAdd} // Adicionado
+                onContainerAdd={handleContainerAdd}
               />
-              <div className="flex-1 flex flex-col h-screen"> {/* Adicionado h-screen aqui */}
-                <header className="h-14 border-b border-border bg-card flex items-center px-4 shrink-0"> {/* Adicionado shrink-0 */}
+              <div className="flex-1 flex flex-col h-screen">
+                <header className="h-14 border-b border-border bg-card flex items-center px-4 shrink-0">
                   <SidebarTrigger />
                 </header>
-                <main className="flex-1 p-6 overflow-y-auto"> {/* flex-1 e overflow-y-auto para rolagem do conteúdo */}
+                <main className="flex-1 p-6 overflow-y-auto">
                   <Routes>
                     <Route 
                       path="/" 
@@ -167,6 +174,15 @@ const App = () => {
                       element={
                         <Inventario 
                           containers={containers} 
+                        />
+                      } 
+                    />
+                    <Route 
+                      path="/portaria" 
+                      element={
+                        <Portaria 
+                          containers={containers} 
+                          onContainerUpdate={handlePortariaUpdate}
                         />
                       } 
                     />

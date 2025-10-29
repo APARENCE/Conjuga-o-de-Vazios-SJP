@@ -1,4 +1,4 @@
-import { Home, BarChart3, Upload, Download, PackageOpen, Plus } from "lucide-react";
+import { Home, BarChart3, Upload, Download, PackageOpen, Plus, Truck } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -25,6 +25,7 @@ interface AppSidebarProps {
 export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarProps) {
   const menuItems = [
     { title: "Containers", url: "/", icon: Home },
+    { title: "Portaria", url: "/portaria", icon: Truck }, // Novo item de menu
     { title: "Análise", url: "/analise", icon: BarChart3 },
     { title: "Inventário", url: "/inventario", icon: PackageOpen },
   ];
