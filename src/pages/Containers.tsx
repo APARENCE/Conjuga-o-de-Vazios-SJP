@@ -31,9 +31,10 @@ export default function Containers({
     if (!search) return true;
 
     // Foco na busca: Apenas filtra pelo campo 'container' (coluna A da planilha)
-    // Usamos correspondência EXATA (===) para mostrar apenas o número específico pesquisado.
-    const containerNumber = String(c.container || '').toLowerCase();
+    // Garante que o número do container também seja limpo e minúsculo para correspondência exata.
+    const containerNumber = String(c.container || '').toLowerCase().trim();
 
+    // Correspondência EXATA
     return containerNumber === search;
   });
   
