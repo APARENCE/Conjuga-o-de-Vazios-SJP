@@ -31,9 +31,10 @@ export default function Containers({
     if (!search) return true;
 
     // Foco na busca: Apenas filtra pelo campo 'container' (coluna A da planilha)
+    // Usamos correspondência EXATA (===) para mostrar apenas o número específico pesquisado.
     const containerNumber = String(c.container || '').toLowerCase();
 
-    return containerNumber.includes(search);
+    return containerNumber === search;
   });
   
   // Log para depuração
@@ -72,7 +73,7 @@ export default function Containers({
       <div className="relative shrink-0">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Pesquisar pelo número do container (Coluna A)..."
+          placeholder="Pesquisar pelo número exato do container (Coluna A)..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
