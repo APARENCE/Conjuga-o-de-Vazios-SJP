@@ -66,7 +66,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
     <Card className="border-0 shadow-sm">
       {/* Removendo max-h fixo e usando flex-1 no layout principal para que a tabela use o espaço restante */}
       <div className="overflow-x-auto overflow-y-auto">
-        <Table>
+        <Table className="compact-table"> {/* Aplicando classe de tabela compacta */}
           {/* Aplicamos sticky, top-0 e bg-background ao TableHeader */}
           <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
             <TableRow className="bg-muted/50 hover:bg-muted/50">

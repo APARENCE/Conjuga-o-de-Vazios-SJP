@@ -37,7 +37,8 @@ All colors MUST be HSL.
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 88%;
+    /* Ajuste sutil na cor da borda para parecer mais fina */
+    --border: 214 32% 90%; /* Lighter border color */
     --input: 214 32% 91%;
     --ring: 217 91% 45%;
 
@@ -84,7 +85,8 @@ All colors MUST be HSL.
     --destructive: 0 84% 65%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 25% 25%;
+    /* Ajuste sutil na cor da borda para parecer mais fina */
+    --border: 215 25% 22%; /* Darker border color, but less contrast than before */
     --input: 215 25% 25%;
     --ring: 217 91% 55%;
     
