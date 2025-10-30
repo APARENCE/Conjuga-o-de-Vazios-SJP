@@ -1,11 +1,23 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Container, ContainerFile } from "@/types/container";
 import { ContainerTable } from "@/components/ContainerTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
+import { Package, TrendingUp, AlertCircle, CheckCircle, Search, Filter, Grid, List, Download, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-// ContainerFormDialog não é mais necessário aqui
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ContainerFormDialog } from "@/components/ContainerFormDialog";
+import { FileUploadDialog } from "@/components/FileUploadDialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface ContainersPageProps {
   containers: Container[];
@@ -23,26 +35,40 @@ export default function Containers({
   onContainerDelete 
 }: ContainersPageProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [armadorFilter, setArmadorFilter] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"table" | "cards">("table");
+  const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
+  const isMobile = useIsMobile();
 
-  const filteredContainers = containers.filter(c => {
-    const search = searchTerm.toLowerCase().trim();
-    
-    // Se o termo de pesquisa estiver vazio, retorna todos os containers
-    if (!search) return true;
+  // Obter armadores únicos para o filtro
+  const armadores = useMemo(() => {
+    const uniqueArmadores = [...new Set(containers.map(c => c.armador).filter(Boolean))];
+    return uniqueArmadores.sort();
+  }, [containers]);
 
-    // Foco na busca: Apenas filtra pelo campo 'container' (coluna A da planilha)
-    // Garante que o número do container também seja limpo e minúsculo para correspondência exata.
-    const containerNumber = String(c.container || '').toLowerCase().trim();
+  // Filtrar containers
+  const filteredContainers = useMemo(() => {
+    return containers.filter(c => {
+      const search = searchTerm.toLowerCase().trim();
+      const matchesSearch = !search || 
+        c.container.toLowerCase().includes(search) ||
+        c.armador.toLowerCase().includes(search) ||
+        c.motorista?.toLowerCase().includes(search) ||
+        c.placas?.toLowerCase().includes(search);
 
-    // Correspondência EXATA
-    return containerNumber === search;
-  });
-  
-  // Log para depuração
-  console.log(`Termo de pesquisa: "${searchTerm}", Containers filtrados: ${filteredContainers.length}`);
+      const matchesStatus = statusFilter === "all" || 
+        (statusFilter === "devolvidos" && String(c.status || '').toLowerCase().includes("ok")) ||
+        (statusFilter === "pendentes" && String(c.status || '').toLowerCase().includes("aguardando")) ||
+        (statusFilter === "vencidos" && (typeof c.diasRestantes === 'number' ? c.diasRestantes : 0) === 0);
 
+      const matchesArmador = armadorFilter === "all" || c.armador === armadorFilter;
 
-  const stats = {
+      return matchesSearch && matchesStatus && matchesArmador;
+    });
+  }, [containers, searchTerm, statusFilter, armadorFilter]);
+
+  const stats = useMemo(() => ({
     total: containers.length,
     devolvidos: containers.filter(c => {
       const status = String(c.status || '').toLowerCase();
@@ -56,91 +82,397 @@ export default function Containers({
       const dias = typeof c.diasRestantes === 'number' ? c.diasRestantes : 0;
       return dias === 0;
     }).length,
+  }), [containers]);
+
+  const getStatusBadge = (status: string) => {
+    if (!status) return <Badge variant="secondary">-</Badge>;
+    const statusLower = String(status).toLowerCase();
+    if (statusLower.includes("ok") || statusLower.includes("devolvido")) {
+      return <Badge className="bg-success text-white">{status}</Badge>;
+    }
+    if (statusLower.includes("aguardando") || statusLower.includes("verificar")) {
+      return <Badge className="bg-warning text-white">{status}</Badge>;
+    }
+    return <Badge variant="secondary">{status}</Badge>;
   };
 
+  const getDiasRestantesColor = (dias: number | string) => {
+    if (typeof dias === "string") return "text-muted-foreground";
+    if (dias === 0) return "text-danger font-semibold";
+    if (dias <= 3) return "text-warning font-semibold";
+    return "text-success";
+  };
+
+  const ContainerCard = ({ container }: { container: Container }) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedContainer(container)}>
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-lg font-bold text-primary">{container.container}</CardTitle>
+              <p className="text-sm text-muted-foreground">{container.armador}</p>
+            </div>
+            <div className="flex flex-col gap-2">
+              {getStatusBadge(container.status)}
+              <span className={cn("text-sm font-semibold", getDiasRestantesColor(container.diasRestantes))}>
+                {container.diasRestantes} dias
+              </span>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <span className="text-muted-foreground">Data Op:</span>
+              <p className="font-medium">{container.dataOperacao || "-"}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Placas:</span>
+              <p className="font-medium">{container.placas || "-"}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Motorista:</span>
+              <p className="font-medium truncate">{container.motorista || "-"}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Depot:</span>
+              <p className="font-medium truncate">{container.depotDevolucao || "-"}</p>
+            </div>
+          </div>
+          
+          <div className="flex gap-2 pt-2">
+            <FileUploadDialog
+              containerId={container.id}
+              files={container.files || []}
+              onFilesChange={(files) => onContainerUpdate(container.id, files)}
+              trigger={
+                <Button variant="outline" size="sm" className="flex-1">
+                  <Eye className="h-4 w-4 mr-1" />
+                  Arquivos ({container.files?.length || 0})
+                </Button>
+              }
+            />
+            <ContainerFormDialog
+              container={container}
+              onSave={(data) => onContainerEdit(container.id, data)}
+              trigger={
+                <Button variant="outline" size="sm">
+                  <Filter className="h-4 w-4" />
+                </Button>
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+
   return (
-    <div className="flex flex-col h-full space-y-6"> {/* Alterado para flex-col h-full */}
-      {/* Título */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 shrink-0">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Gestão de Containers</h1>
           <p className="text-muted-foreground mt-1">
             Controle de entrada e saída de containers CAS
           </p>
         </div>
+        
+        {/* Barra de ações e filtros */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Pesquisar container, armador, motorista..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos Status</SelectItem>
+              <SelectItem value="devolvidos">Devolvidos</SelectItem>
+              <SelectItem value="pendentes">Pendentes</SelectItem>
+              <SelectItem value="vencidos">Vencidos</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={armadorFilter} onValueChange={setArmadorFilter}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Armador" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos Armadores</SelectItem>
+              {armadores.map(armador => (
+                <SelectItem key={armador} value={armador}>{armador}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === "table" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("table")}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === "cards" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("cards")}
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* Barra de Pesquisa */}
-      <div className="relative shrink-0">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Pesquisar pelo número exato do container (Coluna A)..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
+      {/* KPIs - Versão responsiva */}
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          <Card className="border-l-4 border-l-primary hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total
+              </CardTitle>
+              <Package className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">{stats.total}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {armadores.length} armadores
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
+          <Card className="border-l-4 border-l-success hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Devolvidos
+              </CardTitle>
+              <CheckCircle className="h-4 w-4 text-success" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">{stats.devolvidos}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.total > 0 ? ((stats.devolvidos / stats.total) * 100).toFixed(1) : 0}%
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+        >
+          <Card className="border-l-4 border-l-warning hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Pendentes
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-warning" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">{stats.pendentes}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.total > 0 ? ((stats.pendentes / stats.total) * 100).toFixed(1) : 0}%
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
+        >
+          <Card className="border-l-4 border-l-danger hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Vencidos
+              </CardTitle>
+              <AlertCircle className="h-4 w-4 text-danger" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">{stats.vencidos}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.total > 0 ? ((stats.vencidos / stats.total) * 100).toFixed(1) : 0}%
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Resultados da busca */}
+      <div className="flex justify-between items-center">
+        <p className="text-sm text-muted-foreground">
+          {filteredContainers.length} de {containers.length} containers
+        </p>
+        <ContainerFormDialog
+          onSave={onContainerAdd}
+          trigger={
+            <Button size="sm" className="gap-2">
+              <Package className="h-4 w-4" />
+              Novo Container
+            </Button>
+          }
         />
       </div>
 
-      {/* KPIs */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 shrink-0">
-        <Card className="border-l-4 border-l-primary">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total de Containers
-            </CardTitle>
-            <Package className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{stats.total}</div>
-          </CardContent>
-        </Card>
+      {/* Conteúdo principal - Tabela ou Cards */}
+      <AnimatePresence mode="wait">
+        {viewMode === "table" ? (
+          <motion.div
+            key="table"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ContainerTable 
+              containers={filteredContainers} 
+              onContainerUpdate={onContainerUpdate}
+              onContainerEdit={onContainerEdit}
+              onContainerDelete={onContainerDelete}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="cards"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+          >
+            {filteredContainers.length === 0 ? (
+              <div className="col-span-full text-center py-8 text-muted-foreground">
+                <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>Nenhum container encontrado</p>
+              </div>
+            ) : (
+              filteredContainers.map((container) => (
+                <ContainerCard key={container.id} container={container} />
+              ))
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        <Card className="border-l-4 border-l-success">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Devolvidos
-            </CardTitle>
-            <CheckCircle className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{stats.devolvidos}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-warning">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pendentes
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-warning" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{stats.pendentes}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-danger">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Vencidos
-            </CardTitle>
-            <AlertCircle className="h-4 w-4 text-danger" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{stats.vencidos}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabela de Containers - Ocupa o espaço restante */}
-      <div className="flex-1 min-h-0"> {/* Adicionado flex-1 e min-h-0 para forçar a tabela a usar o espaço restante */}
-        <ContainerTable 
-          containers={filteredContainers} 
-          onContainerUpdate={onContainerUpdate}
-          onContainerEdit={onContainerEdit}
-          onContainerDelete={onContainerDelete}
-        />
-      </div>
+      {/* Modal de detalhes do container (mobile) */}
+      {selectedContainer && isMobile && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 z-50 flex items-end"
+          onClick={() => setSelectedContainer(null)}
+        >
+          <motion.div
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            className="bg-background w-full max-h-[80vh] overflow-y-auto rounded-t-2xl p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-xl font-bold">{selectedContainer.container}</h3>
+                <p className="text-muted-foreground">{selectedContainer.armador}</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedContainer(null)}>
+                ×
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-sm text-muted-foreground">Status</span>
+                  <div className="mt-1">{getStatusBadge(selectedContainer.status)}</div>
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground">Dias Restantes</span>
+                  <p className={cn("font-semibold", getDiasRestantesColor(selectedContainer.diasRestantes))}>
+                    {selectedContainer.diasRestantes}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Data Operação:</span>
+                  <span>{selectedContainer.dataOperacao || "-"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Placas:</span>
+                  <span>{selectedContainer.placas || "-"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Motorista:</span>
+                  <span>{selectedContainer.motorista || "-"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Depot:</span>
+                  <span>{selectedContainer.depotDevolucao || "-"}</span>
+                </div>
+              </div>
+              
+              <div className="flex gap-2 pt-4">
+                <FileUploadDialog
+                  containerId={selectedContainer.id}
+                  files={selectedContainer.files || []}
+                  onFilesChange={(files) => {
+                    onContainerUpdate(selectedContainer.id, files);
+                    setSelectedContainer({ ...selectedContainer, files });
+                  }}
+                  trigger={
+                    <Button variant="outline" className="flex-1">
+                      <Eye className="h-4 w-4 mr-2" />
+                      Ver Arquivos
+                    </Button>
+                  }
+                />
+                <ContainerFormDialog
+                  container={selectedContainer}
+                  onSave={(data) => {
+                    onContainerEdit(selectedContainer.id, data);
+                    setSelectedContainer({ ...selectedContainer, ...data });
+                  }}
+                  trigger={
+                    <Button variant="outline">
+                      <Filter className="h-4 w-4" />
+                    </Button>
+                  }
+                />
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 }
