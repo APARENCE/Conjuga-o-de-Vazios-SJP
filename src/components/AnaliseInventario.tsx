@@ -66,17 +66,17 @@ export function AnaliseInventario({ containers, inventory: filteredInventory }: 
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-semibold tracking-tight">Visão Geral</h2>
+      <h2 className="text-xl font-semibold tracking-tight">Visão Geral</h2>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         
         {/* KPI 1: Total de Containers (GLOBAL) */}
         <Card className="border-l-4 border-l-primary">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Containers Ativos (Total)</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2">
+            <CardTitle className="text-xs font-medium">Containers Ativos (Total)</CardTitle>
+            <Package className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{containerStats.total}</div>
+          <CardContent className="p-2 pt-0">
+            <div className="text-base font-bold">{containerStats.total}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {containerStats.devolvidos} devolvidos | {containerStats.pendentes} pendentes
             </p>
@@ -85,12 +85,12 @@ export function AnaliseInventario({ containers, inventory: filteredInventory }: 
 
         {/* KPI 2: Containers Vencidos (GLOBAL) */}
         <Card className="border-l-4 border-l-danger">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Containers Vencidos (Total)</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2">
+            <CardTitle className="text-xs font-medium">Containers Vencidos (Total)</CardTitle>
+            <AlertTriangle className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-danger">{containerStats.vencidos}</div>
+          <CardContent className="p-2 pt-0">
+            <div className="text-base font-bold text-danger">{containerStats.vencidos}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Exigem atenção imediata
             </p>
@@ -99,12 +99,12 @@ export function AnaliseInventario({ containers, inventory: filteredInventory }: 
         
         {/* KPI 3: Itens de Rastreio Ativos (FILTRADO) */}
         <Card className="border-l-4 border-l-warning">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Itens Rastreio Ativos (Filtro)</CardTitle>
-            <Warehouse className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2">
+            <CardTitle className="text-xs font-medium">Itens Rastreio Ativos (Filtro)</CardTitle>
+            <Warehouse className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{inventoryStats.emUso}</div>
+          <CardContent className="p-2 pt-0">
+            <div className="text-base font-bold">{inventoryStats.emUso}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {inventoryStats.totalTrocas} itens de troca rastreados no filtro
             </p>
@@ -113,12 +113,12 @@ export function AnaliseInventario({ containers, inventory: filteredInventory }: 
 
         {/* KPI 4: Itens Rastreio Concluídos (FILTRADO) */}
         <Card className="border-l-4 border-l-success">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Itens Rastreio Concluídos (Filtro)</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2">
+            <CardTitle className="text-xs font-medium">Itens Rastreio Concluídos (Filtro)</CardTitle>
+            <CheckCircle2 className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{inventoryStats.devolvidos}</div>
+          <CardContent className="p-2 pt-0">
+            <div className="text-base font-bold">{inventoryStats.devolvidos}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Itens com status Devolvido (RIC OK) no filtro
             </p>

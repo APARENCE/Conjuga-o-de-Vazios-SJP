@@ -184,14 +184,14 @@ export default function Inventario({ containers }: InventarioProps) {
       transition={{ duration: 0.3, delay }}
     >
       <Card className={`border-l-4 border-l-${color} hover:shadow-md transition-all duration-300 hover:scale-[1.02]`}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2">
           <CardTitle className="text-xs font-medium text-muted-foreground">
             {title}
           </CardTitle>
-          <Icon className={`h-4 w-4 text-${color}`} />
+          <Icon className={`h-3 w-3 text-${color}`} />
         </CardHeader>
-        <CardContent>
-          <div className="text-lg font-bold text-foreground">{value}</div>
+        <CardContent className="p-2 pt-0">
+          <div className="text-base font-bold text-foreground">{value}</div>
           <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
         </CardContent>
       </Card>

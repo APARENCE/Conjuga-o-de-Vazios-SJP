@@ -248,14 +248,14 @@ export default function Containers({
           transition={{ duration: 0.3, delay: 0.1 }}
         >
           <Card className="border-l-4 border-l-primary hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-1">
+            <CardHeader className="flex flex-row items-center justify-between pb-1 p-2">
               <CardTitle className="text-xs font-medium text-muted-foreground">
                 Total
               </CardTitle>
               <Package className="h-3 w-3 text-primary" />
             </CardHeader>
-            <CardContent>
-              <div className="text-lg font-bold text-foreground">{stats.total}</div>
+            <CardContent className="p-2 pt-0">
+              <div className="text-base font-bold text-foreground">{stats.total}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {armadores.length} armadores
               </p>
@@ -269,14 +269,14 @@ export default function Containers({
           transition={{ duration: 0.3, delay: 0.2 }}
         >
           <Card className="border-l-4 border-l-success hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-1">
+            <CardHeader className="flex flex-row items-center justify-between pb-1 p-2">
               <CardTitle className="text-xs font-medium text-muted-foreground">
                 Devolvidos
               </CardTitle>
               <CheckCircle className="h-3 w-3 text-success" />
             </CardHeader>
-            <CardContent>
-              <div className="text-lg font-bold text-foreground">{stats.devolvidos}</div>
+            <CardContent className="p-2 pt-0">
+              <div className="text-base font-bold text-foreground">{stats.devolvidos}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {stats.total > 0 ? ((stats.devolvidos / stats.total) * 100).toFixed(1) : 0}%
               </p>
@@ -290,14 +290,14 @@ export default function Containers({
           transition={{ duration: 0.3, delay: 0.3 }}
         >
           <Card className="border-l-4 border-l-warning hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-1">
+            <CardHeader className="flex flex-row items-center justify-between pb-1 p-2">
               <CardTitle className="text-xs font-medium text-muted-foreground">
                 Pendentes
               </CardTitle>
               <TrendingUp className="h-3 w-3 text-warning" />
             </CardHeader>
-            <CardContent>
-              <div className="text-lg font-bold text-foreground">{stats.pendentes}</div>
+            <CardContent className="p-2 pt-0">
+              <div className="text-base font-bold text-foreground">{stats.pendentes}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {stats.total > 0 ? ((stats.pendentes / stats.total) * 100).toFixed(1) : 0}%
               </p>
@@ -311,14 +311,14 @@ export default function Containers({
           transition={{ duration: 0.3, delay: 0.4 }}
         >
           <Card className="border-l-4 border-l-danger hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-1">
+            <CardHeader className="flex flex-row items-center justify-between pb-1 p-2">
               <CardTitle className="text-xs font-medium text-muted-foreground">
                 Vencidos
               </CardTitle>
               <AlertCircle className="h-3 w-3 text-danger" />
             </CardHeader>
-            <CardContent>
-              <div className="text-lg font-bold text-foreground">{stats.vencidos}</div>
+            <CardContent className="p-2 pt-0">
+              <div className="text-base font-bold text-foreground">{stats.vencidos}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {stats.total > 0 ? ((stats.vencidos / stats.total) * 100).toFixed(1) : 0}%
               </p>
