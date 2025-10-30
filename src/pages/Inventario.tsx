@@ -8,6 +8,7 @@ import { InventoryFilters } from "@/components/InventoryFilters";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Package, Search, Filter, Grid, List, Eye, Calendar, Truck, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
