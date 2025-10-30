@@ -153,13 +153,13 @@ export default function Analise({ containers }: AnalisePageProps) {
     >
       <Card className={`border-l-4 border-l-${color} hover:shadow-lg transition-all duration-300 hover:scale-[1.02]`}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-xs font-medium text-muted-foreground">
             {title}
           </CardTitle>
-          <Icon className={`h-4 w-4 text-${color}`} />
+          <Icon className={`h-3 w-3 text-${color}`} /> {/* Ícone reduzido */}
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-foreground">{value}</div>
+          <div className="text-lg font-bold text-foreground">{value}</div> {/* Valor reduzido */}
           <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
         </CardContent>
       </Card>
@@ -174,11 +174,11 @@ export default function Analise({ containers }: AnalisePageProps) {
     >
       <Card className="hover:shadow-lg transition-all duration-300">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Icon className="h-5 w-5 text-primary" />
+          <CardTitle className="flex items-center gap-2 text-lg"> {/* Título reduzido */}
+            <Icon className="h-4 w-4 text-primary" /> {/* Ícone reduzido */}
             {title}
           </CardTitle>
-          <CardDescription>{description}</CardDescription>
+          <CardDescription className="text-xs">{description}</CardDescription> {/* Descrição reduzida */}
         </CardHeader>
         <CardContent>
           {children}
@@ -193,8 +193,8 @@ export default function Analise({ containers }: AnalisePageProps) {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-4xl font-bold tracking-tight">Análise de Dados</h1>
-            <p className="text-muted-foreground text-lg mt-1">
+            <h1 className="text-2xl font-bold tracking-tight">Análise de Dados</h1>
+            <p className="text-muted-foreground text-sm mt-1"> {/* Fonte reduzida */}
               Visualização e estatísticas detalhadas dos containers CAS
             </p>
           </div>
@@ -202,7 +202,7 @@ export default function Analise({ containers }: AnalisePageProps) {
           {/* Controles */}
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Select value={timeRange} onValueChange={(value: any) => setTimeRange(value)}>
-              <SelectTrigger className="w-full sm:w-[140px]">
+              <SelectTrigger className="w-full sm:w-[140px] h-8 text-xs"> {/* Altura e fonte reduzidas */}
                 <SelectValue placeholder="Período" />
               </SelectTrigger>
               <SelectContent>
@@ -213,8 +213,8 @@ export default function Analise({ containers }: AnalisePageProps) {
               </SelectContent>
             </Select>
             
-            <Button variant="outline" size="sm" className="gap-2">
-              <Download className="h-4 w-4" />
+            <Button variant="outline" size="sm" className="gap-2 h-8 text-xs"> {/* Altura e fonte reduzidas */}
+              <Download className="h-3 w-3" /> {/* Ícone reduzido */}
               Exportar
             </Button>
           </div>
@@ -227,27 +227,27 @@ export default function Analise({ containers }: AnalisePageProps) {
               variant={selectedChart === "all" ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedChart("all")}
-              className="whitespace-nowrap"
+              className="whitespace-nowrap h-7 text-xs"
             >
-              <Activity className="h-4 w-4 mr-1" />
+              <Activity className="h-3 w-3 mr-1" />
               Todos
             </Button>
             <Button
               variant={selectedChart === "status" ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedChart("status")}
-              className="whitespace-nowrap"
+              className="whitespace-nowrap h-7 text-xs"
             >
-              <PieChartIcon className="h-4 w-4 mr-1" />
+              <PieChartIcon className="h-3 w-3 mr-1" />
               Status
             </Button>
             <Button
               variant={selectedChart === "armador" ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedChart("armador")}
-              className="whitespace-nowrap"
+              className="whitespace-nowrap h-7 text-xs"
             >
-              <BarChart3 className="h-4 w-4 mr-1" />
+              <BarChart3 className="h-3 w-3 mr-1" />
               Armador
             </Button>
           </div>

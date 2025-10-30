@@ -255,7 +255,7 @@ export default function Containers({
               <Package className="h-3 w-3 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold text-foreground">{stats.total}</div>
+              <div className="text-lg font-bold text-foreground">{stats.total}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {armadores.length} armadores
               </p>
@@ -276,7 +276,7 @@ export default function Containers({
               <CheckCircle className="h-3 w-3 text-success" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold text-foreground">{stats.devolvidos}</div>
+              <div className="text-lg font-bold text-foreground">{stats.devolvidos}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {stats.total > 0 ? ((stats.devolvidos / stats.total) * 100).toFixed(1) : 0}%
               </p>
@@ -297,7 +297,7 @@ export default function Containers({
               <TrendingUp className="h-3 w-3 text-warning" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold text-foreground">{stats.pendentes}</div>
+              <div className="text-lg font-bold text-foreground">{stats.pendentes}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {stats.total > 0 ? ((stats.pendentes / stats.total) * 100).toFixed(1) : 0}%
               </p>
@@ -318,7 +318,7 @@ export default function Containers({
               <AlertCircle className="h-3 w-3 text-danger" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold text-foreground">{stats.vencidos}</div>
+              <div className="text-lg font-bold text-foreground">{stats.vencidos}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {stats.total > 0 ? ((stats.vencidos / stats.total) * 100).toFixed(1) : 0}%
               </p>
