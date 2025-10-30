@@ -85,15 +85,15 @@ export default function Containers({
   }), [containers]);
 
   const getStatusBadge = (status: string) => {
-    if (!status) return <Badge variant="secondary">-</Badge>;
+    if (!status) return <Badge variant="secondary" className="text-xs">-</Badge>;
     const statusLower = String(status).toLowerCase();
     if (statusLower.includes("ok") || statusLower.includes("devolvido")) {
-      return <Badge className="bg-success text-white">{status}</Badge>;
+      return <Badge className="bg-success text-white text-xs">{status}</Badge>;
     }
     if (statusLower.includes("aguardando") || statusLower.includes("verificar")) {
-      return <Badge className="bg-warning text-white">{status}</Badge>;
+      return <Badge className="bg-warning text-white text-xs">{status}</Badge>;
     }
-    return <Badge variant="secondary">{status}</Badge>;
+    return <Badge variant="secondary" className="text-xs">{status}</Badge>;
   };
 
   const getDiasRestantesColor = (dias: number | string) => {
@@ -111,22 +111,22 @@ export default function Containers({
       transition={{ duration: 0.2 }}
     >
       <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedContainer(container)}>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle className="text-lg font-bold text-primary">{container.container}</CardTitle>
-              <p className="text-sm text-muted-foreground">{container.armador}</p>
+              <CardTitle className="text-sm font-bold text-primary">{container.container}</CardTitle>
+              <p className="text-xs text-muted-foreground">{container.armador}</p>
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
               {getStatusBadge(container.status)}
-              <span className={cn("text-sm font-semibold", getDiasRestantesColor(container.diasRestantes))}>
+              <span className={cn("text-xs font-semibold", getDiasRestantesColor(container.diasRestantes))}>
                 {container.diasRestantes} dias
               </span>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid grid-cols-2 gap-2 text-sm">
+        <CardContent className="space-y-2">
+          <div className="grid grid-cols-2 gap-1 text-xs">
             <div>
               <span className="text-muted-foreground">Data Op:</span>
               <p className="font-medium">{container.dataOperacao || "-"}</p>
@@ -145,14 +145,14 @@ export default function Containers({
             </div>
           </div>
           
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-1 pt-1">
             <FileUploadDialog
               containerId={container.id}
               files={container.files || []}
               onFilesChange={(files) => onContainerUpdate(container.id, files)}
               trigger={
-                <Button variant="outline" size="sm" className="flex-1">
-                  <Eye className="h-4 w-4 mr-1" />
+                <Button variant="outline" size="sm" className="flex-1 h-6 text-xs">
+                  <Eye className="h-3 w-3 mr-1" />
                   Arquivos ({container.files?.length || 0})
                 </Button>
               }
@@ -161,8 +161,8 @@ export default function Containers({
               container={container}
               onSave={(data) => onContainerEdit(container.id, data)}
               trigger={
-                <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4" />
+                <Button variant="outline" size="sm" className="h-6 px-1">
+                  <Filter className="h-3 w-3" />
                 </Button>
               }
             />
@@ -173,30 +173,30 @@ export default function Containers({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestão de Containers</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Gestão de Containers</h1>
+          <p className="text-muted-foreground text-sm mt-1">
             Controle de entrada e saída de containers CAS
           </p>
         </div>
         
         {/* Barra de ações e filtros */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
             <Input
               placeholder="Pesquisar container, armador, motorista..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-7 text-xs h-8"
             />
           </div>
           
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectTrigger className="w-full sm:w-[140px] h-8 text-xs">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -208,7 +208,7 @@ export default function Containers({
           </Select>
 
           <Select value={armadorFilter} onValueChange={setArmadorFilter}>
-            <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectTrigger className="w-full sm:w-[140px] h-8 text-xs">
               <SelectValue placeholder="Armador" />
             </SelectTrigger>
             <SelectContent>
@@ -219,41 +219,43 @@ export default function Containers({
             </SelectContent>
           </Select>
 
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             <Button
               variant={viewMode === "table" ? "default" : "outline"}
               size="sm"
               onClick={() => setViewMode("table")}
+              className="h-7 px-2"
             >
-              <List className="h-4 w-4" />
+              <List className="h-3 w-3" />
             </Button>
             <Button
               variant={viewMode === "cards" ? "default" : "outline"}
               size="sm"
               onClick={() => setViewMode("cards")}
+              className="h-7 px-2"
             >
-              <Grid className="h-4 w-4" />
+              <Grid className="h-3 w-3" />
             </Button>
           </div>
         </div>
       </div>
 
       {/* KPIs - Versão responsiva */}
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3, delay: 0.1 }}
         >
           <Card className="border-l-4 border-l-primary hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className="flex flex-row items-center justify-between pb-1">
+              <CardTitle className="text-xs font-medium text-muted-foreground">
                 Total
               </CardTitle>
-              <Package className="h-4 w-4 text-primary" />
+              <Package className="h-3 w-3 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stats.total}</div>
+              <div className="text-xl font-bold text-foreground">{stats.total}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {armadores.length} armadores
               </p>
@@ -267,14 +269,14 @@ export default function Containers({
           transition={{ duration: 0.3, delay: 0.2 }}
         >
           <Card className="border-l-4 border-l-success hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className="flex flex-row items-center justify-between pb-1">
+              <CardTitle className="text-xs font-medium text-muted-foreground">
                 Devolvidos
               </CardTitle>
-              <CheckCircle className="h-4 w-4 text-success" />
+              <CheckCircle className="h-3 w-3 text-success" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stats.devolvidos}</div>
+              <div className="text-xl font-bold text-foreground">{stats.devolvidos}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {stats.total > 0 ? ((stats.devolvidos / stats.total) * 100).toFixed(1) : 0}%
               </p>
@@ -288,14 +290,14 @@ export default function Containers({
           transition={{ duration: 0.3, delay: 0.3 }}
         >
           <Card className="border-l-4 border-l-warning hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className="flex flex-row items-center justify-between pb-1">
+              <CardTitle className="text-xs font-medium text-muted-foreground">
                 Pendentes
               </CardTitle>
-              <TrendingUp className="h-4 w-4 text-warning" />
+              <TrendingUp className="h-3 w-3 text-warning" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stats.pendentes}</div>
+              <div className="text-xl font-bold text-foreground">{stats.pendentes}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {stats.total > 0 ? ((stats.pendentes / stats.total) * 100).toFixed(1) : 0}%
               </p>
@@ -309,14 +311,14 @@ export default function Containers({
           transition={{ duration: 0.3, delay: 0.4 }}
         >
           <Card className="border-l-4 border-l-danger hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className="flex flex-row items-center justify-between pb-1">
+              <CardTitle className="text-xs font-medium text-muted-foreground">
                 Vencidos
               </CardTitle>
-              <AlertCircle className="h-4 w-4 text-danger" />
+              <AlertCircle className="h-3 w-3 text-danger" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stats.vencidos}</div>
+              <div className="text-xl font-bold text-foreground">{stats.vencidos}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {stats.total > 0 ? ((stats.vencidos / stats.total) * 100).toFixed(1) : 0}%
               </p>
@@ -327,14 +329,14 @@ export default function Containers({
 
       {/* Resultados da busca */}
       <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           {filteredContainers.length} de {containers.length} containers
         </p>
         <ContainerFormDialog
           onSave={onContainerAdd}
           trigger={
-            <Button size="sm" className="gap-2">
-              <Package className="h-4 w-4" />
+            <Button size="sm" className="gap-1 h-7 px-2 text-xs">
+              <Package className="h-3 w-3" />
               Novo Container
             </Button>
           }
@@ -365,12 +367,12 @@ export default function Containers({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
-            className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+            className="grid gap-3 md:grid-cols-2 lg:grid-cols-3"
           >
             {filteredContainers.length === 0 ? (
-              <div className="col-span-full text-center py-8 text-muted-foreground">
-                <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>Nenhum container encontrado</p>
+              <div className="col-span-full text-center py-6 text-muted-foreground">
+                <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Nenhum container encontrado</p>
               </div>
             ) : (
               filteredContainers.map((container) => (
@@ -395,12 +397,12 @@ export default function Containers({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="bg-background w-full max-h-[80vh] overflow-y-auto rounded-t-2xl p-6"
+            className="bg-background w-full max-h-[80vh] overflow-y-auto rounded-t-2xl p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex justify-between items-start mb-3">
               <div>
-                <h3 className="text-xl font-bold">{selectedContainer.container}</h3>
+                <h3 className="text-lg font-bold">{selectedContainer.container}</h3>
                 <p className="text-muted-foreground">{selectedContainer.armador}</p>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setSelectedContainer(null)}>
@@ -408,8 +410,8 @@ export default function Containers({
               </Button>
             </div>
             
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <span className="text-sm text-muted-foreground">Status</span>
                   <div className="mt-1">{getStatusBadge(selectedContainer.status)}</div>
@@ -441,7 +443,7 @@ export default function Containers({
                 </div>
               </div>
               
-              <div className="flex gap-2 pt-4">
+              <div className="flex gap-2 pt-2">
                 <FileUploadDialog
                   containerId={selectedContainer.id}
                   files={selectedContainer.files || []}

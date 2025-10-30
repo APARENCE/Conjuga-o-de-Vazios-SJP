@@ -158,10 +158,10 @@ const App = () => {
                 onContainerAdd={handleContainerAdd}
               />
               <div className="flex-1 flex flex-col h-screen">
-                <header className="h-14 border-b border-border bg-card flex items-center px-4 shrink-0">
+                <header className="h-12 border-b border-border bg-card flex items-center px-3 shrink-0">
                   <SidebarTrigger />
                 </header>
-                <main className="flex-1 p-6 overflow-y-auto">
+                <main className="flex-1 p-4 overflow-y-auto">
                   <Routes>
                     <Route 
                       path="/" 

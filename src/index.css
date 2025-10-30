@@ -107,5 +107,181 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-size: 14px; /* Reduzido de 16px para 14px */
+    line-height: 1.5;
+  }
+
+  /* Ajustes de font sizes para melhor aproveitamento de tela */
+  h1 {
+    @apply text-2xl font-bold; /* Reduzido de text-3xl */
+  }
+  
+  h2 {
+    @apply text-xl font-semibold; /* Reduzido de text-2xl */
+  }
+  
+  h3 {
+    @apply text-lg font-semibold; /* Reduzido de text-xl */
+  }
+
+  /* Ajustes para componentes específicos */
+  .text-sm {
+    font-size: 0.75rem; /* Reduzido de 0.875rem */
+  }
+  
+  .text-xs {
+    font-size: 0.6875rem; /* Reduzido de 0.75rem */
+  }
+
+  /* Reduzir padding em componentes para economizar espaço */
+  .card {
+    @apply p-4; /* Reduzido de p-6 */
+  }
+  
+  .container {
+    @apply px-3 py-2; /* Reduzido de px-4 py-3 */
+  }
+
+  /* Ajustes para tabelas */
+  .table {
+    font-size: 0.75rem;
+  }
+  
+  .table th {
+    @apply px-2 py-1; /* Reduzido de px-3 py-2 */
+  }
+  
+  .table td {
+    @apply px-2 py-1; /* Reduzido de px-3 py-2 */
+  }
+
+  /* Ajustes para badges */
+  .badge {
+    @apply px-1.5 py-0.5 text-xs; /* Reduzido padding */
+  }
+
+  /* Ajustes para botões */
+  .btn-sm {
+    @apply h-7 px-2 text-xs; /* Reduzido de h-8 px-3 */
+  }
+  
+  .btn {
+    @apply h-8 px-3 text-sm; /* Reduzido de h-9 px-4 */
+  }
+
+  /* Ajustes para inputs */
+  .input {
+    @apply h-8 px-2 text-sm; /* Reduzido de h-9 px-3 */
+  }
+
+  /* Ajustes para sidebar */
+  .sidebar {
+    width: 180px; /* Reduzido de 192px */
+  }
+  
+  .sidebar-header {
+    @apply p-3; /* Reduzido de p-4 */
+  }
+  
+  .sidebar-content {
+    @apply p-2; /* Reduzido de p-3 */
+  }
+
+  /* Ajustes para cards de estatísticas */
+  .stat-card {
+    @apply p-3; /* Reduzido de p-4 */
+  }
+  
+  .stat-card .text-2xl {
+    @apply text-xl; /* Reduzido de text-2xl */
+  }
+
+  /* Ajustes para headers */
+  .header {
+    @apply h-12; /* Reduzido de h-14 */
+  }
+  
+  .main-content {
+    @apply p-4; /* Reduzido de p-6 */
+  }
+
+  /* Ajustes para modais/dialogs */
+  .dialog-content {
+    @apply p-4; /* Reduzido de p-6 */
+  }
+  
+  .dialog-header {
+    @apply mb-3; /* Reduzido de mb-4 */
+  }
+
+  /* Ajustes para gráficos */
+  .chart-container {
+    @apply h-64; /* Reduzido de h-80 */
+  }
+
+  /* Ajustes responsivos */
+  @media (max-width: 768px) {
+    body {
+      font-size: 13px;
+    }
+    
+    h1 {
+      @apply text-xl; /* Reduzido em mobile */
+    }
+    
+    h2 {
+      @apply text-lg; /* Reduzido em mobile */
+    }
+    
+    .main-content {
+      @apply p-3; /* Reduzido em mobile */
+    }
+    
+    .sidebar {
+      width: 160px; /* Reduzido em mobile */
+    }
+  }
+
+  /* Ajustes para telas muito pequenas */
+  @media (max-width: 480px) {
+    body {
+      font-size: 12px;
+    }
+    
+    h1 {
+      @apply text-lg; /* Reduzido em telas pequenas */
+    }
+    
+    .main-content {
+      @apply p-2; /* Reduzido em telas pequenas */
+    }
+  }
+}
+
+/* Utilitários personalizados para economizar espaço */
+@layer utilities {
+  .compact {
+    @apply space-y-2;
+  }
+  
+  .compact-card {
+    @apply p-2 shadow-sm;
+  }
+  
+  .compact-text {
+    @apply text-xs leading-tight;
+  }
+  
+  .compact-header {
+    @apply py-1 px-2;
+  }
+  
+  .compact-table {
+    @apply text-xs;
+  }
+  
+  .compact-table th,
+  .compact-table td {
+    @apply px-1 py-0.5;
   }
 }
