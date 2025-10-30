@@ -78,14 +78,20 @@ const App = () => {
     );
   };
   
-  // Handler unificado para edição/atualização de dados (usado pela Portaria)
+  // Handler unificado para edição/atualização de dados (usado pela Portaria e ContainerFormDialog)
   const handleContainerEdit = (id: string, containerData: Partial<Container>) => {
     setContainers((prev) =>
       prev.map((container) =>
         container.id === id ? { ...container, ...containerData } : container
       )
     );
-    // A Portaria já exibe o toast, então não precisamos repetir aqui.
+    // A Portaria já exibe o toast, mas o ContainerFormDialog não.
+    if (!containerData.status) { // Se não for uma atualização da Portaria (que define status)
+        toast({
+            title: "Container atualizado!",
+            description: "Os dados do container foram salvos com sucesso.",
+        });
+    }
   };
 
   const handleContainerAdd = (containerData: Partial<Container>) => {
@@ -107,7 +113,7 @@ const App = () => {
       depotDevolucao: containerData.depotDevolucao || "",
       dataDevolucao: containerData.dataDevolucao || "",
       status: containerData.status || "",
-      files: [],
+      files: containerData.files || [], // Inclui arquivos se houver
     };
     setContainers((prev) => [...prev, newContainer]);
     toast({
@@ -124,12 +130,13 @@ const App = () => {
     });
   };
   
-  // Handler para Portaria: Atualiza dados e arquivos
+  // Handler para Portaria: Atualiza dados e adiciona o novo arquivo (foto)
   const handlePortariaUpdate = (id: string, data: Partial<Container>) => {
     setContainers((prev) =>
       prev.map((container) => {
         if (container.id === id) {
-          // Mescla os dados existentes com os novos dados (incluindo 'files')
+          // Mescla os dados. Se 'files' estiver presente em 'data', ele deve ser o array COMPLETO
+          // (o componente Portaria.tsx já deve ter feito a mesclagem do novo arquivo).
           return { ...container, ...data };
         }
         return container;
@@ -183,6 +190,7 @@ const App = () => {
                         <Portaria 
                           containers={containers} 
                           onContainerUpdate={handlePortariaUpdate}
+                          onContainerAdd={handleContainerAdd} // Passando o handler de adição para novos containers
                         />
                       } 
                     />

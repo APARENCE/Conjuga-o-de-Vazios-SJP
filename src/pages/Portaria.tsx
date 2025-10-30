@@ -12,9 +12,10 @@ import { Badge } from "@/components/ui/badge";
 interface PortariaPageProps {
   containers: Container[];
   onContainerUpdate: (id: string, data: Partial<Container>) => void;
+  onContainerAdd: (data: Partial<Container>) => void; // Adicionando handler para novos containers
 }
 
-export default function Portaria({ containers, onContainerUpdate }: PortariaPageProps) {
+export default function Portaria({ containers, onContainerUpdate, onContainerAdd }: PortariaPageProps) {
   const [containerNumber, setContainerNumber] = useState("");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [actionType, setActionType] = useState<'entrada' | 'baixa'>('entrada');
@@ -37,74 +38,81 @@ export default function Portaria({ containers, onContainerUpdate }: PortariaPage
   };
 
   const handleAction = () => {
-    if (!containerNumber) {
+    if (!searchNumber) {
       toast({ title: "Erro", description: "Insira o número do container.", variant: "destructive" });
       return;
     }
     if (!capturedImage) {
-      toast({ title: "Erro", description: "Capture a foto do container.", variant: "destructive" });
+      toast({ title: "Erro", description: "Capture a foto do container. A foto é obrigatória.", variant: "destructive" });
       return;
     }
 
     const now = new Date().toLocaleString('pt-BR');
-    const containerId = existingContainer?.id || `new-${Date.now()}`;
+    const dateOnly = now.split(' ')[0];
     
+    const newFile = {
+        id: `photo-${Date.now()}`,
+        name: `${actionType}_${searchNumber}_${dateOnly.replace(/\//g, '-')}.jpg`,
+        type: 'image/jpeg',
+        size: 0, 
+        dataUrl: capturedImage,
+        uploadedAt: new Date().toISOString(),
+    };
+
     let updateData: Partial<Container> = {};
     let toastMessage = "";
 
     if (actionType === 'entrada') {
-      // Ação de Entrada (Assumindo que é a primeira vez que o container é registrado ou está sendo re-utilizado)
       updateData = {
         container: searchNumber,
-        dataOperacao: now.split(' ')[0], // Apenas a data
+        dataOperacao: dateOnly,
         status: "Em Operação (Entrada)",
       };
       toastMessage = `Entrada registrada para o container ${searchNumber}.`;
       
-      // Se for um container novo, precisamos adicioná-lo
-      if (!existingContainer) {
-        // Nota: No App.tsx, precisaremos de um handler para adicionar novos containers
-        // Por enquanto, vamos simular a atualização se ele existir, ou notificar se for novo.
-        // Como não temos um handler de 'add' aqui, vamos focar na atualização dos existentes.
-        toast({ 
-            title: "Container Novo", 
-            description: `Container ${searchNumber} não encontrado. Apenas containers existentes podem ser atualizados.`, 
-            variant: "destructive" 
+      if (existingContainer) {
+        // Container existe: Atualiza dados e adiciona a foto
+        const updatedFiles = [...(existingContainer.files || []), newFile];
+        onContainerUpdate(existingContainer.id, { 
+            ...updateData, 
+            files: updatedFiles 
         });
-        return;
+      } else {
+        // Container novo: Adiciona um novo container
+        onContainerAdd({
+            ...updateData,
+            armador: "N/A", // Valor padrão para campos obrigatórios
+            depotDevolucao: "N/A",
+            dataDevolucao: "",
+            freeTime: 0,
+            diasRestantes: 0,
+            placas: "",
+            motorista: "",
+            origem: "",
+            demurrage: "",
+            files: [newFile],
+        });
+        toastMessage = `Novo container ${searchNumber} registrado com sucesso.`;
       }
 
     } else { // 'baixa'
-      // Ação de Baixa/Saída
       if (!existingContainer) {
         toast({ title: "Erro", description: `Container ${searchNumber} não encontrado para baixa.`, variant: "destructive" });
         return;
       }
       
       updateData = {
-        baixaPatio: now.split(' ')[0], // Data da baixa
+        baixaPatio: dateOnly,
         status: "Baixa Pátio SJP",
       };
       toastMessage = `Baixa registrada para o container ${searchNumber}.`;
-    }
-    
-    // Atualiza o container (incluindo a foto como um 'arquivo' temporário)
-    const newFile = {
-        id: `photo-${Date.now()}`,
-        name: `${actionType}_${searchNumber}.jpg`,
-        type: 'image/jpeg',
-        size: 0, // Tamanho não é relevante para o mock local
-        dataUrl: capturedImage,
-        uploadedAt: new Date().toISOString(),
-    };
-
-    // Se o container existir, atualiza os dados e adiciona a foto
-    if (existingContainer) {
-        const currentFiles = existingContainer.files || [];
-        onContainerUpdate(containerId, { 
-            ...updateData, 
-            files: [...currentFiles, newFile] 
-        });
+      
+      // Container existe: Atualiza dados e adiciona a foto
+      const updatedFiles = [...(existingContainer.files || []), newFile];
+      onContainerUpdate(existingContainer.id, { 
+          ...updateData, 
+          files: updatedFiles 
+      });
     }
 
     // Limpa o estado
@@ -124,6 +132,8 @@ export default function Portaria({ containers, onContainerUpdate }: PortariaPage
     }
     return <Badge variant="secondary">{status}</Badge>;
   };
+
+  const isActionDisabled = !searchNumber || !capturedImage || (actionType === 'baixa' && !existingContainer);
 
   return (
     <div className="space-y-6">
@@ -173,9 +183,15 @@ export default function Portaria({ containers, onContainerUpdate }: PortariaPage
                 </div>
               )}
               
-              {!existingContainer && searchNumber && (
-                <div className="text-warning text-sm flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4" /> Container não encontrado na base.
+              {!existingContainer && searchNumber && actionType === 'entrada' && (
+                <div className="text-primary text-sm flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4" /> Container não encontrado. Será criado como novo na entrada.
+                </div>
+              )}
+              
+              {!existingContainer && searchNumber && actionType === 'baixa' && (
+                <div className="text-danger text-sm flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4" /> Container não encontrado. Não é possível registrar baixa.
                 </div>
               )}
 
@@ -203,7 +219,7 @@ export default function Portaria({ containers, onContainerUpdate }: PortariaPage
 
               <Button
                 onClick={handleAction}
-                disabled={!searchNumber || !capturedImage || (actionType === 'baixa' && !existingContainer)}
+                disabled={isActionDisabled}
                 className="w-full h-12 text-lg gap-2"
               >
                 {actionType === 'entrada' ? <LogIn className="h-5 w-5" /> : <LogOut className="h-5 w-5" />}
