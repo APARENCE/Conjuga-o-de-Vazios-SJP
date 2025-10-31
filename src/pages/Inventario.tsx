@@ -199,139 +199,144 @@ export default function Inventario({ containers }: InventarioProps) {
   );
 
   return (
-    <div className="space-y-4"> {/* Reduzindo o espaço vertical principal */}
-      {/* Header Fixo (Título, Filtros) */}
+    <div className="flex flex-col h-full">
+      {/* Cabeçalho Fixo (Título, Filtros, KPIs) */}
       <div className="sticky top-0 z-40 bg-background pb-2 border-b border-border/50 shadow-sm">
         <div className="space-y-2">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Inventário Derivado de Containers</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Rastreamento automático de itens de troca, baixa e devolução associados aos containers.
-            </p>
-          </div>
-          
-          {/* Barra de ações e filtros */}
-          <div className="flex flex-col sm:flex-row gap-1"> {/* Reduzindo gap */}
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" /> {/* Ajustando ícone */}
-              <Input
-                placeholder="Pesquisar por container, armador ou detalhes..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-7 text-xs h-7" // Ajustando input
-              />
+          {/* Header */}
+          <div className="flex flex-col gap-2">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Inventário Derivado de Containers</h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                Rastreamento automático de itens de troca, baixa e devolução associados aos containers.
+              </p>
             </div>
             
-            <div className="flex gap-1"> {/* Reduzindo gap */}
-              <Button
-                variant={viewMode === "table" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("table")}
-                className="h-7 px-2" // Ajustando botão
-              >
-                <List className="h-3 w-3" />
-              </Button>
-              <Button
-                variant={viewMode === "cards" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("cards")}
-                className="h-7 px-2" // Ajustando botão
-              >
-                <Grid className="h-3 w-3" />
-              </Button>
+            {/* Barra de pesquisa e botões de visualização */}
+            <div className="flex flex-col sm:flex-row gap-1">
+              <div className="relative flex-1">
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                <Input
+                  placeholder="Pesquisar por container, armador ou detalhes..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-7 text-xs h-7"
+                />
+              </div>
+              
+              <div className="flex gap-1 shrink-0">
+                <Button
+                  variant={viewMode === "table" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("table")}
+                  className="h-7 px-2"
+                >
+                  <List className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant={viewMode === "cards" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("cards")}
+                  className="h-7 px-2"
+                >
+                  <Grid className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
+          </div>
+
+          {/* KPIs do Inventário */}
+          <div className="grid gap-2 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard
+              title="Total de Itens"
+              value={inventoryStats.totalItems}
+              subtitle={`${inventoryStats.totalTrocas} trocas, ${inventoryStats.totalBaixas} baixas`}
+              icon={Package}
+              color="primary"
+              delay={0.1}
+            />
+            <StatCard
+              title="Em Uso"
+              value={inventoryStats.emUso}
+              subtitle={`${inventoryStats.totalItems > 0 ? ((inventoryStats.emUso / inventoryStats.totalItems) * 100).toFixed(1) : 0}% do total`}
+              icon={Clock}
+              color="warning"
+              delay={0.2}
+            />
+            <StatCard
+              title="Devolvidos"
+              value={inventoryStats.devolvidos}
+              subtitle={`${inventoryStats.totalItems > 0 ? ((inventoryStats.devolvidos / inventoryStats.totalItems) * 100).toFixed(1) : 0}% concluídos`}
+              icon={CheckCircle2}
+              color="success"
+              delay={0.3}
+            />
+            <StatCard
+              title="Taxa Conclusão"
+              value={`${inventoryStats.totalItems > 0 ? ((inventoryStats.devolvidos / inventoryStats.totalItems) * 100).toFixed(1) : 0}%`}
+              icon={Package}
+              color="primary"
+              delay={0.4}
+            />
+          </div>
+
+          {/* Filtros Avançados (Agora sem a barra de pesquisa) */}
+          <InventoryFilters
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            itemTypeFilter={itemTypeFilter}
+            setItemTypeFilter={setItemTypeFilter}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+          />
+
+          {/* Resultados da busca */}
+          <div className="flex justify-between items-center pt-1">
+            <p className="text-xs text-muted-foreground">
+              {filteredInventory.length} de {inventory.length} itens encontrados
+            </p>
           </div>
         </div>
       </div>
 
-      {/* KPIs do Inventário */}
-      <div className="grid gap-2 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4"> {/* Reduzindo gap */}
-        <StatCard
-          title="Total de Itens"
-          value={inventoryStats.totalItems}
-          subtitle={`${inventoryStats.totalTrocas} trocas, ${inventoryStats.totalBaixas} baixas`}
-          icon={Package}
-          color="primary"
-          delay={0.1}
-        />
-        <StatCard
-          title="Em Uso"
-          value={inventoryStats.emUso}
-          subtitle={`${inventoryStats.totalItems > 0 ? ((inventoryStats.emUso / inventoryStats.totalItems) * 100).toFixed(1) : 0}% do total`}
-          icon={Clock}
-          color="warning"
-          delay={0.2}
-        />
-        <StatCard
-          title="Devolvidos"
-          value={inventoryStats.devolvidos}
-          subtitle={`${inventoryStats.totalItems > 0 ? ((inventoryStats.devolvidos / inventoryStats.totalItems) * 100).toFixed(1) : 0}% concluídos`}
-          icon={CheckCircle2}
-          color="success"
-          delay={0.3}
-        />
-        <StatCard
-          title="Taxa Conclusão"
-          value={`${inventoryStats.totalItems > 0 ? ((inventoryStats.devolvidos / inventoryStats.totalItems) * 100).toFixed(1) : 0}%`}
-          icon={Package}
-          color="primary"
-          delay={0.4}
-        />
-      </div>
-
-      {/* Filtros Avançados */}
-      <InventoryFilters
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        itemTypeFilter={itemTypeFilter}
-        setItemTypeFilter={setItemTypeFilter}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-      />
-
-      {/* Resultados da busca */}
-      <div className="flex justify-between items-center pt-1"> {/* Adicionando pt-1 para alinhar com Containers.tsx */}
-        <p className="text-xs text-muted-foreground"> {/* Reduzindo fonte */}
-          {filteredInventory.length} de {inventory.length} itens encontrados
-        </p>
-      </div>
-
       {/* Conteúdo principal - Tabela ou Cards */}
-      <AnimatePresence mode="wait">
-        {viewMode === "table" ? (
-          <motion.div
-            key="table"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <InventoryTable 
-              inventory={filteredInventory} 
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="cards"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="grid gap-3 md:grid-cols-2 lg:grid-cols-3" // Reduzindo gap
-          >
-            {filteredInventory.length === 0 ? (
-              <div className="col-span-full text-center py-8 text-muted-foreground">
-                <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>Nenhum item de inventário encontrado</p>
-              </div>
-            ) : (
-              filteredInventory.map((item) => (
-                <InventoryCard key={item.id + item.itemType} item={item} />
-              ))
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="flex-1 pt-2">
+        <AnimatePresence mode="wait">
+          {viewMode === "table" ? (
+            <motion.div
+              key="table"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <InventoryTable 
+                inventory={filteredInventory} 
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="cards"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="grid gap-3 md:grid-cols-2 lg:grid-cols-3"
+            >
+              {filteredInventory.length === 0 ? (
+                <div className="col-span-full text-center py-8 text-muted-foreground">
+                  <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>Nenhum item de inventário encontrado</p>
+                </div>
+              ) : (
+                filteredInventory.map((item) => (
+                  <InventoryCard key={item.id + item.itemType} item={item} />
+                ))
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* Modal de detalhes do item (mobile) */}
       {selectedItem && isMobile && (

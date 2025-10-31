@@ -37,32 +37,23 @@ export function InventoryFilters({
     setStatusFilter("all"); // Usar 'all' como valor padrão/limpo
   };
 
+  // A pesquisa de texto livre (searchTerm) é gerenciada fora deste componente,
+  // mas é usada para determinar se os filtros estão ativos.
   const isFiltered = searchTerm || (itemTypeFilter !== 'all') || (statusFilter !== 'all');
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
-      {/* Pesquisa de Texto Livre */}
-      <div className="relative flex-1 min-w-[200px]">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Pesquisar por container, armador ou detalhes..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
-      </div>
-
+    <div className="flex flex-col sm:flex-row gap-1 flex-wrap"> {/* Reduzindo gap para 1 */}
       {/* Filtro por Tipo de Item */}
       <Select
         value={itemTypeFilter}
         onValueChange={(value: InventoryItem['itemType'] | 'all') => setItemTypeFilter(value)}
       >
-        <SelectTrigger className="w-full sm:w-[180px]">
-          <PackageOpen className="h-4 w-4 mr-2 text-muted-foreground" />
+        <SelectTrigger className="w-full sm:w-[140px] h-7 text-xs"> {/* Ajustando tamanho e altura */}
+          <PackageOpen className="h-3 w-3 mr-1 text-muted-foreground" /> {/* Ajustando ícone */}
           <SelectValue placeholder="Filtrar por Tipo" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Todos os Tipos</SelectItem> {/* Alterado para 'all' */}
+          <SelectItem value="all">Todos os Tipos</SelectItem>
           {itemTypes.map(type => (
             <SelectItem key={type} value={type}>{type}</SelectItem>
           ))}
@@ -74,12 +65,12 @@ export function InventoryFilters({
         value={statusFilter}
         onValueChange={(value: InventoryItem['status'] | 'all') => setStatusFilter(value)}
       >
-        <SelectTrigger className="w-full sm:w-[200px]">
-          <CheckCircle2 className="h-4 w-4 mr-2 text-muted-foreground" />
+        <SelectTrigger className="w-full sm:w-[140px] h-7 text-xs"> {/* Ajustando tamanho e altura */}
+          <CheckCircle2 className="h-3 w-3 mr-1 text-muted-foreground" /> {/* Ajustando ícone */}
           <SelectValue placeholder="Filtrar por Status" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Todos os Status</SelectItem> {/* Alterado para 'all' */}
+          <SelectItem value="all">Todos os Status</SelectItem>
           {statuses.map(status => (
             <SelectItem key={status} value={status}>{status}</SelectItem>
           ))}
@@ -88,8 +79,8 @@ export function InventoryFilters({
 
       {/* Botão de Limpar Filtros */}
       {isFiltered && (
-        <Button variant="outline" onClick={handleClearFilters} className="shrink-0 w-full sm:w-auto">
-          <X className="h-4 w-4 mr-2" />
+        <Button variant="outline" onClick={handleClearFilters} className="shrink-0 w-full sm:w-auto h-7 px-2 text-xs"> {/* Ajustando altura e fonte */}
+          <X className="h-3 w-3 mr-1" /> {/* Ajustando ícone */}
           Limpar
         </Button>
       )}
