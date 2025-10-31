@@ -31,7 +31,7 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
   ];
 
   return (
-    <Sidebar className="border-r border-border w-44">
+    <Sidebar className="border-r border-border w-40">
       <SidebarHeader className="border-b border-border p-3">
         <h2 className="text-sm font-bold text-primary">Conjugação de vazios</h2>
         <p className="text-xs text-muted-foreground">Patio- SJP</p>
