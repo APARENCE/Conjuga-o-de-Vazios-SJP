@@ -43,8 +43,12 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
             O SidebarTrigger deve ser visível:
             1. Em mobile (isMobile é true)
             2. Em desktop, se a sidebar estiver fechada (!isMobile && !isOpen)
+            
+            Adicionamos 'md:block' para garantir que ele não seja ocultado por classes padrão em desktop.
           */}
-          {(isMobile || !isOpen) && <SidebarTrigger />}
+          {(isMobile || !isOpen) && (
+            <SidebarTrigger className={cn(!isMobile && "md:block")} />
+          )}
         </header>
         <main className="flex-1 py-2 px-0 overflow-y-auto">
           {children}
