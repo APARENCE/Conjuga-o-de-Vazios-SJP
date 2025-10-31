@@ -25,12 +25,16 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const isMobile = useIsMobile();
   
   // Largura da sidebar é 160px (w-40) = 10rem
-  // Removendo a variável sidebarWidth e usando a classe utilitária md:ml-40
-  // para garantir que o Tailwind CSS a reconheça.
 
   return (
+    // O contêiner principal deve ser flexível para acomodar a sidebar fixa e o conteúdo
     <div className="min-h-screen flex w-full bg-background overflow-x-hidden">
-      {/* Conteúdo Principal */}
+      {/* 
+        A sidebar é fixa (md:fixed) e está fora do fluxo flexível.
+        O AppLayout precisa compensar a largura da sidebar.
+      */}
+      
+      {/* Conteúdo Principal (Header + Main) */}
       <div 
         className={cn(
           "flex-1 flex flex-col h-screen transition-all duration-300",
@@ -42,6 +46,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         <header className="h-12 border-b border-border bg-card flex items-center px-3 shrink-0">
           <SidebarTrigger />
         </header>
+        {/* A rolagem deve estar no main, que é flex-1 */}
         <main className="flex-1 py-2 px-0 overflow-y-auto">
           {children}
         </main>
