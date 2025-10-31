@@ -39,7 +39,12 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         )}
       >
         <header className="h-12 border-b border-border bg-card flex items-center px-3 shrink-0">
-          <SidebarTrigger />
+          {/* 
+            O SidebarTrigger deve ser visível:
+            1. Em mobile (isMobile é true)
+            2. Em desktop, se a sidebar estiver fechada (!isMobile && !isOpen)
+          */}
+          {(isMobile || !isOpen) && <SidebarTrigger />}
         </header>
         <main className="flex-1 py-2 px-0 overflow-y-auto">
           {children}
