@@ -152,15 +152,15 @@ export default function Analise({ containers }: AnalisePageProps) {
       transition={{ duration: 0.3, delay }}
     >
       <Card className={`border-l-4 border-l-${color} hover:shadow-lg transition-all duration-300 hover:scale-[1.02]`}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0.5 p-1"> {/* Reduzido padding */}
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0.5 p-1">
           <CardTitle className="text-xs font-medium text-muted-foreground">
             {title}
           </CardTitle>
-          <Icon className={`h-3 w-3 text-${color}`} /> {/* Ícone reduzido */}
+          <Icon className={`h-3 w-3 text-${color}`} />
         </CardHeader>
         <CardContent className="p-1 pt-0">
-          <div className="text-sm font-bold text-foreground">{value}</div> {/* Valor reduzido */}
-          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p> {/* Reduzido mt-1 para mt-0.5 */}
+          <div className="text-sm font-bold text-foreground">{value}</div>
+          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
         </CardContent>
       </Card>
     </motion.div>
@@ -174,11 +174,11 @@ export default function Analise({ containers }: AnalisePageProps) {
     >
       <Card className="hover:shadow-lg transition-all duration-300">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg"> {/* Título reduzido */}
-            <Icon className="h-4 w-4 text-primary" /> {/* Ícone reduzido */}
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Icon className="h-4 w-4 text-primary" />
             {title}
           </CardTitle>
-          <CardDescription className="text-xs">{description}</CardDescription> {/* Descrição reduzida */}
+          <CardDescription className="text-xs">{description}</CardDescription>
         </CardHeader>
         <CardContent>
           {children}
@@ -188,74 +188,76 @@ export default function Analise({ containers }: AnalisePageProps) {
   );
 
   return (
-    <div className="space-y-6 pb-8">
-      {/* Header */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Análise de Dados</h1>
-            <p className="text-muted-foreground text-sm mt-1"> {/* Fonte reduzida */}
-              Visualização e estatísticas detalhadas dos containers CAS
-            </p>
-          </div>
-          
-          {/* Controles */}
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Select value={timeRange} onValueChange={(value: any) => setTimeRange(value)}>
-              <SelectTrigger className="w-full sm:w-[140px] h-8 text-xs"> {/* Altura e fonte reduzidas */}
-                <SelectValue placeholder="Período" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todo período</SelectItem>
-                <SelectItem value="30">Últimos 30 dias</SelectItem>
-                <SelectItem value="60">Últimos 60 dias</SelectItem>
-                <SelectItem value="90">Últimos 90 dias</SelectItem>
-              </SelectContent>
-            </Select>
+    <div className="space-y-4 pb-8"> {/* Reduzindo o espaço vertical principal */}
+      {/* Header Fixo (Título, Filtros) */}
+      <div className="sticky top-0 z-40 bg-background pb-2 border-b border-border/50 shadow-sm">
+        <div className="space-y-2">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"> {/* Reduzindo gap */}
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Análise de Dados</h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                Visualização e estatísticas detalhadas dos containers CAS
+              </p>
+            </div>
             
-            <Button variant="outline" size="sm" className="gap-2 h-8 text-xs"> {/* Altura e fonte reduzidas */}
-              <Download className="h-3 w-3" /> {/* Ícone reduzido */}
-              Exportar
-            </Button>
+            {/* Controles */}
+            <div className="flex flex-col sm:flex-row gap-1 w-full sm:w-auto"> {/* Reduzindo gap */}
+              <Select value={timeRange} onValueChange={(value: any) => setTimeRange(value)}>
+                <SelectTrigger className="w-full sm:w-[140px] h-7 text-xs"> {/* Altura e fonte reduzidas */}
+                  <SelectValue placeholder="Período" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todo período</SelectItem>
+                  <SelectItem value="30">Últimos 30 dias</SelectItem>
+                  <SelectItem value="60">Últimos 60 dias</SelectItem>
+                  <SelectItem value="90">Últimos 90 dias</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Button variant="outline" size="sm" className="gap-1 h-7 px-2 text-xs"> {/* Altura e fonte reduzidas */}
+                <Download className="h-3 w-3" />
+                Exportar
+              </Button>
+            </div>
           </div>
-        </div>
 
-        {/* Filtros rápidos para mobile */}
-        {isMobile && (
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            <Button
-              variant={selectedChart === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedChart("all")}
-              className="whitespace-nowrap h-7 text-xs"
-            >
-              <Activity className="h-3 w-3 mr-1" />
-              Todos
-            </Button>
-            <Button
-              variant={selectedChart === "status" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedChart("status")}
-              className="whitespace-nowrap h-7 text-xs"
-            >
-              <PieChartIcon className="h-3 w-3 mr-1" />
-              Status
-            </Button>
-            <Button
-              variant={selectedChart === "armador" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedChart("armador")}
-              className="whitespace-nowrap h-7 text-xs"
-            >
-              <BarChart3 className="h-3 w-3 mr-1" />
-              Armador
-            </Button>
-          </div>
-        )}
+          {/* Filtros rápidos para mobile */}
+          {isMobile && (
+            <div className="flex gap-1 overflow-x-auto pb-1"> {/* Reduzindo gap e padding */}
+              <Button
+                variant={selectedChart === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedChart("all")}
+                className="whitespace-nowrap h-7 text-xs px-2"
+              >
+                <Activity className="h-3 w-3 mr-1" />
+                Todos
+              </Button>
+              <Button
+                variant={selectedChart === "status" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedChart("status")}
+                className="whitespace-nowrap h-7 text-xs px-2"
+              >
+                <PieChartIcon className="h-3 w-3 mr-1" />
+                Status
+              </Button>
+              <Button
+                variant={selectedChart === "armador" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedChart("armador")}
+                className="whitespace-nowrap h-7 text-xs px-2"
+              >
+                <BarChart3 className="h-3 w-3 mr-1" />
+                Armador
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* KPI Cards - Responsivo */}
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-2 grid-cols-2 sm:grid-cols-2 lg:grid-cols-5"> {/* Reduzindo gap */}
         <StatCard
           title="Total"
           value={stats.total}
@@ -307,7 +309,7 @@ export default function Analise({ containers }: AnalisePageProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="grid gap-6 lg:grid-cols-2"
+            className="grid gap-4 lg:grid-cols-2" // Reduzindo gap
           >
             {/* Containers por Armador */}
             <ChartCard

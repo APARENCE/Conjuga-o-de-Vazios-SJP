@@ -184,7 +184,7 @@ export default function Inventario({ containers }: InventarioProps) {
       transition={{ duration: 0.3, delay }}
     >
       <Card className={`border-l-4 border-l-${color} hover:shadow-md transition-all duration-300 hover:scale-[1.02]`}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0.5 p-1"> {/* Reduzido padding */}
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0.5 p-1">
           <CardTitle className="text-xs font-medium text-muted-foreground">
             {title}
           </CardTitle>
@@ -192,56 +192,60 @@ export default function Inventario({ containers }: InventarioProps) {
         </CardHeader>
         <CardContent className="p-1 pt-0">
           <div className="text-sm font-bold text-foreground">{value}</div>
-          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p> {/* Reduzido mt-1 para mt-0.5 */}
+          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
         </CardContent>
       </Card>
     </motion.div>
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Inventário Derivado de Containers</h1>
-          <p className="text-muted-foreground mt-1">
-            Rastreamento automático de itens de troca, baixa e devolução associados aos containers.
-          </p>
-        </div>
-        
-        {/* Barra de ações e filtros */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Pesquisar por container, armador ou detalhes..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+    <div className="space-y-4"> {/* Reduzindo o espaço vertical principal */}
+      {/* Header Fixo (Título, Filtros) */}
+      <div className="sticky top-0 z-40 bg-background pb-2 border-b border-border/50 shadow-sm">
+        <div className="space-y-2">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Inventário Derivado de Containers</h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Rastreamento automático de itens de troca, baixa e devolução associados aos containers.
+            </p>
           </div>
           
-          <div className="flex gap-2">
-            <Button
-              variant={viewMode === "table" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setViewMode("table")}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === "cards" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setViewMode("cards")}
-            >
-              <Grid className="h-4 w-4" />
-            </Button>
+          {/* Barra de ações e filtros */}
+          <div className="flex flex-col sm:flex-row gap-1"> {/* Reduzindo gap */}
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" /> {/* Ajustando ícone */}
+              <Input
+                placeholder="Pesquisar por container, armador ou detalhes..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-7 text-xs h-7" // Ajustando input
+              />
+            </div>
+            
+            <div className="flex gap-1"> {/* Reduzindo gap */}
+              <Button
+                variant={viewMode === "table" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setViewMode("table")}
+                className="h-7 px-2" // Ajustando botão
+              >
+                <List className="h-3 w-3" />
+              </Button>
+              <Button
+                variant={viewMode === "cards" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setViewMode("cards")}
+                className="h-7 px-2" // Ajustando botão
+              >
+                <Grid className="h-3 w-3" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* KPIs do Inventário */}
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-2 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4"> {/* Reduzindo gap */}
         <StatCard
           title="Total de Itens"
           value={inventoryStats.totalItems}
@@ -286,8 +290,8 @@ export default function Inventario({ containers }: InventarioProps) {
       />
 
       {/* Resultados da busca */}
-      <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex justify-between items-center pt-1"> {/* Adicionando pt-1 para alinhar com Containers.tsx */}
+        <p className="text-xs text-muted-foreground"> {/* Reduzindo fonte */}
           {filteredInventory.length} de {inventory.length} itens encontrados
         </p>
       </div>
@@ -313,7 +317,7 @@ export default function Inventario({ containers }: InventarioProps) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
-            className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+            className="grid gap-3 md:grid-cols-2 lg:grid-cols-3" // Reduzindo gap
           >
             {filteredInventory.length === 0 ? (
               <div className="col-span-full text-center py-8 text-muted-foreground">
