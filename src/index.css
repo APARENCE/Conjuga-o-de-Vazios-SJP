@@ -279,11 +279,12 @@ All colors MUST be HSL.
   }
   
   .compact-table {
-    @apply text-xs; /* Reduzindo o tamanho da fonte da tabela */
+    /* Fonte menor que text-xs (0.6875rem) */
+    font-size: 0.6rem; /* Aproximadamente 9.6px */
   }
   
   .compact-table th,
   .compact-table td {
-    @apply px-1 py-0; /* Reduzido de py-0.5 para py-0 */
+    @apply px-0.5 py-0; /* Reduzindo o padding horizontal para o mínimo */
   }
 }
