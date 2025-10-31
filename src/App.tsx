@@ -39,19 +39,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         )}
       >
         <header className="h-12 border-b border-border bg-card flex items-center px-3 shrink-0">
-          {/* 
-            Renderizamos o SidebarTrigger.
-            Em desktop, ele deve ser visível APENAS quando a sidebar estiver fechada (!isOpen).
-            Quando a sidebar está aberta, o botão de toggle no rodapé da sidebar é usado.
-          */}
-          <SidebarTrigger 
-            className={cn(
-              // Oculta em desktop se a sidebar estiver aberta
-              !isMobile && isOpen && "hidden md:hidden",
-              // Garante que ele apareça em desktop se estiver fechado
-              !isMobile && !isOpen && "md:block"
-            )}
-          />
+          <SidebarTrigger />
         </header>
         <main className="flex-1 py-2 px-0 overflow-y-auto">
           {children}

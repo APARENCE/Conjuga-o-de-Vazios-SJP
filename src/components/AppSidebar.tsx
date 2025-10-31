@@ -51,7 +51,9 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
     <Sidebar 
       className={cn(
         "border-r border-border w-40 transition-transform duration-300 ease-in-out",
-        // Em desktop (md+), se não estiver aberto, move para fora da tela (-10rem)
+        // Em desktop (md+), a sidebar é fixa.
+        "md:fixed md:top-0 md:left-0 md:h-full md:z-50",
+        // Em desktop, se não estiver aberto, move para fora da tela (-10rem)
         !isMobile && !isOpen && "-translate-x-40",
         // Em desktop, se estiver aberto, garante que esteja na posição 0
         !isMobile && isOpen && "translate-x-0"
