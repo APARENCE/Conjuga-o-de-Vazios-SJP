@@ -173,217 +173,224 @@ export default function Containers({
   );
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Gestão de Containers</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Controle de entrada e saída de containers CAS
-          </p>
-        </div>
-        
-        {/* Barra de ações e filtros */}
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-            <Input
-              placeholder="Pesquisar container, armador, motorista..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-7 text-xs h-8"
-            />
-          </div>
-          
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[140px] h-8 text-xs">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos Status</SelectItem>
-              <SelectItem value="devolvidos">Devolvidos</SelectItem>
-              <SelectItem value="pendentes">Pendentes</SelectItem>
-              <SelectItem value="vencidos">Vencidos</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={armadorFilter} onValueChange={setArmadorFilter}>
-            <SelectTrigger className="w-full sm:w-[140px] h-8 text-xs">
-              <SelectValue placeholder="Armador" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos Armadores</SelectItem>
-              {armadores.map(armador => (
-                <SelectItem key={armador} value={armador}>{armador}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="flex gap-1">
-            <Button
-              variant={viewMode === "table" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setViewMode("table")}
-              className="h-7 px-2"
-            >
-              <List className="h-3 w-3" />
-            </Button>
-            <Button
-              variant={viewMode === "cards" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setViewMode("cards")}
-              className="h-7 px-2"
-            >
-              <Grid className="h-3 w-3" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* KPIs - Versão responsiva */}
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-        >
-          <Card className="border-l-4 border-l-primary hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-1 p-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">
-                Total
-              </CardTitle>
-              <Package className="h-3 w-3 text-primary" />
-            </CardHeader>
-            <CardContent className="p-1 pt-0">
-              <div className="text-sm font-bold text-foreground">{stats.total}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {armadores.length} armadores
+    <div className="flex flex-col h-full">
+      {/* Cabeçalho Fixo (Título, Filtros, KPIs) */}
+      <div className="sticky top-0 z-40 bg-background pb-4 border-b border-border/50 shadow-sm">
+        <div className="space-y-4">
+          {/* Header */}
+          <div className="flex flex-col gap-3">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Gestão de Containers</h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                Controle de entrada e saída de containers CAS
               </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-        >
-          <Card className="border-l-4 border-l-success hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-1 p-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">
-                Devolvidos
-              </CardTitle>
-              <CheckCircle className="h-3 w-3 text-success" />
-            </CardHeader>
-            <CardContent className="p-1 pt-0">
-              <div className="text-sm font-bold text-foreground">{stats.devolvidos}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {stats.total > 0 ? ((stats.devolvidos / stats.total) * 100).toFixed(1) : 0}%
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
-        >
-          <Card className="border-l-4 border-l-warning hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-1 p-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">
-                Pendentes
-              </CardTitle>
-              <TrendingUp className="h-3 w-3 text-warning" />
-            </CardHeader>
-            <CardContent className="p-1 pt-0">
-              <div className="text-sm font-bold text-foreground">{stats.pendentes}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {stats.total > 0 ? ((stats.pendentes / stats.total) * 100).toFixed(1) : 0}%
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
-        >
-          <Card className="border-l-4 border-l-danger hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-1 p-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">
-                Vencidos
-              </CardTitle>
-              <AlertCircle className="h-3 w-3 text-danger" />
-            </CardHeader>
-            <CardContent className="p-1 pt-0">
-              <div className="text-sm font-bold text-foreground">{stats.vencidos}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {stats.total > 0 ? ((stats.vencidos / stats.total) * 100).toFixed(1) : 0}%
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      {/* Resultados da busca */}
-      <div className="flex justify-between items-center">
-        <p className="text-xs text-muted-foreground">
-          {filteredContainers.length} de {containers.length} containers
-        </p>
-        <ContainerFormDialog
-          onSave={onContainerAdd}
-          trigger={
-            <Button size="sm" className="gap-1 h-7 px-2 text-xs">
-              <Package className="h-3 w-3" />
-              Novo Container
-            </Button>
-          }
-        />
-      </div>
-
-      {/* Conteúdo principal - Tabela ou Cards */}
-      <AnimatePresence mode="wait">
-        {viewMode === "table" ? (
-          <motion.div
-            key="table"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <ContainerTable 
-              containers={filteredContainers} 
-              onContainerUpdate={onContainerUpdate}
-              onContainerEdit={onContainerEdit}
-              onContainerDelete={onContainerDelete}
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="cards"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="grid gap-3 md:grid-cols-2 lg:grid-cols-3"
-          >
-            {filteredContainers.length === 0 ? (
-              <div className="col-span-full text-center py-6 text-muted-foreground">
-                <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Nenhum container encontrado</p>
+            </div>
+            
+            {/* Barra de ações e filtros */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                <Input
+                  placeholder="Pesquisar container, armador, motorista..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-7 text-xs h-8"
+                />
               </div>
-            ) : (
-              filteredContainers.map((container) => (
-                <ContainerCard key={container.id} container={container} />
-              ))
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+              
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[140px] h-8 text-xs">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos Status</SelectItem>
+                  <SelectItem value="devolvidos">Devolvidos</SelectItem>
+                  <SelectItem value="pendentes">Pendentes</SelectItem>
+                  <SelectItem value="vencidos">Vencidos</SelectItem>
+                </SelectContent>
+              </Select>
 
-      {/* Modal de detalhes do container (mobile) */}
+              <Select value={armadorFilter} onValueChange={setArmadorFilter}>
+                <SelectTrigger className="w-full sm:w-[140px] h-8 text-xs">
+                  <SelectValue placeholder="Armador" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos Armadores</SelectItem>
+                  {armadores.map(armador => (
+                    <SelectItem key={armador} value={armador}>{armador}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="flex gap-1">
+                <Button
+                  variant={viewMode === "table" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("table")}
+                  className="h-7 px-2"
+                >
+                  <List className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant={viewMode === "cards" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("cards")}
+                  className="h-7 px-2"
+                >
+                  <Grid className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* KPIs - Versão responsiva */}
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+            >
+              <Card className="border-l-4 border-l-primary hover:shadow-md transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between pb-1 p-2">
+                  <CardTitle className="text-xs font-medium text-muted-foreground">
+                    Total
+                  </CardTitle>
+                  <Package className="h-3 w-3 text-primary" />
+                </CardHeader>
+                <CardContent className="p-1 pt-0">
+                  <div className="text-sm font-bold text-foreground">{stats.total}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {armadores.length} armadores
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+            >
+              <Card className="border-l-4 border-l-success hover:shadow-md transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between pb-1 p-2">
+                  <CardTitle className="text-xs font-medium text-muted-foreground">
+                    Devolvidos
+                  </CardTitle>
+                  <CheckCircle className="h-3 w-3 text-success" />
+                </CardHeader>
+                <CardContent className="p-1 pt-0">
+                  <div className="text-sm font-bold text-foreground">{stats.devolvidos}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {stats.total > 0 ? ((stats.devolvidos / stats.total) * 100).toFixed(1) : 0}%
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.3 }}
+            >
+              <Card className="border-l-4 border-l-warning hover:shadow-md transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between pb-1 p-2">
+                  <CardTitle className="text-xs font-medium text-muted-foreground">
+                    Pendentes
+                  </CardTitle>
+                  <TrendingUp className="h-3 w-3 text-warning" />
+                </CardHeader>
+                <CardContent className="p-1 pt-0">
+                  <div className="text-sm font-bold text-foreground">{stats.pendentes}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {stats.total > 0 ? ((stats.pendentes / stats.total) * 100).toFixed(1) : 0}%
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.4 }}
+            >
+              <Card className="border-l-4 border-l-danger hover:shadow-md transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between pb-1 p-2">
+                  <CardTitle className="text-xs font-medium text-muted-foreground">
+                    Vencidos
+                  </CardTitle>
+                  <AlertCircle className="h-3 w-3 text-danger" />
+                </CardHeader>
+                <CardContent className="p-1 pt-0">
+                  <div className="text-sm font-bold text-foreground">{stats.vencidos}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {stats.total > 0 ? ((stats.vencidos / stats.total) * 100).toFixed(1) : 0}%
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Resultados da busca */}
+          <div className="flex justify-between items-center pt-2">
+            <p className="text-xs text-muted-foreground">
+              {filteredContainers.length} de {containers.length} containers
+            </p>
+            <ContainerFormDialog
+              onSave={onContainerAdd}
+              trigger={
+                <Button size="sm" className="gap-1 h-7 px-2 text-xs">
+                  <Package className="h-3 w-3" />
+                  Novo Container
+                </Button>
+              }
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Conteúdo principal - Tabela ou Cards (Roleable) */}
+      <div className="flex-1 pt-4">
+        <AnimatePresence mode="wait">
+          {viewMode === "table" ? (
+            <motion.div
+              key="table"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ContainerTable 
+                containers={filteredContainers} 
+                onContainerUpdate={onContainerUpdate}
+                onContainerEdit={onContainerEdit}
+                onContainerDelete={onContainerDelete}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="cards"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="grid gap-3 md:grid-cols-2 lg:grid-cols-3"
+            >
+              {filteredContainers.length === 0 ? (
+                <div className="col-span-full text-center py-6 text-muted-foreground">
+                  <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Nenhum container encontrado</p>
+                </div>
+              ) : (
+                filteredContainers.map((container) => (
+                  <ContainerCard key={container.id} container={container} />
+                ))
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Modal de detalhes do container (mobile) - Mantido fora do fluxo de rolagem */}
       {selectedContainer && isMobile && (
         <motion.div
           initial={{ opacity: 0 }}
