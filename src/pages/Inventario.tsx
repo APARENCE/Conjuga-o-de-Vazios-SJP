@@ -138,28 +138,28 @@ export default function Inventario({ containers }: InventarioProps) {
       transition={{ duration: 0.2 }}
     >
       <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-[1.02]">
-        <CardHeader className="pb-1 p-3"> {/* Reduzindo padding */}
+        <CardHeader className="pb-1 p-3">
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <CardTitle className="text-sm font-bold text-primary flex items-center gap-1"> {/* Reduzindo tamanho */}
-                <Package className="h-4 w-4" /> {/* Reduzindo ícone */}
+              <CardTitle className="text-sm font-bold text-primary flex items-center gap-1">
+                <Package className="h-4 w-4" />
                 {item.container}
               </CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">{item.armador}</p> {/* Reduzindo fonte e margem */}
+              <p className="text-xs text-muted-foreground mt-0.5">{item.armador}</p>
             </div>
-            <div className="flex flex-col gap-1 items-end"> {/* Reduzindo gap */}
+            <div className="flex flex-col gap-1 items-end">
               {getItemTypeBadge(item.itemType)}
               {getStatusBadge(item.status)}
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-1 p-3 pt-1"> {/* Reduzindo padding e espaço vertical */}
-          <div className="space-y-1"> {/* Reduzindo espaço vertical */}
-            <div className="flex items-start gap-1 text-xs"> {/* Reduzindo fonte e gap */}
+        <CardContent className="space-y-1 p-3 pt-1">
+          <div className="space-y-1">
+            <div className="flex items-start gap-1 text-xs">
               <span className="text-muted-foreground shrink-0">Detalhes:</span>
               <p className="font-medium text-xs line-clamp-2">{item.details}</p>
             </div>
-            <div className="flex items-center gap-1 text-xs"> {/* Reduzindo fonte e gap */}
+            <div className="flex items-center gap-1 text-xs">
               <Calendar className="h-3 w-3 text-muted-foreground" />
               <span className="text-muted-foreground">Atualizado:</span>
               <span className="text-xs">{new Date(item.lastUpdated).toLocaleDateString('pt-BR')}</span>
@@ -167,7 +167,7 @@ export default function Inventario({ containers }: InventarioProps) {
           </div>
           
           <div className="flex gap-1 pt-2">
-            <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => setSelectedItem(item)}> {/* Reduzindo altura e fonte */}
+            <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => setSelectedItem(item)}>
               <Eye className="h-3 w-3" />
               Detalhes
             </Button>
@@ -203,16 +203,17 @@ export default function Inventario({ containers }: InventarioProps) {
       {/* Cabeçalho Fixo (Título, Filtros, KPIs) */}
       <div className="sticky top-0 z-40 bg-background pb-2 border-b border-border/50 shadow-sm">
         <div className="space-y-2">
-          {/* Header */}
-          <div className="flex flex-col gap-2">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Inventário Derivado de Containers</h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Rastreamento automático de itens de troca, baixa e devolução associados aos containers.
-              </p>
-            </div>
-            
-            {/* Barra de pesquisa e botões de visualização */}
+          {/* Título */}
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Inventário Derivado de Containers</h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Rastreamento automático de itens de troca, baixa e devolução associados aos containers.
+            </p>
+          </div>
+          
+          {/* Ações e Filtros (Consolidado) */}
+          <div className="flex flex-col gap-1">
+            {/* Linha 1: Pesquisa e Visualização */}
             <div className="flex flex-col sm:flex-row gap-1">
               <div className="relative flex-1">
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
@@ -243,6 +244,16 @@ export default function Inventario({ containers }: InventarioProps) {
                 </Button>
               </div>
             </div>
+
+            {/* Linha 2: Filtros Avançados */}
+            <InventoryFilters
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              itemTypeFilter={itemTypeFilter}
+              setItemTypeFilter={setItemTypeFilter}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+            />
           </div>
 
           {/* KPIs do Inventário */}
@@ -280,16 +291,6 @@ export default function Inventario({ containers }: InventarioProps) {
             />
           </div>
 
-          {/* Filtros Avançados */}
-          <InventoryFilters
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            itemTypeFilter={itemTypeFilter}
-            setItemTypeFilter={setItemTypeFilter}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-          />
-
           {/* Resultados da busca */}
           <div className="flex justify-between items-center pt-1">
             <p className="text-xs text-muted-foreground">
@@ -321,7 +322,7 @@ export default function Inventario({ containers }: InventarioProps) {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
-              className="grid gap-3 md:grid-cols-2 lg:grid-cols-4" // Aumentando para 4 colunas em telas grandes
+              className="grid gap-3 md:grid-cols-2 lg:grid-cols-4"
             >
               {filteredInventory.length === 0 ? (
                 <div className="col-span-full text-center py-8 text-muted-foreground">
