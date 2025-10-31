@@ -34,7 +34,8 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         className={cn(
           "flex-1 flex flex-col h-screen transition-all duration-300",
           // Em desktop (md+), a margem esquerda é controlada por 'isOpen'.
-          // Se isOpen for true, a margem é 10rem. Se for false, a margem é 0.
+          // Usamos ml-[10rem] para empurrar o conteúdo quando a sidebar está aberta.
+          // Se a sidebar estiver fechada, a margem é 0.
           !isMobile && (isOpen ? `md:ml-[${sidebarWidth}]` : "md:ml-0"),
         )}
       >
