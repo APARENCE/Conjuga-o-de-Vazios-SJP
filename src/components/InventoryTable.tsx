@@ -40,12 +40,12 @@ export function InventoryTable({ inventory }: InventoryTableProps) {
         <Table className="compact-table"> {/* Aplicando classe de tabela compacta */}
           <TableHeader className="sticky top-0 z-10 bg-muted/50 shadow-sm">
             <TableRow className="bg-muted/50">
-              <TableHead className="font-semibold min-w-[120px]">Container</TableHead>
-              <TableHead className="font-semibold min-w-[100px]">Armador</TableHead>
-              <TableHead className="font-semibold min-w-[100px]">Tipo de Item</TableHead>
-              <TableHead className="font-semibold min-w-[300px]">Detalhes</TableHead> {/* Reduzido para 300px */}
-              <TableHead className="font-semibold min-w-[120px]">Status</TableHead>
-              <TableHead className="font-semibold min-w-[150px]">Última Atualização</TableHead>
+              <TableHead className="font-semibold min-w-[110px]">Container</TableHead>
+              <TableHead className="font-semibold min-w-[90px]">Armador</TableHead>
+              <TableHead className="font-semibold min-w-[90px]">Tipo de Item</TableHead>
+              <TableHead className="font-semibold min-w-[250px]">Detalhes</TableHead> {/* Reduzido para 250px */}
+              <TableHead className="font-semibold min-w-[100px]">Status</TableHead>
+              <TableHead className="font-semibold min-w-[120px]">Última Atualização</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -59,12 +59,12 @@ export function InventoryTable({ inventory }: InventoryTableProps) {
             ) : (
               inventory.map((item) => (
                 <TableRow key={item.id + item.itemType} className="hover:bg-muted/30">
-                  <TableCell className="font-bold min-w-[120px]">{item.container}</TableCell>
-                  <TableCell className="min-w-[100px]">{item.armador}</TableCell>
-                  <TableCell className="font-medium min-w-[100px]">{item.itemType}</TableCell>
-                  <TableCell className="max-w-[400px] truncate text-sm text-muted-foreground min-w-[300px]">{item.details}</TableCell> {/* Ajustado min-w */}
-                  <TableCell className="min-w-[120px]">{getStatusBadge(item.status)}</TableCell>
-                  <TableCell className="min-w-[150px]">{new Date(item.lastUpdated).toLocaleString('pt-BR')}</TableCell>
+                  <TableCell className="font-bold min-w-[110px]">{item.container}</TableCell>
+                  <TableCell className="min-w-[90px]">{item.armador}</TableCell>
+                  <TableCell className="font-medium min-w-[90px]">{item.itemType}</TableCell>
+                  <TableCell className="max-w-[400px] truncate text-sm text-muted-foreground min-w-[250px]">{item.details}</TableCell> {/* Ajustado min-w */}
+                  <TableCell className="min-w-[100px]">{getStatusBadge(item.status)}</TableCell>
+                  <TableCell className="min-w-[120px]">{new Date(item.lastUpdated).toLocaleString('pt-BR')}</TableCell>
                 </TableRow>
               ))
             )}
