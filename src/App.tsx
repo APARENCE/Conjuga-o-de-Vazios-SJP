@@ -40,10 +40,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
       >
         <header className="h-12 border-b border-border bg-card flex items-center px-3 shrink-0">
           {/* 
-            Renderizamos o SidebarTrigger sempre.
-            Em mobile, ele abre/fecha a sidebar.
-            Em desktop, ele só é necessário quando a sidebar está fechada.
-            Se a sidebar estiver aberta, ele fica oculto em desktop para não duplicar a função do botão de toggle no rodapé.
+            Renderizamos o SidebarTrigger.
+            Em desktop, ele deve ser visível APENAS quando a sidebar estiver fechada (!isOpen).
+            Quando a sidebar está aberta, o botão de toggle no rodapé da sidebar é usado.
           */}
           <SidebarTrigger 
             className={cn(
