@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface AnalisePageProps {
   containers: Container[];
@@ -27,7 +28,13 @@ export default function Analise({ containers }: AnalisePageProps) {
     cutoffDate.setDate(cutoffDate.getDate() - daysAgo);
     
     return containers.filter(c => {
-      const dataOp = c.dataOperacao ? new Date(c.dataOperacao.split('/').reverse().join('-')) : null;
+      // Converte DD/MM/YYYY para Date
+      const dataOpParts = c.dataOperacao?.split('/');
+      if (!dataOpParts || dataOpParts.length !== 3) return false;
+      
+      // Cria a data no formato YYYY-MM-DD para evitar problemas de fuso horário
+      const dataOp = new Date(`${dataOpParts[2]}-${dataOpParts[1]}-${dataOpParts[0]}`);
+      
       return dataOp && dataOp >= cutoffDate;
     });
   }, [containers, timeRange]);
@@ -42,7 +49,7 @@ export default function Analise({ containers }: AnalisePageProps) {
     return Object.entries(grouped)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, isMobile ? 5 : 10); // Limita em mobile
+      .slice(0, isMobile ? 6 : 10); // Aumenta para 6 em mobile para melhor visualização
   }, [filteredContainers, isMobile]);
 
   const depotData = useMemo(() => {
@@ -57,7 +64,7 @@ export default function Analise({ containers }: AnalisePageProps) {
     return Object.entries(grouped)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, isMobile ? 5 : 8); // Limita em mobile
+      .slice(0, isMobile ? 6 : 8); // Aumenta para 6 em mobile
   }, [filteredContainers, isMobile]);
 
   const statusData = useMemo(() => {
@@ -80,7 +87,7 @@ export default function Analise({ containers }: AnalisePageProps) {
 
   const diasRestantesData = useMemo(() => {
     const ranges = {
-      "Vencido": 0,
+      "Vencido (0)": 0,
       "1-3 dias": 0,
       "4-7 dias": 0,
       "8-14 dias": 0,
@@ -89,7 +96,7 @@ export default function Analise({ containers }: AnalisePageProps) {
 
     filteredContainers.forEach(c => {
       const dias = typeof c.diasRestantes === 'number' ? c.diasRestantes : 0;
-      if (dias === 0) ranges["Vencido"]++;
+      if (dias === 0) ranges["Vencido (0)"]++;
       else if (dias <= 3) ranges["1-3 dias"]++;
       else if (dias <= 7) ranges["4-7 dias"]++;
       else if (dias <= 14) ranges["8-14 dias"]++;
@@ -104,28 +111,36 @@ export default function Analise({ containers }: AnalisePageProps) {
     const grouped = filteredContainers.reduce((acc, container) => {
       if (!container.dataOperacao) return acc;
       
-      const date = container.dataOperacao.split('/').reverse().join('-');
-      const month = new Date(date).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+      // Converte DD/MM/YYYY para Date
+      const parts = container.dataOperacao.split('/');
+      if (parts.length !== 3) return acc;
       
-      if (!acc[month]) {
-        acc[month] = { month, entradas: 0, devolucoes: 0 };
+      const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+      const monthKey = date.toISOString().substring(0, 7); // YYYY-MM
+      const monthLabel = date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+      
+      if (!acc[monthKey]) {
+        acc[monthKey] = { month: monthLabel, entradas: 0, devolucoes: 0, key: monthKey };
       }
       
-      acc[month].entradas++;
+      acc[monthKey].entradas++;
       if (String(container.status || '').toLowerCase().includes("devolvido")) {
-        acc[month].devolucoes++;
+        acc[monthKey].devolucoes++;
       }
       
       return acc;
-    }, {} as Record<string, { month: string; entradas: number; devolucoes: number }>);
+    }, {} as Record<string, { month: string; entradas: number; devolucoes: number; key: string }>);
 
-    return Object.values(grouped).slice(-6); // Últimos 6 meses
+    // Ordena por chave (YYYY-MM) e pega os últimos 6
+    return Object.values(grouped)
+        .sort((a, b) => a.key.localeCompare(b.key))
+        .slice(-6); 
   }, [filteredContainers]);
 
   const stats = useMemo(() => {
     const devolvidos = statusData.find(s => s.name === "Devolvidos")?.value || 0;
     const pendentes = statusData.find(s => s.name === "Pendentes")?.value || 0;
-    const vencidos = diasRestantesData.find(d => d.name === "Vencido")?.value || 0;
+    const vencidos = diasRestantesData.find(d => d.name === "Vencido (0)")?.value || 0;
 
     return {
       total: filteredContainers.length,
@@ -166,11 +181,13 @@ export default function Analise({ containers }: AnalisePageProps) {
     </motion.div>
   );
 
-  const ChartCard = ({ title, description, children, icon: Icon }: any) => (
+  const ChartCard = ({ title, description, children, icon: Icon, className }: any) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
+      className={className}
     >
       <Card className="hover:shadow-lg transition-all duration-300">
         <CardHeader>
@@ -187,12 +204,17 @@ export default function Analise({ containers }: AnalisePageProps) {
     </motion.div>
   );
 
+  // Altura dinâmica para gráficos
+  const chartHeight = isMobile ? 250 : 300;
+  const barChartMargin = isMobile ? { top: 10, right: 5, bottom: 60, left: 5 } : { top: 20, right: 20, bottom: 40, left: 20 };
+  const pieChartOuterRadius = isMobile ? 70 : 90;
+
   return (
-    <div className="space-y-4 pb-8"> {/* Reduzindo o espaço vertical principal */}
+    <div className="space-y-4 pb-8 px-4"> {/* Adicionando padding horizontal aqui */}
       {/* Header Fixo (Título, Filtros) */}
-      <div className="sticky top-0 z-40 bg-background pb-2 border-b border-border/50 shadow-sm">
+      <div className="sticky top-0 z-40 bg-background pb-2 border-b border-border/50 shadow-sm -mx-4 px-4"> {/* Ajustando margem negativa para cobrir o padding do container */}
         <div className="space-y-2">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"> {/* Reduzindo gap */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">Análise de Dados</h1>
               <p className="text-muted-foreground text-sm mt-1">
@@ -201,9 +223,9 @@ export default function Analise({ containers }: AnalisePageProps) {
             </div>
             
             {/* Controles */}
-            <div className="flex flex-col sm:flex-row gap-1 w-full sm:w-auto"> {/* Reduzindo gap */}
+            <div className="flex flex-col sm:flex-row gap-1 w-full sm:w-auto">
               <Select value={timeRange} onValueChange={(value: any) => setTimeRange(value)}>
-                <SelectTrigger className="w-full sm:w-[140px] h-7 text-xs"> {/* Altura e fonte reduzidas */}
+                <SelectTrigger className="w-full sm:w-[140px] h-7 text-xs">
                   <SelectValue placeholder="Período" />
                 </SelectTrigger>
                 <SelectContent>
@@ -214,7 +236,7 @@ export default function Analise({ containers }: AnalisePageProps) {
                 </SelectContent>
               </Select>
               
-              <Button variant="outline" size="sm" className="gap-1 h-7 px-2 text-xs"> {/* Altura e fonte reduzidas */}
+              <Button variant="outline" size="sm" className="gap-1 h-7 px-2 text-xs">
                 <Download className="h-3 w-3" />
                 Exportar
               </Button>
@@ -223,7 +245,7 @@ export default function Analise({ containers }: AnalisePageProps) {
 
           {/* Filtros rápidos para mobile */}
           {isMobile && (
-            <div className="flex gap-1 overflow-x-auto pb-1"> {/* Reduzindo gap e padding */}
+            <div className="flex gap-1 overflow-x-auto pb-1">
               <Button
                 variant={selectedChart === "all" ? "default" : "outline"}
                 size="sm"
@@ -251,13 +273,31 @@ export default function Analise({ containers }: AnalisePageProps) {
                 <BarChart3 className="h-3 w-3 mr-1" />
                 Armador
               </Button>
+              <Button
+                variant={selectedChart === "dias" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedChart("dias")}
+                className="whitespace-nowrap h-7 text-xs px-2"
+              >
+                <Clock className="h-3 w-3 mr-1" />
+                Prazos
+              </Button>
+              <Button
+                variant={selectedChart === "depot" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedChart("depot")}
+                className="whitespace-nowrap h-7 text-xs px-2"
+              >
+                <Package className="h-3 w-3 mr-1" />
+                Depot
+              </Button>
             </div>
           )}
         </div>
       </div>
 
       {/* KPI Cards - Responsivo */}
-      <div className="grid gap-2 grid-cols-2 sm:grid-cols-2 lg:grid-cols-5"> {/* Reduzindo gap */}
+      <div className="grid gap-2 grid-cols-2 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard
           title="Total"
           value={stats.total}
@@ -302,47 +342,52 @@ export default function Analise({ containers }: AnalisePageProps) {
 
       {/* Charts Grid - Responsivo e Dinâmico */}
       <AnimatePresence mode="wait">
-        {(selectedChart === "all" || !isMobile) ? (
-          <motion.div
-            key="all"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="grid gap-4 lg:grid-cols-2" // Reduzindo gap
-          >
-            {/* Containers por Armador */}
+        <motion.div
+          key={selectedChart}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className={cn("grid gap-4", isMobile || selectedChart !== "all" ? "grid-cols-1" : "lg:grid-cols-2")}
+        >
+          
+          {/* Containers por Armador */}
+          {(selectedChart === "all" || selectedChart === "armador") && (
             <ChartCard
               title="Containers por Armador"
-              description="Distribuição de containers entre os armadores"
+              description={`Top ${armadorData.length} armadores no período selecionado`}
               icon={BarChart3}
+              className={cn(selectedChart === "armador" && "lg:col-span-2")}
             >
-              <ChartContainer config={chartConfig} className="h-[300px]">
+              <ChartContainer config={chartConfig} className={`h-[${chartHeight}px]`}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={armadorData} margin={{ top: 20, right: 20, bottom: isMobile ? 60 : 40, left: 20 }}>
+                  <BarChart data={armadorData} margin={barChartMargin}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis 
                       dataKey="name" 
-                      angle={-45}
+                      angle={isMobile ? -45 : -30}
                       textAnchor="end"
-                      height={isMobile ? 80 : 60}
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 12 }}
+                      height={isMobile ? 70 : 60}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 9 : 12 }}
+                      interval={0} // Garante que todos os rótulos sejam exibidos
                     />
-                    <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 12 }} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Bar dataKey="value" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
             </ChartCard>
+          )}
 
-            {/* Distribuição por Status */}
+          {/* Distribuição por Status */}
+          {(selectedChart === "all" || selectedChart === "status") && (
             <ChartCard
               title="Distribuição por Status"
               description="Proporção de containers por status"
               icon={PieChartIcon}
             >
-              <ChartContainer config={chartConfig} className="h-[300px]">
+              <ChartContainer config={chartConfig} className={`h-[${chartHeight}px]`}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -351,7 +396,7 @@ export default function Analise({ containers }: AnalisePageProps) {
                       cy="50%"
                       labelLine={false}
                       label={({ name, percent }: any) => isMobile ? `${(percent * 100).toFixed(0)}%` : `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={isMobile ? 80 : 90}
+                      outerRadius={pieChartOuterRadius}
                       dataKey="value"
                     >
                       {statusData.map((entry, index) => (
@@ -359,26 +404,29 @@ export default function Analise({ containers }: AnalisePageProps) {
                       ))}
                     </Pie>
                     <ChartTooltip content={<ChartTooltipContent />} />
+                    {!isMobile && <Legend layout="vertical" verticalAlign="middle" align="right" />}
                   </PieChart>
                 </ResponsiveContainer>
               </ChartContainer>
             </ChartCard>
+          )}
 
-            {/* Distribuição de Dias Restantes */}
+          {/* Distribuição de Dias Restantes */}
+          {(selectedChart === "all" || selectedChart === "dias") && (
             <ChartCard
               title="Dias Restantes para Devolução"
               description="Distribuição por prazo de devolução"
               icon={Clock}
             >
-              <ChartContainer config={chartConfig} className="h-[300px]">
+              <ChartContainer config={chartConfig} className={`h-[${chartHeight}px]`}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={diasRestantesData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                  <BarChart data={diasRestantesData} margin={barChartMargin}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis 
                       dataKey="name" 
                       tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 12 }}
                     />
-                    <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 12 }} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Bar 
                       dataKey="value" 
@@ -389,146 +437,77 @@ export default function Analise({ containers }: AnalisePageProps) {
                 </ResponsiveContainer>
               </ChartContainer>
             </ChartCard>
+          )}
 
-            {/* Containers por Depot */}
+          {/* Containers por Depot */}
+          {(selectedChart === "all" || selectedChart === "depot") && (
             <ChartCard
               title="Containers por Depot de Devolução"
-              description="Distribuição entre os depots"
+              description={`Top ${depotData.length} depots no período selecionado`}
               icon={Package}
+              className={cn(selectedChart === "depot" && "lg:col-span-2")}
             >
-              <ChartContainer config={chartConfig} className="h-[300px]">
+              <ChartContainer config={chartConfig} className={`h-[${chartHeight}px]`}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={depotData} margin={{ top: 20, right: 20, bottom: isMobile ? 80 : 60, left: 20 }}>
+                  <BarChart data={depotData} margin={barChartMargin}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis 
                       dataKey="name" 
-                      angle={-45}
+                      angle={isMobile ? -45 : -30}
                       textAnchor="end"
-                      height={isMobile ? 100 : 80}
+                      height={isMobile ? 70 : 60}
                       tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 9 : 11 }}
+                      interval={0}
                     />
-                    <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 12 }} />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="value" fill="hsl(var(--chart-3))" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="value" fill="hsl(var(--secondary))" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
             </ChartCard>
-          </motion.div>
-        ) : selectedChart === "status" ? (
-          <motion.div
-            key="status"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.3 }}
-          >
+          )}
+          
+          {/* Timeline de Operações */}
+          {(selectedChart === "all" || selectedChart === "dias") && timelineData.length > 0 && (
             <ChartCard
-              title="Distribuição por Status"
-              description="Proporção de containers por status"
-              icon={PieChartIcon}
+              title="Timeline de Operações"
+              description="Evolução de entradas e devoluções nos últimos meses"
+              icon={Activity}
+              className={cn(selectedChart === "dias" && "lg:col-span-2")}
             >
-              <ChartContainer config={chartConfig} className="h-[400px]">
+              <ChartContainer config={chartConfig} className={`h-[${chartHeight}px]`}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={statusData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent, value }: any) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
-                      outerRadius={120}
-                      dataKey="value"
-                    >
-                      {statusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
+                  <LineChart data={timelineData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis 
+                      dataKey="month" 
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 12 }}
+                    />
+                    <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 12 }} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </ChartCard>
-          </motion.div>
-        ) : selectedChart === "armador" ? (
-          <motion.div
-            key="armador"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.3 }}
-          >
-            <ChartCard
-              title="Containers por Armador"
-              description="Distribuição de containers entre os armadores"
-              icon={BarChart3}
-            >
-              <ChartContainer config={chartConfig} className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={armadorData} margin={{ top: 20, right: 20, bottom: 60, left: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis 
-                      dataKey="name" 
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    <Line 
+                      type="monotone" 
+                      dataKey="entradas" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={2}
+                      dot={{ fill: "hsl(var(--primary))" }}
                     />
-                    <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="value" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-                  </BarChart>
+                    <Line 
+                      type="monotone" 
+                      dataKey="devolucoes" 
+                      stroke="hsl(var(--success))" 
+                      strokeWidth={2}
+                      dot={{ fill: "hsl(var(--success))" }}
+                    />
+                  </LineChart>
                 </ResponsiveContainer>
               </ChartContainer>
             </ChartCard>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-
-      {/* Timeline de Operações (Novidade) */}
-      {!isMobile && timelineData.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.6 }}
-        >
-          <ChartCard
-            title="Timeline de Operações"
-            description="Evolução de entradas e devoluções nos últimos meses"
-            icon={Activity}
-          >
-            <ChartContainer config={chartConfig} className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={timelineData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis 
-                    dataKey="month" 
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  />
-                  <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="entradas" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={2}
-                    dot={{ fill: "hsl(var(--primary))" }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="devolucoes" 
-                    stroke="hsl(var(--success))" 
-                    strokeWidth={2}
-                    dot={{ fill: "hsl(var(--success))" }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </ChartCard>
+          )}
         </motion.div>
-      )}
+      </AnimatePresence>
     </div>
   );
 }
