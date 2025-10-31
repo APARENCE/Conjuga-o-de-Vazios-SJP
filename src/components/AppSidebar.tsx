@@ -31,7 +31,7 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
   ];
 
   return (
-    <Sidebar className="border-r border-border w-40">
+    <Sidebar className="border-r border-border w-40 md:w-40"> {/* Mantendo w-40 para desktop, mas garantindo que o sidebar.tsx gerencie o mobile */}
       <SidebarHeader className="border-b border-border p-1">
         <h2 className="text-sm font-bold text-primary break-words leading-tight">Conjugação de vazios</h2>
         <p className="text-xs text-muted-foreground">Patio- SJP</p>

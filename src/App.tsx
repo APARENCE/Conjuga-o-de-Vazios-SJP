@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Containers from "./pages/Containers";
 import Analise from "./pages/Analise";
@@ -14,8 +14,47 @@ import NotFound from "./pages/NotFound";
 import { Container, ContainerFile } from "@/types/container";
 import { parseExcelFile, exportToExcel } from "@/lib/excelUtils";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const queryClient = new QueryClient();
+
+// Componente Wrapper para aplicar o layout
+const AppLayout = ({ children }: { children: React.ReactNode }) => {
+  const { isOpen } = useSidebar();
+  const isMobile = useIsMobile();
+  
+  // Largura da sidebar é 160px (w-40)
+  const sidebarWidth = "10rem"; 
+
+  return (
+    <div className="min-h-screen flex w-full bg-background">
+      <AppSidebar 
+        onImport={() => {}} // Handlers vazios, pois o input está no App
+        onExport={() => {}}
+        onContainerAdd={() => {}}
+      />
+      
+      {/* Conteúdo Principal */}
+      <div 
+        className={cn(
+          "flex-1 flex flex-col h-screen transition-all duration-300",
+          // Em desktop (md+), aplica margem se a sidebar estiver aberta
+          !isMobile && isOpen ? `ml-[${sidebarWidth}]` : "ml-0"
+        )}
+        style={!isMobile && isOpen ? { marginLeft: sidebarWidth } : { marginLeft: 0 }}
+      >
+        <header className="h-12 border-b border-border bg-card flex items-center px-3 shrink-0">
+          <SidebarTrigger />
+        </header>
+        <main className="flex-1 py-2 px-0 overflow-y-auto">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+};
+
 
 const App = () => {
   const [containers, setContainers] = useState<Container[]>([]);
@@ -151,54 +190,42 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <SidebarProvider>
-            <div className="min-h-screen flex w-full bg-background">
-              <AppSidebar 
-                onImport={handleImport} 
-                onExport={handleExport} 
-                onContainerAdd={handleContainerAdd}
-              />
-              <div className="flex-1 flex flex-col h-screen">
-                <header className="h-12 border-b border-border bg-card flex items-center px-3 shrink-0">
-                  <SidebarTrigger />
-                </header>
-                <main className="flex-1 py-2 px-0 overflow-y-auto">
-                  <Routes>
-                    <Route 
-                      path="/" 
-                      element={
-                        <Containers 
-                          containers={containers} 
-                          onContainerUpdate={handleContainerUpdate}
-                          onContainerAdd={handleContainerAdd}
-                          onContainerEdit={handleContainerEdit}
-                          onContainerDelete={handleContainerDelete}
-                        />
-                      } 
+            <AppLayout>
+              <Routes>
+                <Route 
+                  path="/" 
+                  element={
+                    <Containers 
+                      containers={containers} 
+                      onContainerUpdate={handleContainerUpdate}
+                      onContainerAdd={handleContainerAdd}
+                      onContainerEdit={handleContainerEdit}
+                      onContainerDelete={handleContainerDelete}
                     />
-                    <Route path="/analise" element={<Analise containers={containers} />} />
-                    <Route 
-                      path="/inventario" 
-                      element={
-                        <Inventario 
-                          containers={containers} 
-                        />
-                      } 
+                  } 
+                />
+                <Route path="/analise" element={<Analise containers={containers} />} />
+                <Route 
+                  path="/inventario" 
+                  element={
+                    <Inventario 
+                      containers={containers} 
                     />
-                    <Route 
-                      path="/portaria" 
-                      element={
-                        <Portaria 
-                          containers={containers} 
-                          onContainerUpdate={handlePortariaUpdate}
-                          onContainerAdd={handleContainerAdd} // Passando o handler de adição para novos containers
-                        />
-                      } 
+                  } 
+                />
+                <Route 
+                  path="/portaria" 
+                  element={
+                    <Portaria 
+                      containers={containers} 
+                      onContainerUpdate={handlePortariaUpdate}
+                      onContainerAdd={handleContainerAdd} // Passando o handler de adição para novos containers
                     />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </main>
-              </div>
-            </div>
+                  } 
+                />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AppLayout>
             <input
               ref={fileInputRef}
               type="file"
