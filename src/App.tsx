@@ -25,20 +25,17 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const isMobile = useIsMobile();
   
   // Largura da sidebar é 160px (w-40) = 10rem
-  const sidebarWidth = "10rem"; 
+  const sidebarWidth = "10rem"; // 160px
 
   return (
-    <div className="min-h-screen flex w-full bg-background overflow-x-hidden"> {/* Adicionado overflow-x-hidden */}
-      {/* AppSidebar é renderizado no componente App */}
-      
+    <div className="min-h-screen flex w-full bg-background overflow-x-hidden">
       {/* Conteúdo Principal */}
       <div 
         className={cn(
           "flex-1 flex flex-col h-screen transition-all duration-300",
-          // Em desktop (md+), aplica margem fixa de 10rem.
-          "md:ml-[10rem]",
-          // Em mobile, se a sidebar estiver aberta, não faz nada (ela é fixed e overlay).
-          // Se a sidebar estiver fechada, a margem é 0 (que é o padrão).
+          // Em desktop (md+), a margem esquerda é controlada por 'isOpen'.
+          // Se isOpen for true, a margem é 10rem. Se for false, a margem é 0.
+          !isMobile && (isOpen ? `md:ml-[${sidebarWidth}]` : "md:ml-0"),
         )}
       >
         <header className="h-12 border-b border-border bg-card flex items-center px-3 shrink-0">

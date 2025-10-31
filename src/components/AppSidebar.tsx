@@ -1,4 +1,4 @@
-import { Home, BarChart3, Upload, Download, PackageOpen, Plus, Truck } from "lucide-react";
+import { Home, BarChart3, Upload, Download, PackageOpen, Plus, Truck, ChevronLeft, ChevronRight } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { ContainerFormDialog } from "./ContainerFormDialog";
 import { Container } from "@/types/container";
 import { useIsMobile } from "@/hooks/use-mobile"; // Importando useIsMobile
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface AppSidebarProps {
   onImport: () => void;
@@ -25,7 +26,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarProps) {
-  const { setIsOpen } = useSidebar();
+  const { isOpen, setIsOpen } = useSidebar();
   const isMobile = useIsMobile();
   
   const handleNavigationClick = () => {
@@ -40,6 +41,10 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
     { title: "Análise", url: "/analise", icon: BarChart3 },
     { title: "Inventário", url: "/inventario", icon: PackageOpen },
   ];
+
+  const handleToggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
 
   return (
     <Sidebar className="border-r border-border w-40"> {/* Definindo a largura w-40 (10rem) */}
@@ -113,8 +118,29 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border p-1">
+      <SidebarFooter className="border-t border-border p-1 flex justify-between items-center">
         <p className="text-xs text-muted-foreground">v1.0.0</p>
+        
+        {/* Botão de Toggle (Visível apenas em desktop) */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-6 w-6 hidden md:flex"
+              onClick={handleToggleSidebar}
+            >
+              {isOpen ? (
+                <ChevronLeft className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            {isOpen ? "Ocultar Sidebar" : "Mostrar Sidebar"}
+          </TooltipContent>
+        </Tooltip>
       </SidebarFooter>
     </Sidebar>
   );
