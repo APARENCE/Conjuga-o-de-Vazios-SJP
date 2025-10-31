@@ -195,7 +195,7 @@ export default function Containers({
             <div>
               <h1 className="text-2xl font-bold text-foreground">Gestão de Containers</h1>
               <p className="text-muted-foreground text-sm mt-1">
-                Controle de entrada e saída de containers CAS
+                Controle de entrada e saída de containers
               </p>
             </div>
             
