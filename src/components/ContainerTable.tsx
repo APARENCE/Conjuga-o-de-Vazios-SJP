@@ -53,9 +53,12 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
     return "text-success";
   };
 
-  // Classes para colunas fixas
-  const fixedColumnClasses = "sticky bg-background z-20"; 
-  // Ajustando fixedHeaderClasses para garantir que o fundo do cabeçalho fixo seja opaco
+  // Classes para colunas fixas (rolagem horizontal)
+  // Z-index 20 para as células do corpo
+  const fixedCellClasses = "sticky bg-background z-20"; 
+  
+  // Classes para o cabeçalho fixo (rolagem vertical)
+  // Z-index 30 para o cabeçalho inteiro
   const fixedHeaderClasses = "sticky top-0 z-30 bg-muted/50 shadow-sm"; 
 
   // Larguras fixas para as colunas fixas
@@ -65,17 +68,17 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
 
   return (
     <Card className="border-0 shadow-sm">
-      {/* Adicionando altura máxima para forçar a rolagem interna e fixar o cabeçalho */}
+      {/* Contêiner de rolagem com altura máxima */}
       <div className="overflow-x-auto overflow-y-auto max-h-[75vh] lg:max-h-[85vh]">
-        <Table className="compact-table"> {/* Aplicando classe de tabela compacta */}
-          {/* Aplicamos sticky, top-0 e bg-background ao TableHeader */}
-          <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
+        <Table className="compact-table">
+          {/* TableHeader: Fixo no topo (Z-index 30) */}
+          <TableHeader className={fixedHeaderClasses}>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
-              {/* Coluna 1: Container (Fixo na esquerda) */}
-              <TableHead className={cn("font-semibold left-0", fixedHeaderClasses, containerWidth)}>Container</TableHead>
+              {/* Coluna 1: Container (Fixo na esquerda, Z-index 35 para sobrepor a Armador) */}
+              <TableHead className={cn("font-semibold left-0 z-[35]", containerWidth)}>Container</TableHead>
               
-              {/* Coluna 2: Armador (Fixo na esquerda, deslocado) */}
-              <TableHead className={cn("font-semibold", armadorLeft, fixedHeaderClasses, armadorWidth)}>Armador</TableHead>
+              {/* Coluna 2: Armador (Fixo na esquerda, deslocado, Z-index 30) */}
+              <TableHead className={cn("font-semibold z-30", armadorLeft, armadorWidth)}>Armador</TableHead>
               
               <TableHead className="font-semibold w-[120px] min-w-[120px]">Data Operação</TableHead>
               <TableHead className="font-semibold w-[120px] min-w-[120px]">Data Porto</TableHead>
@@ -105,13 +108,13 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
             ) : (
               containers.map((container) => (
                 <TableRow key={container.id} className="hover:bg-muted/30">
-                  {/* Coluna 1: Container (Fixo na esquerda) */}
-                  <TableCell className={cn("font-bold left-0", fixedColumnClasses, containerWidth)}>
+                  {/* Coluna 1: Container (Fixo na esquerda, Z-index 25 para sobrepor Armador) */}
+                  <TableCell className={cn("font-bold left-0 z-[25]", fixedCellClasses, containerWidth)}>
                     {container.container}
                   </TableCell>
                   
-                  {/* Coluna 2: Armador (Fixo na esquerda, deslocado) */}
-                  <TableCell className={cn("font-bold", armadorLeft, fixedColumnClasses, armadorWidth)}>
+                  {/* Coluna 2: Armador (Fixo na esquerda, deslocado, Z-index 20) */}
+                  <TableCell className={cn("font-bold z-20", armadorLeft, fixedCellClasses, armadorWidth)}>
                     {container.armador}
                   </TableCell>
                   
