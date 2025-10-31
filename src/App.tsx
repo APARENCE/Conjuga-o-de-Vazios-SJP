@@ -29,11 +29,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen flex w-full bg-background overflow-x-hidden"> {/* Adicionado overflow-x-hidden */}
-      <AppSidebar 
-        onImport={() => {}} // Handlers vazios, pois o input está no App
-        onExport={() => {}}
-        onContainerAdd={() => {}}
-      />
+      {/* AppSidebar é renderizado no componente App */}
       
       {/* Conteúdo Principal */}
       <div 
@@ -62,7 +58,11 @@ const App = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImport = () => {
-    fileInputRef.current?.click();
+    if (fileInputRef.current) {
+      // Limpa o valor anterior para garantir que o onChange seja disparado mesmo se o mesmo arquivo for selecionado
+      fileInputRef.current.value = ''; 
+      fileInputRef.current.click();
+    }
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
