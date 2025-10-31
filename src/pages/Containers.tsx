@@ -251,7 +251,7 @@ export default function Containers({
               transition={{ duration: 0.3, delay: 0.1 }}
             >
               <Card className="border-l-4 border-l-primary hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between pb-1 p-2">
+                <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1"> {/* Reduzido padding */}
                   <CardTitle className="text-xs font-medium text-muted-foreground">
                     Total
                   </CardTitle>
@@ -259,7 +259,7 @@ export default function Containers({
                 </CardHeader>
                 <CardContent className="p-1 pt-0">
                   <div className="text-sm font-bold text-foreground">{stats.total}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-0.5"> {/* Reduzido mt-1 para mt-0.5 */}
                     {armadores.length} armadores
                   </p>
                 </CardContent>
@@ -272,7 +272,7 @@ export default function Containers({
               transition={{ duration: 0.3, delay: 0.2 }}
             >
               <Card className="border-l-4 border-l-success hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between pb-1 p-2">
+                <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1"> {/* Reduzido padding */}
                   <CardTitle className="text-xs font-medium text-muted-foreground">
                     Devolvidos
                   </CardTitle>
@@ -280,7 +280,7 @@ export default function Containers({
                 </CardHeader>
                 <CardContent className="p-1 pt-0">
                   <div className="text-sm font-bold text-foreground">{stats.devolvidos}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-0.5"> {/* Reduzido mt-1 para mt-0.5 */}
                     {stats.total > 0 ? ((stats.devolvidos / stats.total) * 100).toFixed(1) : 0}%
                   </p>
                 </CardContent>
@@ -293,7 +293,7 @@ export default function Containers({
               transition={{ duration: 0.3, delay: 0.3 }}
             >
               <Card className="border-l-4 border-l-warning hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between pb-1 p-2">
+                <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1"> {/* Reduzido padding */}
                   <CardTitle className="text-xs font-medium text-muted-foreground">
                     Pendentes
                   </CardTitle>
@@ -301,7 +301,7 @@ export default function Containers({
                 </CardHeader>
                 <CardContent className="p-1 pt-0">
                   <div className="text-sm font-bold text-foreground">{stats.pendentes}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-0.5"> {/* Reduzido mt-1 para mt-0.5 */}
                     {stats.total > 0 ? ((stats.pendentes / stats.total) * 100).toFixed(1) : 0}%
                   </p>
                 </CardContent>
@@ -314,7 +314,7 @@ export default function Containers({
               transition={{ duration: 0.3, delay: 0.4 }}
             >
               <Card className="border-l-4 border-l-danger hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between pb-1 p-2">
+                <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1"> {/* Reduzido padding */}
                   <CardTitle className="text-xs font-medium text-muted-foreground">
                     Vencidos
                   </CardTitle>
@@ -322,7 +322,7 @@ export default function Containers({
                 </CardHeader>
                 <CardContent className="p-1 pt-0">
                   <div className="text-sm font-bold text-foreground">{stats.vencidos}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-0.5"> {/* Reduzido mt-1 para mt-0.5 */}
                     {stats.total > 0 ? ((stats.vencidos / stats.total) * 100).toFixed(1) : 0}%
                   </p>
                 </CardContent>

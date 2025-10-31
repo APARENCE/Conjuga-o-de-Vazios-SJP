@@ -184,7 +184,7 @@ export default function Inventario({ containers }: InventarioProps) {
       transition={{ duration: 0.3, delay }}
     >
       <Card className={`border-l-4 border-l-${color} hover:shadow-md transition-all duration-300 hover:scale-[1.02]`}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0.5 p-1"> {/* Reduzido padding */}
           <CardTitle className="text-xs font-medium text-muted-foreground">
             {title}
           </CardTitle>
@@ -192,7 +192,7 @@ export default function Inventario({ containers }: InventarioProps) {
         </CardHeader>
         <CardContent className="p-1 pt-0">
           <div className="text-sm font-bold text-foreground">{value}</div>
-          <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p> {/* Reduzido mt-1 para mt-0.5 */}
         </CardContent>
       </Card>
     </motion.div>
