@@ -34,21 +34,20 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         className={cn(
           "flex-1 flex flex-col h-screen transition-all duration-300",
           // Em desktop (md+), a margem esquerda é controlada por 'isOpen'.
-          // Se isOpen for true, a margem é 10rem. Se for false, a margem é 0.
           !isMobile && (isOpen ? `md:ml-[${sidebarWidth}]` : "md:ml-0"),
         )}
       >
         <header className="h-12 border-b border-border bg-card flex items-center px-3 shrink-0">
           {/* 
             Renderizamos o SidebarTrigger.
-            Em desktop, ele deve ser visível APENAS quando a sidebar estiver fechada (!isOpen).
-            Quando a sidebar está aberta, o botão de toggle no rodapé da sidebar é usado.
+            Ele deve ser visível em mobile (sempre) e em desktop APENAS quando a sidebar estiver fechada.
+            Se a sidebar estiver aberta em desktop, ele deve ser ocultado (hidden md:hidden).
           */}
           <SidebarTrigger 
             className={cn(
               // Oculta em desktop se a sidebar estiver aberta
               !isMobile && isOpen && "hidden md:hidden",
-              // Garante que ele apareça em desktop se estiver fechado
+              // Garante que ele apareça em mobile e em desktop quando fechado
               !isMobile && !isOpen && "md:block"
             )}
           />
