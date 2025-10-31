@@ -28,9 +28,12 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const sidebarWidth = "10rem"; 
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
-      {/* AppSidebar é renderizado aqui, mas os handlers são passados no componente App */}
-      {/* Removendo AppSidebar daqui para renderizar no componente App, onde os handlers estão definidos */}
+    <div className="min-h-screen flex w-full bg-background overflow-x-hidden"> {/* Adicionado overflow-x-hidden */}
+      <AppSidebar 
+        onImport={() => {}} // Handlers vazios, pois o input está no App
+        onExport={() => {}}
+        onContainerAdd={() => {}}
+      />
       
       {/* Conteúdo Principal */}
       <div 

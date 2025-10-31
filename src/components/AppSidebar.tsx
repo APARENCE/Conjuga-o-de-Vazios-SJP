@@ -11,10 +11,12 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
+  useSidebar, // Importando useSidebar
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ContainerFormDialog } from "./ContainerFormDialog";
 import { Container } from "@/types/container";
+import { useIsMobile } from "@/hooks/use-mobile"; // Importando useIsMobile
 
 interface AppSidebarProps {
   onImport: () => void;
@@ -23,6 +25,15 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarProps) {
+  const { setIsOpen } = useSidebar();
+  const isMobile = useIsMobile();
+  
+  const handleNavigationClick = () => {
+    if (isMobile) {
+      setIsOpen(false); // Fecha a sidebar em mobile após a navegação
+    }
+  };
+
   const menuItems = [
     { title: "Containers", url: "/", icon: Home },
     { title: "Portaria", url: "/portaria", icon: Truck }, // Novo item de menu
@@ -47,6 +58,7 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
                   <SidebarMenuButton asChild className="h-7 px-2">
                     <NavLink
                       to={item.url}
+                      onClick={handleNavigationClick} // Adicionando o handler de clique
                       className={({ isActive }) =>
                         isActive
                           ? "bg-primary/10 text-primary font-medium text-xs"
