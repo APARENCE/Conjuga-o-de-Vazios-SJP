@@ -18,6 +18,7 @@ import { ContainerFormDialog } from "./ContainerFormDialog";
 import { Container } from "@/types/container";
 import { useIsMobile } from "@/hooks/use-mobile"; // Importando useIsMobile
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils"; // Importando cn
 
 interface AppSidebarProps {
   onImport: () => void;
@@ -47,7 +48,15 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
   };
 
   return (
-    <Sidebar className="border-r border-border w-40"> {/* Definindo a largura w-40 (10rem) */}
+    <Sidebar 
+      className={cn(
+        "border-r border-border w-40 transition-transform duration-300 ease-in-out",
+        // Em desktop (md+), se não estiver aberto, move para fora da tela (-10rem)
+        !isMobile && !isOpen && "-translate-x-40",
+        // Em desktop, se estiver aberto, garante que esteja na posição 0
+        !isMobile && isOpen && "translate-x-0"
+      )}
+    >
       <SidebarHeader className="border-b border-border p-1">
         <h2 className="text-sm font-bold text-primary break-words leading-tight">Conjugação de vazios</h2>
         <p className="text-xs text-muted-foreground">Patio- SJP</p>
