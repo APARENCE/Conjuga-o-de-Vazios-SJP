@@ -43,7 +43,7 @@ export function InventoryTable({ inventory }: InventoryTableProps) {
               <TableHead className="font-semibold min-w-[100px]">Container</TableHead>
               <TableHead className="font-semibold min-w-[80px]">Armador</TableHead>
               <TableHead className="font-semibold min-w-[80px]">Tipo de Item</TableHead>
-              <TableHead className="font-semibold min-w-[200px]">Detalhes</TableHead> {/* Reduzido para 200px */}
+              <TableHead className="font-semibold min-w-[200px]">Detalhes</TableHead> {/* Mantido em 200px para legibilidade */}
               <TableHead className="font-semibold min-w-[90px]">Status</TableHead>
               <TableHead className="font-semibold min-w-[100px]">Última Atualização</TableHead>
             </TableRow>
