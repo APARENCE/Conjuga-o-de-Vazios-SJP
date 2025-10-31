@@ -35,8 +35,8 @@ export function InventoryTable({ inventory }: InventoryTableProps) {
 
   return (
     <Card className="border-0 shadow-sm">
-      {/* Adicionando altura máxima para rolagem interna */}
-      <div className="overflow-x-auto max-h-[75vh] lg:max-h-[85vh]">
+      {/* Adicionando altura máxima para rolagem interna e fixar o cabeçalho */}
+      <div className="overflow-x-auto overflow-y-auto max-h-[75vh] lg:max-h-[85vh]">
         <Table className="compact-table"> {/* Aplicando classe de tabela compacta */}
           <TableHeader className="sticky top-0 z-10 bg-muted/50 shadow-sm">
             <TableRow className="bg-muted/50">

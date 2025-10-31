@@ -55,6 +55,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
 
   // Classes para colunas fixas
   const fixedColumnClasses = "sticky bg-background z-20"; 
+  // Ajustando fixedHeaderClasses para garantir que o fundo do cabeçalho fixo seja opaco
   const fixedHeaderClasses = "sticky top-0 z-30 bg-muted/50 shadow-sm"; 
 
   // Larguras fixas para as colunas fixas
@@ -64,8 +65,8 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
 
   return (
     <Card className="border-0 shadow-sm">
-      {/* Removendo max-h fixo e usando flex-1 no layout principal para que a tabela use o espaço restante */}
-      <div className="overflow-x-auto overflow-y-auto">
+      {/* Adicionando altura máxima para forçar a rolagem interna e fixar o cabeçalho */}
+      <div className="overflow-x-auto overflow-y-auto max-h-[75vh] lg:max-h-[85vh]">
         <Table className="compact-table"> {/* Aplicando classe de tabela compacta */}
           {/* Aplicamos sticky, top-0 e bg-background ao TableHeader */}
           <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
