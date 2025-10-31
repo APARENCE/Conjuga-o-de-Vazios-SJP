@@ -31,20 +31,20 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
   ];
 
   return (
-    <Sidebar className="border-r border-border w-40">
-      <SidebarHeader className="border-b border-border p-3">
+    <Sidebar className="border-r border-border w-36">
+      <SidebarHeader className="border-b border-border p-2">
         <h2 className="text-sm font-bold text-primary">Conjugação de vazios</h2>
         <p className="text-xs text-muted-foreground">Patio- SJP</p>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="p-1">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs">Navegação</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs px-2">Navegação</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="h-8 px-2">
+                  <SidebarMenuButton asChild className="h-7 px-2">
                     <NavLink
                       to={item.url}
                       className={({ isActive }) =>
@@ -64,8 +64,8 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs">Ações</SidebarGroupLabel>
-          <SidebarGroupContent className="space-y-1 px-2">
+          <SidebarGroupLabel className="text-xs px-2">Ações</SidebarGroupLabel>
+          <SidebarGroupContent className="space-y-1 px-1">
             <ContainerFormDialog 
               onSave={onContainerAdd} 
               trigger={
@@ -101,7 +101,7 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border p-3">
+      <SidebarFooter className="border-t border-border p-2">
         <p className="text-xs text-muted-foreground">v1.0.0</p>
       </SidebarFooter>
     </Sidebar>

@@ -178,7 +178,7 @@ All colors MUST be HSL.
 
   /* Ajustes para sidebar */
   .sidebar {
-    width: 160px; 
+    width: 144px; 
   }
   
   .sidebar-header {
@@ -240,7 +240,7 @@ All colors MUST be HSL.
     }
     
     .sidebar {
-      width: 160px; 
+      width: 144px; 
     }
   }
 
