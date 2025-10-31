@@ -190,8 +190,8 @@ export default function Inventario({ containers }: InventarioProps) {
           </CardTitle>
           <Icon className={`h-3 w-3 text-${color}`} />
         </CardHeader>
-        <CardContent className="p-2 pt-0">
-          <div className="text-base font-bold text-foreground">{value}</div>
+        <CardContent className="p-1 pt-0">
+          <div className="text-sm font-bold text-foreground">{value}</div>
           <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
         </CardContent>
       </Card>

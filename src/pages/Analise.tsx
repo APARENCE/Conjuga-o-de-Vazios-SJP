@@ -158,8 +158,8 @@ export default function Analise({ containers }: AnalisePageProps) {
           </CardTitle>
           <Icon className={`h-3 w-3 text-${color}`} /> {/* Ícone reduzido */}
         </CardHeader>
-        <CardContent className="p-2 pt-0">
-          <div className="text-base font-bold text-foreground">{value}</div> {/* Valor reduzido */}
+        <CardContent className="p-1 pt-0">
+          <div className="text-sm font-bold text-foreground">{value}</div> {/* Valor reduzido */}
           <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
         </CardContent>
       </Card>

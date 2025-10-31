@@ -75,8 +75,8 @@ export function AnaliseInventario({ containers, inventory: filteredInventory }: 
             <CardTitle className="text-xs font-medium">Containers Ativos (Total)</CardTitle>
             <Package className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="p-2 pt-0">
-            <div className="text-base font-bold">{containerStats.total}</div>
+          <CardContent className="p-1 pt-0">
+            <div className="text-sm font-bold">{containerStats.total}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {containerStats.devolvidos} devolvidos | {containerStats.pendentes} pendentes
             </p>
@@ -89,8 +89,8 @@ export function AnaliseInventario({ containers, inventory: filteredInventory }: 
             <CardTitle className="text-xs font-medium">Containers Vencidos (Total)</CardTitle>
             <AlertTriangle className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="p-2 pt-0">
-            <div className="text-base font-bold text-danger">{containerStats.vencidos}</div>
+          <CardContent className="p-1 pt-0">
+            <div className="text-sm font-bold text-danger">{containerStats.vencidos}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Exigem atenção imediata
             </p>
@@ -103,8 +103,8 @@ export function AnaliseInventario({ containers, inventory: filteredInventory }: 
             <CardTitle className="text-xs font-medium">Itens Rastreio Ativos (Filtro)</CardTitle>
             <Warehouse className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="p-2 pt-0">
-            <div className="text-base font-bold">{inventoryStats.emUso}</div>
+          <CardContent className="p-1 pt-0">
+            <div className="text-sm font-bold">{inventoryStats.emUso}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {inventoryStats.totalTrocas} itens de troca rastreados no filtro
             </p>
@@ -117,8 +117,8 @@ export function AnaliseInventario({ containers, inventory: filteredInventory }: 
             <CardTitle className="text-xs font-medium">Itens Rastreio Concluídos (Filtro)</CardTitle>
             <CheckCircle2 className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="p-2 pt-0">
-            <div className="text-base font-bold">{inventoryStats.devolvidos}</div>
+          <CardContent className="p-1 pt-0">
+            <div className="text-sm font-bold">{inventoryStats.devolvidos}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Itens com status Devolvido (RIC OK) no filtro
             </p>

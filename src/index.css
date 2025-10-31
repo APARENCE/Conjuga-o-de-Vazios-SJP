@@ -137,7 +137,7 @@ All colors MUST be HSL.
 
   /* Reduzir padding em componentes para economizar espaço */
   .card {
-    @apply p-3; /* Reduzido de p-4 para p-3 */
+    @apply p-3; 
   }
   
   .container {
@@ -284,6 +284,6 @@ All colors MUST be HSL.
   
   .compact-table th,
   .compact-table td {
-    @apply px-1 py-0.5;
+    @apply px-1 py-0; /* Reduzido de py-0.5 para py-0 */
   }
 }

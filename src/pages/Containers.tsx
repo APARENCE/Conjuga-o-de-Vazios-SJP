@@ -254,8 +254,8 @@ export default function Containers({
               </CardTitle>
               <Package className="h-3 w-3 text-primary" />
             </CardHeader>
-            <CardContent className="p-2 pt-0">
-              <div className="text-base font-bold text-foreground">{stats.total}</div>
+            <CardContent className="p-1 pt-0">
+              <div className="text-sm font-bold text-foreground">{stats.total}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {armadores.length} armadores
               </p>
@@ -275,8 +275,8 @@ export default function Containers({
               </CardTitle>
               <CheckCircle className="h-3 w-3 text-success" />
             </CardHeader>
-            <CardContent className="p-2 pt-0">
-              <div className="text-base font-bold text-foreground">{stats.devolvidos}</div>
+            <CardContent className="p-1 pt-0">
+              <div className="text-sm font-bold text-foreground">{stats.devolvidos}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {stats.total > 0 ? ((stats.devolvidos / stats.total) * 100).toFixed(1) : 0}%
               </p>
@@ -296,8 +296,8 @@ export default function Containers({
               </CardTitle>
               <TrendingUp className="h-3 w-3 text-warning" />
             </CardHeader>
-            <CardContent className="p-2 pt-0">
-              <div className="text-base font-bold text-foreground">{stats.pendentes}</div>
+            <CardContent className="p-1 pt-0">
+              <div className="text-sm font-bold text-foreground">{stats.pendentes}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {stats.total > 0 ? ((stats.pendentes / stats.total) * 100).toFixed(1) : 0}%
               </p>
@@ -317,8 +317,8 @@ export default function Containers({
               </CardTitle>
               <AlertCircle className="h-3 w-3 text-danger" />
             </CardHeader>
-            <CardContent className="p-2 pt-0">
-              <div className="text-base font-bold text-foreground">{stats.vencidos}</div>
+            <CardContent className="p-1 pt-0">
+              <div className="text-sm font-bold text-foreground">{stats.vencidos}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {stats.total > 0 ? ((stats.vencidos / stats.total) * 100).toFixed(1) : 0}%
               </p>
