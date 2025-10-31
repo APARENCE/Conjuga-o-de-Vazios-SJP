@@ -29,11 +29,8 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen flex w-full bg-background">
-      <AppSidebar 
-        onImport={() => {}} // Handlers vazios, pois o input está no App
-        onExport={() => {}}
-        onContainerAdd={() => {}}
-      />
+      {/* AppSidebar é renderizado aqui, mas os handlers são passados no componente App */}
+      {/* Removendo AppSidebar daqui para renderizar no componente App, onde os handlers estão definidos */}
       
       {/* Conteúdo Principal */}
       <div 
@@ -191,6 +188,12 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <SidebarProvider>
+            {/* Renderiza a Sidebar aqui, onde os handlers estão disponíveis */}
+            <AppSidebar 
+              onImport={handleImport} 
+              onExport={handleExport}
+              onContainerAdd={handleContainerAdd}
+            />
             <AppLayout>
               <Routes>
                 <Route 
