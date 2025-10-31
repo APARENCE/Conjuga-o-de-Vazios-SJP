@@ -25,7 +25,8 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const isMobile = useIsMobile();
   
   // Largura da sidebar é 160px (w-40) = 10rem
-  const sidebarWidth = "10rem"; // 160px
+  // Removendo a variável sidebarWidth e usando a classe utilitária md:ml-40
+  // para garantir que o Tailwind CSS a reconheça.
 
   return (
     <div className="min-h-screen flex w-full bg-background overflow-x-hidden">
@@ -34,9 +35,8 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         className={cn(
           "flex-1 flex flex-col h-screen transition-all duration-300",
           // Em desktop (md+), a margem esquerda é controlada por 'isOpen'.
-          // Usamos ml-[10rem] para empurrar o conteúdo quando a sidebar está aberta.
-          // Se a sidebar estiver fechada, a margem é 0.
-          !isMobile && (isOpen ? `md:ml-[${sidebarWidth}]` : "md:ml-0"),
+          // Se isOpen for true, a margem é 10rem (ml-40). Se for false, a margem é 0 (ml-0).
+          !isMobile && (isOpen ? `md:ml-40` : "md:ml-0"),
         )}
       >
         <header className="h-12 border-b border-border bg-card flex items-center px-3 shrink-0">
