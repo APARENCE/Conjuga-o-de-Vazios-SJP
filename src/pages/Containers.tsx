@@ -175,10 +175,10 @@ export default function Containers({
   return (
     <div className="flex flex-col h-full">
       {/* Cabeçalho Fixo (Título, Filtros, KPIs) */}
-      <div className="sticky top-0 z-40 bg-background pb-4 border-b border-border/50 shadow-sm">
-        <div className="space-y-4">
+      <div className="sticky top-0 z-40 bg-background pb-2 border-b border-border/50 shadow-sm">
+        <div className="space-y-2">
           {/* Header */}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             <div>
               <h1 className="text-2xl font-bold text-foreground">Gestão de Containers</h1>
               <p className="text-muted-foreground text-sm mt-1">
@@ -187,19 +187,19 @@ export default function Containers({
             </div>
             
             {/* Barra de ações e filtros */}
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row gap-1">
               <div className="relative flex-1">
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
                 <Input
                   placeholder="Pesquisar container, armador, motorista..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-7 text-xs h-8"
+                  className="pl-7 text-xs h-7"
                 />
               </div>
               
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[140px] h-8 text-xs">
+                <SelectTrigger className="w-full sm:w-[140px] h-7 text-xs">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -211,7 +211,7 @@ export default function Containers({
               </Select>
 
               <Select value={armadorFilter} onValueChange={setArmadorFilter}>
-                <SelectTrigger className="w-full sm:w-[140px] h-8 text-xs">
+                <SelectTrigger className="w-full sm:w-[140px] h-7 text-xs">
                   <SelectValue placeholder="Armador" />
                 </SelectTrigger>
                 <SelectContent>
@@ -244,7 +244,7 @@ export default function Containers({
           </div>
 
           {/* KPIs - Versão responsiva */}
-          <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-2 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -331,7 +331,7 @@ export default function Containers({
           </div>
 
           {/* Resultados da busca */}
-          <div className="flex justify-between items-center pt-2">
+          <div className="flex justify-between items-center pt-1">
             <p className="text-xs text-muted-foreground">
               {filteredContainers.length} de {containers.length} containers
             </p>
@@ -349,7 +349,7 @@ export default function Containers({
       </div>
 
       {/* Conteúdo principal - Tabela ou Cards (Roleable) */}
-      <div className="flex-1 pt-4">
+      <div className="flex-1 pt-2">
         <AnimatePresence mode="wait">
           {viewMode === "table" ? (
             <motion.div
