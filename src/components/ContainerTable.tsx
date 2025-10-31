@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { FileUploadDialog } from "@/components/FileUploadDialog";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, AlertTriangle, XCircle, Clock } from "lucide-react";
 import { ContainerFormDialog } from "@/components/ContainerFormDialog";
 import {
   AlertDialog,
@@ -51,6 +51,13 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
     if (dias === 0) return "text-danger font-semibold";
     if (dias <= 3) return "text-warning font-semibold";
     return "text-success";
+  };
+  
+  const getDiasRestantesIcon = (dias: number | string) => {
+    if (typeof dias === "string") return null;
+    if (dias === 0) return <XCircle className="h-3 w-3 text-danger shrink-0" />;
+    if (dias <= 3) return <AlertTriangle className="h-3 w-3 text-warning shrink-0" />;
+    return null;
   };
 
   // Classes para colunas fixas (rolagem horizontal)
@@ -121,7 +128,10 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                   <TableCell className="w-[70px] min-w-[70px]">{container.demurrage}</TableCell>
                   <TableCell className="text-center w-[45px] min-w-[45px]">{container.freeTime || "-"}</TableCell>
                   <TableCell className={cn("text-center w-[65px] min-w-[65px]", getDiasRestantesColor(container.diasRestantes))}>
-                    {container.diasRestantes}
+                    <div className="flex items-center justify-center gap-1">
+                        {getDiasRestantesIcon(container.diasRestantes)}
+                        {container.diasRestantes}
+                    </div>
                   </TableCell>
                   <TableCell className="w-[55px] min-w-[55px]">{container.placas}</TableCell>
                   <TableCell className="w-[75px] min-w-[75px] truncate">{container.motorista}</TableCell>

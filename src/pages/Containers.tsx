@@ -18,6 +18,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { VencimentoAlert } from "@/components/VencimentoAlert"; // Importando o novo componente
 
 interface ContainersPageProps {
   containers: Container[];
@@ -35,7 +36,8 @@ export default function Containers({
   onContainerDelete 
 }: ContainersPageProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  // Status filter agora pode ser 'vencidos' ou 'proximos'
+  const [statusFilter, setStatusFilter] = useState<string>("all"); 
   const [armadorFilter, setArmadorFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
@@ -47,6 +49,9 @@ export default function Containers({
     return uniqueArmadores.sort();
   }, [containers]);
 
+  // Função para calcular dias restantes como número
+  const getDiasRestantes = (c: Container) => typeof c.diasRestantes === 'number' ? c.diasRestantes : 0;
+
   // Filtrar containers
   const filteredContainers = useMemo(() => {
     return containers.filter(c => {
@@ -57,10 +62,21 @@ export default function Containers({
         c.motorista?.toLowerCase().includes(search) ||
         c.placas?.toLowerCase().includes(search);
 
-      const matchesStatus = statusFilter === "all" || 
-        (statusFilter === "devolvidos" && String(c.status || '').toLowerCase().includes("ok")) ||
-        (statusFilter === "pendentes" && String(c.status || '').toLowerCase().includes("aguardando")) ||
-        (statusFilter === "vencidos" && (typeof c.diasRestantes === 'number' ? c.diasRestantes : 0) === 0);
+      let matchesStatus = true;
+      const dias = getDiasRestantes(c);
+      const statusLower = String(c.status || '').toLowerCase();
+
+      if (statusFilter === "devolvidos") {
+        matchesStatus = statusLower.includes("ok") || statusLower.includes("devolvido");
+      } else if (statusFilter === "pendentes") {
+        matchesStatus = statusLower.includes("aguardando") || statusLower.includes("verificar");
+      } else if (statusFilter === "vencidos") {
+        matchesStatus = dias === 0;
+      } else if (statusFilter === "proximos") {
+        matchesStatus = dias > 0 && dias <= 3;
+      } else if (statusFilter === "all") {
+        matchesStatus = true;
+      }
 
       const matchesArmador = armadorFilter === "all" || c.armador === armadorFilter;
 
@@ -78,10 +94,7 @@ export default function Containers({
       const status = String(c.status || '').toLowerCase();
       return status.includes("aguardando") || status.includes("verificar");
     }).length,
-    vencidos: containers.filter(c => {
-      const dias = typeof c.diasRestantes === 'number' ? c.diasRestantes : 0;
-      return dias === 0;
-    }).length,
+    vencidos: containers.filter(c => getDiasRestantes(c) === 0).length,
   }), [containers]);
 
   const getStatusBadge = (status: string) => {
@@ -198,7 +211,18 @@ export default function Containers({
                 />
               </div>
               
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select 
+                value={statusFilter} 
+                onValueChange={(value) => {
+                    // Se o valor for um dos filtros de alerta, definimos o filtro de status
+                    if (value === 'vencidos' || value === 'proximos') {
+                        setStatusFilter(value);
+                    } else {
+                        // Caso contrário, usamos o valor padrão do Select
+                        setStatusFilter(value);
+                    }
+                }}
+              >
                 <SelectTrigger className="w-full sm:w-[140px] h-7 text-xs">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -206,7 +230,8 @@ export default function Containers({
                   <SelectItem value="all">Todos Status</SelectItem>
                   <SelectItem value="devolvidos">Devolvidos</SelectItem>
                   <SelectItem value="pendentes">Pendentes</SelectItem>
-                  <SelectItem value="vencidos">Vencidos</SelectItem>
+                  <SelectItem value="vencidos">Vencidos (0 dias)</SelectItem>
+                  <SelectItem value="proximos">Próximos (1-3 dias)</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -242,6 +267,13 @@ export default function Containers({
               </div>
             </div>
           </div>
+          
+          {/* Alerta de Vencimento (Novo) */}
+          <VencimentoAlert 
+            containers={containers} 
+            onFilterChange={setStatusFilter} 
+            currentFilter={statusFilter}
+          />
 
           {/* KPIs - Versão responsiva */}
           <div className="grid gap-2 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -251,7 +283,7 @@ export default function Containers({
               transition={{ duration: 0.3, delay: 0.1 }}
             >
               <Card className="border-l-4 border-l-primary hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1"> {/* Reduzido padding */}
+                <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1">
                   <CardTitle className="text-xs font-medium text-muted-foreground">
                     Total
                   </CardTitle>
@@ -259,7 +291,7 @@ export default function Containers({
                 </CardHeader>
                 <CardContent className="p-1 pt-0">
                   <div className="text-sm font-bold text-foreground">{stats.total}</div>
-                  <p className="text-xs text-muted-foreground mt-0.5"> {/* Reduzido mt-1 para mt-0.5 */}
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {armadores.length} armadores
                   </p>
                 </CardContent>
@@ -272,7 +304,7 @@ export default function Containers({
               transition={{ duration: 0.3, delay: 0.2 }}
             >
               <Card className="border-l-4 border-l-success hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1"> {/* Reduzido padding */}
+                <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1">
                   <CardTitle className="text-xs font-medium text-muted-foreground">
                     Devolvidos
                   </CardTitle>
@@ -280,7 +312,7 @@ export default function Containers({
                 </CardHeader>
                 <CardContent className="p-1 pt-0">
                   <div className="text-sm font-bold text-foreground">{stats.devolvidos}</div>
-                  <p className="text-xs text-muted-foreground mt-0.5"> {/* Reduzido mt-1 para mt-0.5 */}
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {stats.total > 0 ? ((stats.devolvidos / stats.total) * 100).toFixed(1) : 0}%
                   </p>
                 </CardContent>
@@ -293,7 +325,7 @@ export default function Containers({
               transition={{ duration: 0.3, delay: 0.3 }}
             >
               <Card className="border-l-4 border-l-warning hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1"> {/* Reduzido padding */}
+                <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1">
                   <CardTitle className="text-xs font-medium text-muted-foreground">
                     Pendentes
                   </CardTitle>
@@ -301,7 +333,7 @@ export default function Containers({
                 </CardHeader>
                 <CardContent className="p-1 pt-0">
                   <div className="text-sm font-bold text-foreground">{stats.pendentes}</div>
-                  <p className="text-xs text-muted-foreground mt-0.5"> {/* Reduzido mt-1 para mt-0.5 */}
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {stats.total > 0 ? ((stats.pendentes / stats.total) * 100).toFixed(1) : 0}%
                   </p>
                 </CardContent>
@@ -314,7 +346,7 @@ export default function Containers({
               transition={{ duration: 0.3, delay: 0.4 }}
             >
               <Card className="border-l-4 border-l-danger hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1"> {/* Reduzido padding */}
+                <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1">
                   <CardTitle className="text-xs font-medium text-muted-foreground">
                     Vencidos
                   </CardTitle>
@@ -322,7 +354,7 @@ export default function Containers({
                 </CardHeader>
                 <CardContent className="p-1 pt-0">
                   <div className="text-sm font-bold text-foreground">{stats.vencidos}</div>
-                  <p className="text-xs text-muted-foreground mt-0.5"> {/* Reduzido mt-1 para mt-0.5 */}
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {stats.total > 0 ? ((stats.vencidos / stats.total) * 100).toFixed(1) : 0}%
                   </p>
                 </CardContent>
