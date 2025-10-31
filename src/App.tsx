@@ -16,35 +16,58 @@ import { parseExcelFile, exportToExcel } from "@/lib/excelUtils";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Menu } from "lucide-react"; // Importando o ícone Menu
+import { Button } from "@/components/ui/button"; // Importando Button
 
 const queryClient = new QueryClient();
 
 // Componente Wrapper para aplicar o layout
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
-  const { isOpen } = useSidebar();
+  const { isOpen, setIsOpen } = useSidebar();
   const isMobile = useIsMobile();
   
   // Largura da sidebar é 160px (w-40) = 10rem
 
+  // Definindo o SidebarTrigger localmente para controle total
+  const CustomSidebarTrigger = () => {
+    // O botão de toggle dentro da sidebar (AppSidebar.tsx) lida com o estado aberto/fechado em desktop.
+    // Este trigger é para:
+    // 1. Mobile (sempre visível para abrir/fechar o menu lateral)
+    // 2. Desktop, quando a sidebar está oculta (para reabri-la)
+    
+    if (isMobile || !isOpen) {
+      return (
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className={cn(
+            "h-8 w-8",
+            // Em desktop, só mostramos se a sidebar estiver fechada
+            !isMobile && isOpen && "hidden" 
+          )}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <Menu className="h-4 w-4" />
+        </Button>
+      );
+    }
+    return null;
+  };
+
   return (
     // O contêiner principal deve ser flexível para acomodar a sidebar fixa e o conteúdo
     <div className="min-h-screen flex w-full bg-background overflow-x-hidden">
-      {/* 
-        A sidebar é fixa (md:fixed) e está fora do fluxo flexível.
-        O AppLayout precisa compensar a largura da sidebar.
-      */}
-      
       {/* Conteúdo Principal (Header + Main) */}
       <div 
         className={cn(
           "flex-1 flex flex-col h-screen transition-all duration-300",
           // Em desktop (md+), a margem esquerda é controlada por 'isOpen'.
-          // Se isOpen for true, a margem é 10rem (ml-40). Se for false, a margem é 0 (ml-0).
           !isMobile && (isOpen ? `md:ml-40` : "md:ml-0"),
         )}
       >
         <header className="h-12 border-b border-border bg-card flex items-center px-3 shrink-0">
-          <SidebarTrigger />
+          {/* Usando o trigger customizado */}
+          <CustomSidebarTrigger />
         </header>
         {/* A rolagem deve estar no main, que é flex-1 */}
         <main className="flex-1 py-2 px-0 overflow-y-auto">
