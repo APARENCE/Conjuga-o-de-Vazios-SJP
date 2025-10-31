@@ -31,7 +31,7 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
   ];
 
   return (
-    <Sidebar className="border-r border-border w-36">
+    <Sidebar className="border-r border-border w-40">
       <SidebarHeader className="border-b border-border p-1">
         <h2 className="text-sm font-bold text-primary break-words leading-tight">Conjugação de vazios</h2>
         <p className="text-xs text-muted-foreground">Patio- SJP</p>
@@ -74,7 +74,6 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
                   size="sm"
                   className="w-full justify-start bg-primary hover:bg-primary/90 text-primary-foreground h-7 px-1 text-xs"
                 >
-                  {/* Removido mr-1 para dar mais espaço ao texto */}
                   <Plus className="h-3 w-3" /> 
                   Novo Container
                 </Button>
