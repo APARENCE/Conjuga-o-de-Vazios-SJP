@@ -161,7 +161,7 @@ const App = () => {
                 <header className="h-12 border-b border-border bg-card flex items-center px-3 shrink-0">
                   <SidebarTrigger />
                 </header>
-                <main className="flex-1 py-2 px-1 overflow-y-auto">
+                <main className="flex-1 py-2 px-0 overflow-y-auto">
                   <Routes>
                     <Route 
                       path="/" 
