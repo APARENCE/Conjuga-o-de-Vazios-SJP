@@ -33,7 +33,6 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
   return (
     <Sidebar className="border-r border-border w-36">
       <SidebarHeader className="border-b border-border p-1">
-        {/* Garantindo que o texto do título possa quebrar a linha */}
         <h2 className="text-sm font-bold text-primary break-words leading-tight">Conjugação de vazios</h2>
         <p className="text-xs text-muted-foreground">Patio- SJP</p>
       </SidebarHeader>
@@ -45,7 +44,6 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  {/* Mantendo px-2 nos botões de navegação, pois o texto é curto */}
                   <SidebarMenuButton asChild className="h-7 px-2">
                     <NavLink
                       to={item.url}
@@ -74,10 +72,10 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
                 <Button
                   variant="default"
                   size="sm"
-                  // Reduzindo o padding horizontal do botão para px-1 para dar mais espaço ao texto
                   className="w-full justify-start bg-primary hover:bg-primary/90 text-primary-foreground h-7 px-1 text-xs"
                 >
-                  <Plus className="h-3 w-3 mr-1" />
+                  {/* Removido mr-1 para dar mais espaço ao texto */}
+                  <Plus className="h-3 w-3" /> 
                   Novo Container
                 </Button>
               }
@@ -85,7 +83,6 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
             <Button
               variant="outline"
               size="sm"
-              // Reduzindo o padding horizontal do botão para px-1
               className="w-full justify-start h-7 px-1 text-xs"
               onClick={onImport}
             >
@@ -95,7 +92,6 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
             <Button
               variant="outline"
               size="sm"
-              // Reduzindo o padding horizontal do botão para px-1
               className="w-full justify-start h-7 px-1 text-xs"
               onClick={onExport}
             >
