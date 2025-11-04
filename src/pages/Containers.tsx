@@ -43,8 +43,8 @@ export default function Containers({
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
   const isMobile = useIsMobile();
 
-  // Obter armadores únicos para o filtro
-  const armadores = useMemo(() => {
+  // Obter armadores únicos para o filtro (baseado em todos os containers)
+  const allArmadores = useMemo(() => {
     const uniqueArmadores = [...new Set(containers.map(c => c.armador).filter(Boolean))];
     return uniqueArmadores.sort();
   }, [containers]);
@@ -84,18 +84,32 @@ export default function Containers({
     });
   }, [containers, searchTerm, statusFilter, armadorFilter]);
 
-  const stats = useMemo(() => ({
-    total: containers.length,
-    devolvidos: containers.filter(c => {
+  // NOVO CÁLCULO DE STATS: Baseado em filteredContainers
+  const stats = useMemo(() => {
+    const total = filteredContainers.length;
+    
+    const devolvidos = filteredContainers.filter(c => {
       const status = String(c.status || '').toLowerCase();
       return status.includes("ok") || status.includes("devolvido");
-    }).length,
-    pendentes: containers.filter(c => {
+    }).length;
+    
+    const pendentes = filteredContainers.filter(c => {
       const status = String(c.status || '').toLowerCase();
       return status.includes("aguardando") || status.includes("verificar");
-    }).length,
-    vencidos: containers.filter(c => getDiasRestantes(c) === 0).length,
-  }), [containers]);
+    }).length;
+    
+    const vencidos = filteredContainers.filter(c => getDiasRestantes(c) === 0).length;
+    
+    const armadoresFiltrados = [...new Set(filteredContainers.map(c => c.armador).filter(Boolean))].length;
+
+    return {
+      total,
+      devolvidos,
+      pendentes,
+      vencidos,
+      armadoresFiltrados,
+    };
+  }, [filteredContainers]);
 
   const getStatusBadge = (status: string) => {
     if (!status) return <Badge variant="secondary" className="text-xs">-</Badge>;
@@ -241,7 +255,7 @@ export default function Containers({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos Armadores</SelectItem>
-                  {armadores.map(armador => (
+                  {allArmadores.map(armador => (
                     <SelectItem key={armador} value={armador}>{armador}</SelectItem>
                   ))}
                 </SelectContent>
@@ -292,7 +306,7 @@ export default function Containers({
                 <CardContent className="p-1 pt-0">
                   <div className="text-sm font-bold text-foreground">{stats.total}</div>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {armadores.length} armadores
+                    {stats.armadoresFiltrados} armadores
                   </p>
                 </CardContent>
               </Card>
