@@ -18,7 +18,8 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { VencimentoAlert } from "@/components/VencimentoAlert"; // Importando o novo componente
+import { VencimentoAlert } from "@/components/VencimentoAlert";
+import { ContainerDetailsSidebar } from "@/components/ContainerDetailsSidebar"; // Importando a nova sidebar
 
 interface ContainersPageProps {
   containers: Container[];
@@ -178,17 +179,13 @@ export default function Containers({
           </div>
           
           <div className="flex gap-1 pt-1">
-            <FileUploadDialog
-              containerId={container.id}
-              files={container.files || []}
-              onFilesChange={(files) => onContainerUpdate(container.id, files)}
-              trigger={
-                <Button variant="outline" size="sm" className="flex-1 h-6 text-xs">
-                  <Eye className="h-3 w-3 mr-1" />
-                  Arquivos ({container.files?.length || 0})
-                </Button>
-              }
-            />
+            <Button variant="outline" size="sm" className="flex-1 h-6 text-xs gap-1" onClick={(e) => {
+                e.stopPropagation(); // Evita abrir a sidebar
+                setSelectedContainer(container); // Abre a sidebar de detalhes
+            }}>
+              <Eye className="h-3 w-3" />
+              Detalhes
+            </Button>
             <ContainerFormDialog
               container={container}
               onSave={(data) => onContainerEdit(container.id, data)}
@@ -415,6 +412,7 @@ export default function Containers({
                 onContainerUpdate={onContainerUpdate}
                 onContainerEdit={onContainerEdit}
                 onContainerDelete={onContainerDelete}
+                onContainerSelect={setSelectedContainer} // Adicionando o handler de seleção
               />
             </motion.div>
           ) : (
@@ -441,98 +439,18 @@ export default function Containers({
         </AnimatePresence>
       </div>
 
-      {/* Modal de detalhes do container (mobile) - Mantido fora do fluxo de rolagem */}
-      {selectedContainer && isMobile && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 z-50 flex items-end"
-          onClick={() => setSelectedContainer(null)}
-        >
-          <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="bg-background w-full max-h-[80vh] overflow-y-auto rounded-t-2xl p-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <h3 className="text-lg font-bold">{selectedContainer.container}</h3>
-                <p className="text-muted-foreground">{selectedContainer.armador}</p>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => setSelectedContainer(null)}>
-                ×
-              </Button>
-            </div>
-            
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <span className="text-sm text-muted-foreground">Status Geral</span>
-                  <div className="mt-1">{getStatusBadge(selectedContainer.status)}</div>
-                </div>
-                <div>
-                  <span className="text-sm text-muted-foreground">Prazo (Dias)</span>
-                  <p className={cn("font-semibold", getDiasRestantesColor(selectedContainer.prazoDias))}>
-                    {selectedContainer.prazoDias}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Data Entrada:</span>
-                  <span>{selectedContainer.dataEntrada || "-"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Placa:</span>
-                  <span>{selectedContainer.placa || "-"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Motorista Entrada:</span>
-                  <span>{selectedContainer.motoristaEntrada || "-"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Cliente Entrada:</span>
-                  <span>{selectedContainer.clienteEntrada || "-"}</span>
-                </div>
-              </div>
-              
-              <div className="flex gap-2 pt-2">
-                <FileUploadDialog
-                  containerId={selectedContainer.id}
-                  files={selectedContainer.files || []}
-                  onFilesChange={(files) => {
-                    onContainerUpdate(selectedContainer.id, files);
-                    setSelectedContainer({ ...selectedContainer, files });
-                  }}
-                  trigger={
-                    <Button variant="outline" className="flex-1">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver Arquivos
-                    </Button>
-                  }
-                />
-                <ContainerFormDialog
-                  container={selectedContainer}
-                  onSave={(data) => {
-                    onContainerEdit(selectedContainer.id, data);
-                    setSelectedContainer({ ...selectedContainer, ...data });
-                  }}
-                  trigger={
-                    <Button variant="outline">
-                      <Filter className="h-4 w-4" />
-                    </Button>
-                  }
-                />
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
+      {/* Sidebar de Detalhes (Substitui o modal mobile) */}
+      <ContainerDetailsSidebar
+        container={selectedContainer}
+        onClose={() => setSelectedContainer(null)}
+        onContainerUpdate={(id, files) => {
+            onContainerUpdate(id, files);
+            // Atualiza o estado local para refletir os novos arquivos na sidebar
+            if (selectedContainer && selectedContainer.id === id) {
+                setSelectedContainer(prev => prev ? { ...prev, files } : null);
+            }
+        }}
+      />
     </div>
   );
 }

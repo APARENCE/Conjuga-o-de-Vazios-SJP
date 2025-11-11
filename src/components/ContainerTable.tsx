@@ -31,9 +31,10 @@ interface ContainerTableProps {
   onContainerUpdate: (containerId: string, files: ContainerFile[]) => void;
   onContainerEdit: (id: string, container: Partial<Container>) => void;
   onContainerDelete: (id: string) => void;
+  onContainerSelect: (container: Container) => void; // Novo prop
 }
 
-export function ContainerTable({ containers, onContainerUpdate, onContainerEdit, onContainerDelete }: ContainerTableProps) {
+export function ContainerTable({ containers, onContainerUpdate, onContainerEdit, onContainerDelete, onContainerSelect }: ContainerTableProps) {
   const getStatusBadge = (status: string) => {
     if (!status) return <Badge variant="secondary">-</Badge>;
     const statusLower = String(status).toLowerCase();
@@ -138,7 +139,11 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               </TableRow>
             ) : (
               containers.map((container) => (
-                <TableRow key={container.id} className="hover:bg-muted/30">
+                <TableRow 
+                  key={container.id} 
+                  className="hover:bg-muted/30 cursor-pointer"
+                  onClick={() => onContainerSelect(container)} // Adicionando clique na linha
+                >
                   {/* Colunas Fixas (Renderizadas primeiro) */}
                   <TableCell className={cn("font-bold z-[25]", containerLeft, fixedCellClasses, containerWidth)}>
                     {container.container}
@@ -152,7 +157,6 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                   <TableCell className={cn(colWidths.md, "truncate")}>{container.motoristaEntrada}</TableCell>
                   <TableCell className={colWidths.sm}>{container.placa}</TableCell>
                   <TableCell className={colWidths.md}>{container.dataEntrada}</TableCell>
-                  {/* CONTAINER e ARMADOR (5ª e 6ª colunas) são pulados aqui, pois foram renderizados como fixos */}
                   <TableCell className={cn(colWidths.xs, "text-right")}>{container.tara || "-"}</TableCell>
                   <TableCell className={cn(colWidths.xs, "text-right")}>{container.mgw || "-"}</TableCell>
                   <TableCell className={colWidths.xs}>{container.tipo}</TableCell>
@@ -175,17 +179,17 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                   <TableCell className={colWidths.md}>{container.statusMinuta}</TableCell>
                   <TableCell className={cn(colWidths.lg, "truncate")}>{container.bookingAtrelado}</TableCell>
                   <TableCell className={colWidths.xs}>{container.lacre}</TableCell>
-                  <TableCell className={cn(colWidths.lg, "truncate")}>{container.clienteSaidaDestino}</TableCell>
+                  <TableCell className={colWidths.lg}>{container.clienteSaidaDestino}</TableCell>
                   <TableCell className={colWidths.sm}>{container.atrelado}</TableCell>
                   <TableCell className={colWidths.sm}>{container.operadorSaida}</TableCell>
                   <TableCell className={colWidths.md}>{container.dataEstufagem}</TableCell>
                   <TableCell className={colWidths.md}>{container.dataSaidaSJP}</TableCell>
-                  <TableCell className={cn(colWidths.md, "truncate")}>{container.motoristaSaidaSJP}</TableCell>
+                  <TableCell className={colWidths.md}>{container.motoristaSaidaSJP}</TableCell>
                   <TableCell className={colWidths.sm}>{container.placaSaida}</TableCell>
                   <TableCell className={colWidths.md}>{getStatusBadge(container.status)}</TableCell>
                   
                   {/* Colunas de Ação */}
-                  <TableCell className="text-center w-[45px] min-w-[45px]">
+                  <TableCell className="text-center w-[45px] min-w-[45px]" onClick={(e) => e.stopPropagation()}>
                     <FileUploadDialog
                       containerId={container.id}
                       files={container.files || []}
@@ -197,7 +201,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                       }
                     />
                   </TableCell>
-                  <TableCell className="w-[45px] min-w-[45px]">
+                  <TableCell className="w-[45px] min-w-[45px]" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-0.5 justify-center">
                       <ContainerFormDialog
                         container={container}
