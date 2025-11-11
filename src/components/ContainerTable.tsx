@@ -82,7 +82,6 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
   };
   
   // Classe para ocultar colunas não essenciais em telas menores que 2XL
-  // Vamos usar 'hidden lg:table-cell' para ocultar em telas pequenas/médias, mas manter visível em desktop (lg+)
   const hiddenColClass = "hidden 2xl:table-cell";
   const hiddenColHeaderClass = "hidden 2xl:table-cell";
   
@@ -122,7 +121,6 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               <TableHead className={cn("font-semibold", colWidths.sm, hiddenColHeaderClass)}>OPERADOR1</TableHead>
               <TableHead className={cn("font-semibold", colWidths.xs, hiddenColHeaderClass)}>TARA</TableHead>
               <TableHead className={cn("font-semibold", colWidths.xs, hiddenColHeaderClass)}>MGW</TableHead>
-              {/* TIPO, STATUS V/C, DATA PORTO, FREE TIME foram movidos */}
               <TableHead className={cn("font-semibold", colWidths.md, hiddenColHeaderClass)}>DEMURRAGE</TableHead>
               <TableHead className={cn("font-semibold", colWidths.lg, hiddenColHeaderClass)}>TRANSPORTADORA (Entrada)</TableHead>
               <TableHead className={cn("font-semibold", colWidths.sm, hiddenColHeaderClass)}>ESTOQUE</TableHead>
