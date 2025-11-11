@@ -100,9 +100,8 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
         const headerRow = jsonData[0];
         const dataRows = jsonData.slice(1);
         
-        // Se o número de colunas na planilha for menor que o esperado, pode haver um erro de formato.
         if (headerRow.length < CONTAINER_KEYS_ORDER.length) {
-             console.warn(`Aviso: A planilha tem ${headerRow.length} colunas, mas ${CONTAINER_KEYS_ORDER.length} são esperadas.`);
+             console.warn(`Aviso: A planilha tem ${headerRow.length} colunas, mas ${CONTAINER_KEYS_ORDER.length} são esperadas. Verifique se há colunas vazias no final.`);
         }
 
         const containers: Container[] = dataRows
@@ -146,6 +145,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
 
 
             const containerValue = String(partialContainer.container || '').trim();
+            // Garante que o ID seja único, mesmo se o container estiver vazio (embora não deva)
             const id = containerValue || `import-${Date.now()}-${index}`;
 
             return {
