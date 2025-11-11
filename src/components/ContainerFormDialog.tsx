@@ -96,8 +96,10 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[60vh] pr-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* Seção 1: Identificação e Status */}
+            <div className="grid grid-cols-2 gap-4 border-b pb-4">
               <div className="space-y-2">
                 <Label htmlFor="container">Container *</Label>
                 <Input
@@ -116,6 +118,19 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
                   required
                 />
               </div>
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="status">Status</Label>
+                <Input
+                  id="status"
+                  value={formData.status}
+                  onChange={(e) => handleChange("status", e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Seção 2: Datas e Prazos */}
+            <div className="grid grid-cols-2 gap-4 border-b pb-4">
+              <h3 className="col-span-2 text-sm font-semibold text-muted-foreground">Datas e Prazos</h3>
               <div className="space-y-2">
                 <Label htmlFor="dataOperacao">Data de Operação</Label>
                 <Input
@@ -141,7 +156,7 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="freeTime">Free Time</Label>
+                <Label htmlFor="freeTime">Free Time (dias)</Label>
                 <Input
                   id="freeTime"
                   type="number"
@@ -158,22 +173,11 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
                   onChange={(e) => handleChange("diasRestantes", parseInt(e.target.value) || 0)}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="placas">Placas</Label>
-                <Input
-                  id="placas"
-                  value={formData.placas}
-                  onChange={(e) => handleChange("placas", e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="motorista">Motorista</Label>
-                <Input
-                  id="motorista"
-                  value={formData.motorista}
-                  onChange={(e) => handleChange("motorista", e.target.value)}
-                />
-              </div>
+            </div>
+
+            {/* Seção 3: Logística e Motorista */}
+            <div className="grid grid-cols-2 gap-4 border-b pb-4">
+              <h3 className="col-span-2 text-sm font-semibold text-muted-foreground">Logística</h3>
               <div className="space-y-2">
                 <Label htmlFor="origem">Origem</Label>
                 <Input
@@ -183,27 +187,19 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="baixaPatio">Baixa Pátio SJP</Label>
+                <Label htmlFor="placas">Placas</Label>
                 <Input
-                  id="baixaPatio"
-                  value={formData.baixaPatio}
-                  onChange={(e) => handleChange("baixaPatio", e.target.value)}
+                  id="placas"
+                  value={formData.placas}
+                  onChange={(e) => handleChange("placas", e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="containerTroca">Container (Troca)</Label>
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="motorista">Motorista</Label>
                 <Input
-                  id="containerTroca"
-                  value={formData.containerTroca}
-                  onChange={(e) => handleChange("containerTroca", e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="armadorTroca">Armador (Troca)</Label>
-                <Input
-                  id="armadorTroca"
-                  value={formData.armadorTroca}
-                  onChange={(e) => handleChange("armadorTroca", e.target.value)}
+                  id="motorista"
+                  value={formData.motorista}
+                  onChange={(e) => handleChange("motorista", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -222,15 +218,37 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
                   onChange={(e) => handleChange("dataDevolucao", e.target.value)}
                 />
               </div>
+            </div>
+
+            {/* Seção 4: Troca e Baixa */}
+            <div className="grid grid-cols-2 gap-4">
+              <h3 className="col-span-2 text-sm font-semibold text-muted-foreground">Troca e Baixa</h3>
               <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="baixaPatio">Baixa Pátio SJP</Label>
                 <Input
-                  id="status"
-                  value={formData.status}
-                  onChange={(e) => handleChange("status", e.target.value)}
+                  id="baixaPatio"
+                  value={formData.baixaPatio}
+                  onChange={(e) => handleChange("baixaPatio", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="containerTroca">Container (Troca)</Label>
+                <Input
+                  id="containerTroca"
+                  value={formData.containerTroca}
+                  onChange={(e) => handleChange("containerTroca", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="armadorTroca">Armador (Troca)</Label>
+                <Input
+                  id="armadorTroca"
+                  value={formData.armadorTroca}
+                  onChange={(e) => handleChange("armadorTroca", e.target.value)}
                 />
               </div>
             </div>
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancelar
