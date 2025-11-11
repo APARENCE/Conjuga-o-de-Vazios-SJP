@@ -84,7 +84,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               <TableHead className={cn("font-semibold z-30", armadorLeft, armadorWidth)}>ARMADOR</TableHead>
               
               {/* Colunas Variáveis (Ordem da Planilha) */}
-              <TableHead className="font-semibold w-[70px] min-w-[70px]">DATA OP.</TableHead>
+              <TableHead className="font-semibold w-[70px] min-w-[70px]">DATA DE OPERAÇÃO</TableHead>
               <TableHead className="font-semibold w-[70px] min-w-[70px]">DATA PORTO</TableHead>
               <TableHead className="font-semibold w-[70px] min-w-[70px]">DEMURRAGE</TableHead>
               <TableHead className="font-semibold text-center w-[45px] min-w-[45px]">FREE TIME</TableHead>
@@ -92,11 +92,11 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               <TableHead className="font-semibold w-[55px] min-w-[55px]">PLACAS</TableHead>
               <TableHead className="font-semibold w-[75px] min-w-[75px]">MOTORISTA</TableHead>
               <TableHead className="font-semibold w-[55px] min-w-[55px]">ORIGEM</TableHead>
-              <TableHead className="font-semibold w-[75px] min-w-[75px]">DEPOT DEV.</TableHead>
-              <TableHead className="font-semibold w-[70px] min-w-[70px]">DATA DEV.</TableHead>
-              <TableHead className="font-semibold w-[75px] min-w-[75px]">CONT. TROCA</TableHead>
-              <TableHead className="font-semibold w-[65px] min-w-[65px]">ARM. TROCA</TableHead>
-              <TableHead className="font-semibold w-[70px] min-w-[70px]">BAIXA PÁTIO</TableHead>
+              <TableHead className="font-semibold w-[75px] min-w-[75px]">DEPOT DE DEVOLUÇÃO</TableHead>
+              <TableHead className="font-semibold w-[70px] min-w-[70px]">DATA DE DEVOLUÇÃO</TableHead>
+              <TableHead className="font-semibold w-[75px] min-w-[75px]">CONTAINER TROCA</TableHead>
+              <TableHead className="font-semibold w-[65px] min-w-[65px]">ARMADOR TROCA</TableHead>
+              <TableHead className="font-semibold w-[70px] min-w-[70px]">BAIXA PÁTIO SJP</TableHead>
               <TableHead className="font-semibold w-[75px] min-w-[75px]">STATUS</TableHead>
               
               {/* Colunas de Ação */}
