@@ -22,7 +22,7 @@ export function AnaliseInventario({ containers, inventory: filteredInventory }: 
       return status.includes("aguardando") || status.includes("verificar");
     }).length;
     const vencidos = containers.filter(c => {
-      const dias = typeof c.prazoDias === 'number' ? c.prazoDias : 0; // Usando prazoDias
+      const dias = typeof c.diasRestantes === 'number' ? c.diasRestantes : 0;
       return dias === 0;
     }).length;
 
@@ -41,26 +41,26 @@ export function AnaliseInventario({ containers, inventory: filteredInventory }: 
     // Função auxiliar para normalizar o status
     const normalizeStatus = (status: string | undefined) => String(status || '').toLowerCase();
 
-    // Contagem de itens Aguardando Devolução
-    const aguardandoDevolucao = filteredInventory.filter(item => {
+    // Contagem de itens em uso/aguardando devolução
+    const emUso = filteredInventory.filter(item => {
       const status = normalizeStatus(item.status);
-      return status.includes("aguardando devolução");
+      return status.includes("em uso") || status.includes("aguardando devolução");
     }).length;
     
     // Contagem de itens devolvidos (RIC OK)
-    const ricOk = filteredInventory.filter(item => {
+    const devolvidos = filteredInventory.filter(item => {
       const status = normalizeStatus(item.status);
       return status.includes("ric ok") || status.includes("devolvido");
     }).length;
 
-    // Contagem de itens de Baixa Pátio
-    const totalBaixas = filteredInventory.filter(item => item.itemType === 'Baixa Pátio').length;
+    // Contagem de tipos de itens
+    const totalTrocas = filteredInventory.filter(item => item.itemType === 'Troca').length;
     
     return {
       totalItems,
-      aguardandoDevolucao,
-      ricOk,
-      totalBaixas,
+      emUso,
+      devolvidos,
+      totalTrocas,
     };
   }, [filteredInventory]); // Depende do inventário filtrado
 
@@ -97,30 +97,30 @@ export function AnaliseInventario({ containers, inventory: filteredInventory }: 
           </CardContent>
         </Card>
         
-        {/* KPI 3: RICs Devolvidas (FILTRADO) */}
-        <Card className="border-l-4 border-l-success">
+        {/* KPI 3: Itens de Rastreio Ativos (FILTRADO) */}
+        <Card className="border-l-4 border-l-warning">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2">
-            <CardTitle className="text-xs font-medium">RICs Devolvidas (Filtro)</CardTitle>
-            <CheckCircle2 className="h-3 w-3 text-muted-foreground" />
+            <CardTitle className="text-xs font-medium">Itens Rastreio Ativos (Filtro)</CardTitle>
+            <Warehouse className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
           <CardContent className="p-1 pt-0">
-            <div className="text-sm font-bold">{inventoryStats.ricOk}</div>
+            <div className="text-sm font-bold">{inventoryStats.emUso}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Itens com status RIC OK no filtro
+              {inventoryStats.totalTrocas} itens de troca rastreados no filtro
             </p>
           </CardContent>
         </Card>
 
-        {/* KPI 4: Pendentes de Devolução (FILTRADO) */}
-        <Card className="border-l-4 border-l-warning">
+        {/* KPI 4: Itens Rastreio Concluídos (FILTRADO) */}
+        <Card className="border-l-4 border-l-success">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-2">
-            <CardTitle className="text-xs font-medium">Pendentes de Devolução (Filtro)</CardTitle>
-            <Clock className="h-3 w-3 text-muted-foreground" />
+            <CardTitle className="text-xs font-medium">Itens Rastreio Concluídos (Filtro)</CardTitle>
+            <CheckCircle2 className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
           <CardContent className="p-1 pt-0">
-            <div className="text-sm font-bold">{inventoryStats.aguardandoDevolucao}</div>
+            <div className="text-sm font-bold">{inventoryStats.devolvidos}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Itens Aguardando Devolução no filtro
+              Itens com status Devolvido (RIC OK) no filtro
             </p>
           </CardContent>
         </Card>
