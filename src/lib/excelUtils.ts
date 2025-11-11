@@ -20,6 +20,7 @@ const excelDateToJSDate = (serial: any): string => {
   if (typeof serial === "string") {
     const brMatch = serial.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
     if (brMatch) {
+        // DD/MM/YYYY
         date = new Date(`${brMatch[3]}-${brMatch[2]}-${brMatch[1]}`);
     } else {
         date = new Date(serial);
@@ -41,42 +42,41 @@ const excelDateToJSDate = (serial: any): string => {
   return String(serial);
 };
 
-// Mapping of expected header names (case-insensitive, trimmed) to Container keys
-const HEADER_MAP: { [key: string]: keyof Container } = {
-  'operador': 'operador',
-  'motorista entrada': 'motoristaEntrada',
-  'placa': 'placa',
-  'data entrada': 'dataEntrada',
-  'container': 'container',
-  'armador': 'armador',
-  'tara': 'tara',
-  'mgw': 'mgw',
-  'tipo': 'tipo',
-  'padrão': 'padrao',
-  'status (vazio/cheio)': 'statusVazioCheio',
-  'data porto': 'dataPorto',
-  'freetimearmador': 'freeTimeArmador',
-  'demurrage': 'demurrage',
-  'prazo(dias)': 'prazoDias',
-  'cliente de entrada': 'clienteEntrada',
-  'transportadora': 'transportadora',
-  'estoque': 'estoque',
-  'transportadora saida': 'transportadoraSaida', // Assumindo que o segundo 'TRANSPORTADORA' é 'TRANSPORTADORA SAIDA'
-  'status entrega minuta': 'statusEntregaMinuta',
-  'status minuta': 'statusMinuta',
-  'booking atrelado': 'bookingAtrelado',
-  'lacre': 'lacre',
-  'cliente saida / destino': 'clienteSaidaDestino',
-  'atrelado': 'atrelado',
-  'operador saida': 'operadorSaida', // Assumindo que o segundo 'OPERADOR' é 'OPERADOR SAIDA'
-  'data da estufagem': 'dataEstufagem',
-  'data saida sjp': 'dataSaidaSJP',
-  'motorista saida sjp': 'motoristaSaidaSJP',
-  'placa saida': 'placaSaida', // Assumindo que o segundo 'PLACA' é 'PLACA SAIDA'
-  
-  // Mapeamento de campos antigos para novos (para compatibilidade interna)
-  'dias restantes': 'prazoDias', // Mapeia o campo antigo para o novo 'prazoDias'
-};
+// Ordem exata das chaves da interface Container, correspondendo à ordem da planilha.
+// Isso garante que mesmo com cabeçalhos duplicados, o mapeamento seja correto.
+const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
+  'operador', // 1. OPERADOR (Entrada)
+  'motoristaEntrada', // 2. MOTORISTA ENTRADA
+  'placa', // 3. PLACA (Entrada)
+  'dataEntrada', // 4. DATA ENTRADA
+  'container', // 5. CONTAINER
+  'armador', // 6. ARMADOR
+  'tara', // 7. TARA
+  'mgw', // 8. MGW
+  'tipo', // 9. TIPO
+  'padrao', // 10. PADRÃO
+  'statusVazioCheio', // 11. STATUS (VAZIO/CHEIO)
+  'dataPorto', // 12. DATA PORTO
+  'freeTimeArmador', // 13. FREETimearmador
+  'demurrage', // 14. Demurrage
+  'prazoDias', // 15. Prazo(dias)
+  'clienteEntrada', // 16. CLIENTE DE ENTRADA
+  'transportadora', // 17. TRANSPORTADORA (Entrada)
+  'estoque', // 18. ESTOQUE
+  'transportadoraSaida', // 19. TRANSPORTADORA (Saída)
+  'statusEntregaMinuta', // 20. STATUS ENTREGA MINUTA
+  'statusMinuta', // 21. STATUS MINUTA
+  'bookingAtrelado', // 22. BOOKING ATRELADO
+  'lacre', // 23. LACRE
+  'clienteSaidaDestino', // 24. CLIENTE SAIDA / DESTINO
+  'atrelado', // 25. ATRELADO
+  'operadorSaida', // 26. OPERADOR (Saída)
+  'dataEstufagem', // 27. DATA DA ESTUFAGEM
+  'dataSaidaSJP', // 28. DATA SAIDA SJP
+  'motoristaSaidaSJP', // 29. MOTORISTA SAIDA SJP
+  'placaSaida', // 30. PLACA (Saída)
+];
+
 
 export const parseExcelFile = (file: File): Promise<Container[]> => {
   return new Promise((resolve, reject) => {
@@ -85,6 +85,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
     reader.onload = (e) => {
       try {
         const data = e.target?.result;
+        // Lendo como array de arrays (raw: false para manter formatação de data)
         const workbook = XLSX.read(data, { type: 'binary', cellDates: true, raw: false });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
@@ -95,29 +96,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
           return resolve([]);
         }
 
-        // 1. Mapeamento de Cabeçalho
-        const rawHeaderRow = jsonData[0];
-        const columnMap: { [key: number]: keyof Container } = {};
-        let containerColumnIndex: number | null = null;
-
-        rawHeaderRow.forEach((rawHeader, index) => {
-          const header = String(rawHeader || '').toLowerCase().trim();
-          const mappedKey = HEADER_MAP[header];
-          
-          if (mappedKey) {
-            columnMap[index] = mappedKey;
-            if (mappedKey === 'container' && containerColumnIndex === null) {
-                containerColumnIndex = index;
-            }
-          }
-        });
-        
-        if (containerColumnIndex === null) {
-          columnMap[4] = 'container'; // Assumindo que CONTAINER está na coluna E (índice 4)
-          containerColumnIndex = 4;
-        }
-        
-        // 2. Processamento das Linhas de Dados
+        // A primeira linha é o cabeçalho, mas vamos ignorá-la e usar a ordem fixa CONTAINER_KEYS_ORDER
         const dataRows = jsonData.slice(1);
         
         const containers: Container[] = dataRows
@@ -125,7 +104,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
           .map((row, index) => {
             const partialContainer: Partial<Container> = {
               files: [],
-              // Definindo defaults para todos os novos campos
+              // Definindo defaults para todos os campos
               operador: "", motoristaEntrada: "", placa: "", dataEntrada: "", container: "", armador: "",
               tara: 0, mgw: 0, tipo: "", padrao: "", statusVazioCheio: "", dataPorto: "", freeTimeArmador: 0,
               demurrage: "", prazoDias: 0, clienteEntrada: "", transportadora: "", estoque: "",
@@ -135,8 +114,8 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
               diasRestantes: 0, status: "",
             };
 
-            Object.entries(columnMap).forEach(([colIndexStr, key]) => {
-              const colIndex = parseInt(colIndexStr);
+            // Mapeamento por índice
+            CONTAINER_KEYS_ORDER.forEach((key, colIndex) => {
               let value = row[colIndex] ?? ""; 
 
               if (['tara', 'mgw', 'freeTimeArmador', 'prazoDias'].includes(key)) {
@@ -171,6 +150,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
         
         resolve(containers);
       } catch (error) {
+        console.error("Erro durante o parsing do Excel:", error);
         reject(error);
       }
     };
@@ -200,20 +180,20 @@ export const exportToExcel = (containers: Container[]) => {
       'Demurrage': c.demurrage,
       'Prazo(dias)': c.prazoDias,
       'CLIENTE DE ENTRADA': c.clienteEntrada,
-      'TRANSPORTADORA': c.transportadora,
+      'TRANSPORTADORA': c.transportadora, // Entrada
       'ESTOQUE': c.estoque,
-      'TRANSPORTADORA SAIDA': c.transportadoraSaida,
+      'TRANSPORTADORA': c.transportadoraSaida, // Saída (Nome duplicado na exportação)
       'STATUS ENTREGA MINUTA': c.statusEntregaMinuta,
       'STATUS MINUTA': c.statusMinuta,
       'BOOKING ATRELADO': c.bookingAtrelado,
       'LACRE': c.lacre,
       'CLIENTE SAIDA / DESTINO': c.clienteSaidaDestino,
       'ATRELADO': c.atrelado,
-      'OPERADOR SAIDA': c.operadorSaida,
+      'OPERADOR': c.operadorSaida, // Saída (Nome duplicado na exportação)
       'DATA DA ESTUFAGEM': c.dataEstufagem,
       'DATA SAIDA SJP': c.dataSaidaSJP,
       'MOTORISTA SAIDA SJP': c.motoristaSaidaSJP,
-      'PLACA SAIDA': c.placaSaida,
+      'PLACA': c.placaSaida, // Saída (Nome duplicado na exportação)
       // Campos de compatibilidade que não estão na planilha original, mas podem ser úteis
       'STATUS GERAL': c.status,
       'DIAS RESTANTES (COMPAT)': c.diasRestantes,
