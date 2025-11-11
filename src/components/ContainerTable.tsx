@@ -69,6 +69,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
   // Larguras fixas para as colunas fixas (MÁXIMA REDUÇÃO)
   const containerWidth = "w-[85px] min-w-[85px]";
   const armadorWidth = "w-[65px] min-w-[65px]";
+  const containerLeft = "left-0";
   const armadorLeft = "left-[85px]"; // Começa após a coluna Container (85px)
 
   return (
@@ -80,7 +81,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
           <TableHeader className={fixedHeaderClasses}>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
               {/* Colunas Fixas (Container e Armador) */}
-              <TableHead className={cn("font-semibold left-0 z-[35]", containerWidth)}>CONTAINER</TableHead>
+              <TableHead className={cn("font-semibold z-[35]", containerLeft, containerWidth)}>CONTAINER</TableHead>
               <TableHead className={cn("font-semibold z-30", armadorLeft, armadorWidth)}>ARMADOR</TableHead>
               
               {/* Colunas Variáveis (Ordem da Planilha) */}
@@ -130,7 +131,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               containers.map((container) => (
                 <TableRow key={container.id} className="hover:bg-muted/30">
                   {/* Colunas Fixas */}
-                  <TableCell className={cn("font-bold left-0 z-[25]", fixedCellClasses, containerWidth)}>
+                  <TableCell className={cn("font-bold z-[25]", containerLeft, fixedCellClasses, containerWidth)}>
                     {container.container}
                   </TableCell>
                   <TableCell className={cn("font-bold z-20", armadorLeft, fixedCellClasses, armadorWidth)}>
