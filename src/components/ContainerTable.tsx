@@ -93,9 +93,9 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               <TableHead className={cn("font-semibold z-30", armadorLeft, armadorWidth)}>ARMADOR</TableHead>
               
               {/* Colunas Variáveis (Ordem da Planilha) */}
-              <TableHead className={cn("font-semibold", colWidths.sm)}>OPERADOR</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.sm)}>OPERADOR1</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>MOTORISTA ENTRADA</TableHead>
-              <TableHead className={cn("font-semibold", colWidths.sm)}>PLACA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.sm)}>PLACA1</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>DATA ENTRADA</TableHead>
               <TableHead className={cn("font-semibold", colWidths.xs)}>TARA</TableHead>
               <TableHead className={cn("font-semibold", colWidths.xs)}>MGW</TableHead>
@@ -107,20 +107,20 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               <TableHead className={cn("font-semibold", colWidths.md)}>DEMURRAGE</TableHead>
               <TableHead className={cn("font-semibold text-center", colWidths.md)}>PRAZO(DIAS)</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>CLIENTE ENTRADA</TableHead>
-              <TableHead className={cn("font-semibold", colWidths.lg)}>TRANSPORTADORA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.lg)}>TRANSPORTADORA (Entrada)</TableHead>
               <TableHead className={cn("font-semibold", colWidths.sm)}>ESTOQUE</TableHead>
-              <TableHead className={cn("font-semibold", colWidths.lg)}>TRANSPORTADORA SAIDA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.lg)}>TRANSPORTADORA (Saída)</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>STATUS ENTREGA MINUTA</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>STATUS MINUTA</TableHead>
               <TableHead className={cn("font-semibold", colWidths.lg)}>BOOKING ATRELADO</TableHead>
               <TableHead className={cn("font-semibold", colWidths.xs)}>LACRE</TableHead>
               <TableHead className={cn("font-semibold", colWidths.lg)}>CLIENTE SAIDA / DESTINO</TableHead>
               <TableHead className={cn("font-semibold", colWidths.sm)}>ATRELADO</TableHead>
-              <TableHead className={cn("font-semibold", colWidths.sm)}>OPERADOR SAIDA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.sm)}>OPERADOR (Saída)</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>DATA ESTUFAGEM</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>DATA SAIDA SJP</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>MOTORISTA SAIDA SJP</TableHead>
-              <TableHead className={cn("font-semibold", colWidths.sm)}>PLACA SAIDA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.sm)}>PLACA (Saída)</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>STATUS GERAL</TableHead>
               
               {/* Colunas de Ação */}

@@ -42,12 +42,11 @@ const excelDateToJSDate = (serial: any): string => {
   return String(serial);
 };
 
-// Ordem exata das chaves da interface Container, correspondendo à ordem da planilha.
-// Isso garante que mesmo com cabeçalhos duplicados, o mapeamento seja correto.
+// Ordem exata das chaves da interface Container, correspondendo à ordem da planilha (30 colunas).
 const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
-  'operador', // 1. OPERADOR (Entrada)
+  'operador', // 1. OPERADOR1
   'motoristaEntrada', // 2. MOTORISTA ENTRADA
-  'placa', // 3. PLACA (Entrada)
+  'placa', // 3. PLACA1 (Entrada)
   'dataEntrada', // 4. DATA ENTRADA
   'container', // 5. CONTAINER
   'armador', // 6. ARMADOR
@@ -90,15 +89,22 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
+        // Usamos header: 1 para obter o cabeçalho na primeira linha e os dados nas seguintes
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: "" }) as any[][];
         
         if (jsonData.length < 2) {
           return resolve([]);
         }
 
-        // A primeira linha é o cabeçalho, mas vamos ignorá-la e usar a ordem fixa CONTAINER_KEYS_ORDER
+        // A primeira linha é o cabeçalho, vamos usá-la para verificar o número de colunas
+        const headerRow = jsonData[0];
         const dataRows = jsonData.slice(1);
         
+        // Se o número de colunas na planilha for menor que o esperado, pode haver um erro de formato.
+        if (headerRow.length < CONTAINER_KEYS_ORDER.length) {
+             console.warn(`Aviso: A planilha tem ${headerRow.length} colunas, mas ${CONTAINER_KEYS_ORDER.length} são esperadas.`);
+        }
+
         const containers: Container[] = dataRows
           .filter(row => row.some(cell => String(cell || '').trim() !== ''))
           .map((row, index) => {
@@ -135,6 +141,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
             partialContainer.diasRestantes = partialContainer.prazoDias;
             
             // Mapeamento de compatibilidade: status (usando statusVazioCheio como fallback)
+            // Se o status geral não for fornecido na planilha, usamos o status Vazio/Cheio
             partialContainer.status = partialContainer.status || partialContainer.statusVazioCheio || "";
 
 
@@ -163,10 +170,10 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
 export const exportToExcel = (containers: Container[]) => {
   const worksheet = XLSX.utils.json_to_sheet(
     containers.map(c => ({
-      // Ordem exata da planilha
-      'OPERADOR': c.operador,
+      // Ordem exata da planilha (usando os nomes de cabeçalho fornecidos pelo usuário)
+      'OPERADOR1': c.operador,
       'MOTORISTA ENTRADA': c.motoristaEntrada,
-      'PLACA': c.placa,
+      'PLACA1': c.placa,
       'DATA ENTRADA': c.dataEntrada,
       'CONTAINER': c.container,
       'ARMADOR': c.armador,
@@ -182,21 +189,20 @@ export const exportToExcel = (containers: Container[]) => {
       'CLIENTE DE ENTRADA': c.clienteEntrada,
       'TRANSPORTADORA': c.transportadora, // Entrada
       'ESTOQUE': c.estoque,
-      'TRANSPORTADORA': c.transportadoraSaida, // Saída (Nome duplicado na exportação)
+      'TRANSPORTADORA SAIDA': c.transportadoraSaida, // Saída (Ajustado para evitar duplicidade na exportação, mas mantendo a ordem)
       'STATUS ENTREGA MINUTA': c.statusEntregaMinuta,
       'STATUS MINUTA': c.statusMinuta,
       'BOOKING ATRELADO': c.bookingAtrelado,
       'LACRE': c.lacre,
       'CLIENTE SAIDA / DESTINO': c.clienteSaidaDestino,
       'ATRELADO': c.atrelado,
-      'OPERADOR': c.operadorSaida, // Saída (Nome duplicado na exportação)
+      'OPERADOR SAIDA': c.operadorSaida, // Saída (Ajustado para evitar duplicidade na exportação, mas mantendo a ordem)
       'DATA DA ESTUFAGEM': c.dataEstufagem,
       'DATA SAIDA SJP': c.dataSaidaSJP,
       'MOTORISTA SAIDA SJP': c.motoristaSaidaSJP,
-      'PLACA': c.placaSaida, // Saída (Nome duplicado na exportação)
-      // Campos de compatibilidade que não estão na planilha original, mas podem ser úteis
+      'PLACA SAIDA': c.placaSaida, // Saída (Ajustado para evitar duplicidade na exportação, mas mantendo a ordem)
+      // Adicionando STATUS GERAL no final, pois não estava na lista de 30 colunas
       'STATUS GERAL': c.status,
-      'DIAS RESTANTES (COMPAT)': c.diasRestantes,
     }))
   );
   
