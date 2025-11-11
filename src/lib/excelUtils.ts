@@ -51,9 +51,8 @@ const excelDateToJSDate = (serial: any): string => {
 };
 
 // Mapping of expected header names (case-insensitive, trimmed) to Container keys
-// Baseado na planilha fornecida:
+// Ordem e nomes baseados na planilha:
 const HEADER_MAP: { [key: string]: keyof Container } = {
-  // Colunas A-E (Identificação e Prazos)
   'conteiner': 'container',
   'armador': 'armador',
   'data de operação': 'dataOperacao',
@@ -61,23 +60,17 @@ const HEADER_MAP: { [key: string]: keyof Container } = {
   'demurrage': 'demurrage',
   'free time': 'freeTime',
   'dias restantes': 'diasRestantes',
-  
-  // Colunas H-L (Logística)
   'placas': 'placas',
   'motorista': 'motorista',
   'origem': 'origem',
   'depot de devolução': 'depotDevolucao',
   'data de devolução': 'dataDevolucao',
-  
-  // Colunas M-O (Troca e Baixa)
   'container troca': 'containerTroca',
   'armador troca': 'armadorTroca',
   'baixa pátio sjp': 'baixaPatio',
-  
-  // Coluna P (Status)
   'status': 'status',
   
-  // Adicionando variações comuns para robustez
+  // Variações comuns para robustez
   'nº container': 'container',
   'data operacao': 'dataOperacao',
   'data devolução': 'dataDevolucao',
