@@ -88,7 +88,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
           {/* TableHeader: Fixo no topo (Z-index 30) */}
           <TableHeader className={fixedHeaderClasses}>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
-              {/* Colunas Fixas (Container e Armador) */}
+              {/* Colunas Fixas (Renderizadas primeiro, mas mapeadas para a 5ª e 6ª posição lógica) */}
               <TableHead className={cn("font-semibold z-[35]", containerLeft, containerWidth)}>CONTAINER</TableHead>
               <TableHead className={cn("font-semibold z-30", armadorLeft, armadorWidth)}>ARMADOR</TableHead>
               
@@ -97,6 +97,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               <TableHead className={cn("font-semibold", colWidths.md)}>MOTORISTA ENTRADA</TableHead>
               <TableHead className={cn("font-semibold", colWidths.sm)}>PLACA1</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>DATA ENTRADA</TableHead>
+              {/* CONTAINER e ARMADOR são fixos, mas seus cabeçalhos não são repetidos aqui */}
               <TableHead className={cn("font-semibold", colWidths.xs)}>TARA</TableHead>
               <TableHead className={cn("font-semibold", colWidths.xs)}>MGW</TableHead>
               <TableHead className={cn("font-semibold", colWidths.xs)}>TIPO</TableHead>
@@ -138,7 +139,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
             ) : (
               containers.map((container) => (
                 <TableRow key={container.id} className="hover:bg-muted/30">
-                  {/* Colunas Fixas */}
+                  {/* Colunas Fixas (Renderizadas primeiro) */}
                   <TableCell className={cn("font-bold z-[25]", containerLeft, fixedCellClasses, containerWidth)}>
                     {container.container}
                   </TableCell>
@@ -151,6 +152,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                   <TableCell className={cn(colWidths.md, "truncate")}>{container.motoristaEntrada}</TableCell>
                   <TableCell className={colWidths.sm}>{container.placa}</TableCell>
                   <TableCell className={colWidths.md}>{container.dataEntrada}</TableCell>
+                  {/* CONTAINER e ARMADOR (5ª e 6ª colunas) são pulados aqui, pois foram renderizados como fixos */}
                   <TableCell className={cn(colWidths.xs, "text-right")}>{container.tara || "-"}</TableCell>
                   <TableCell className={cn(colWidths.xs, "text-right")}>{container.mgw || "-"}</TableCell>
                   <TableCell className={colWidths.xs}>{container.tipo}</TableCell>

@@ -110,11 +110,7 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 border-b pb-4">
               <h3 className="col-span-full text-sm font-semibold text-muted-foreground">1. Entrada e Identificação</h3>
               
-              {/* Linha 1: CONTAINER, OPERADOR1, MOTORISTA ENTRADA, PLACA1, DATA ENTRADA, ARMADOR */}
-              <div className="space-y-2">
-                <Label htmlFor="container">CONTAINER *</Label>
-                <Input id="container" value={formData.container} onChange={(e) => handleChange("container", e.target.value)} required />
-              </div>
+              {/* Linha 1: OPERADOR1, MOTORISTA ENTRADA, PLACA1, DATA ENTRADA, CONTAINER, ARMADOR */}
               <div className="space-y-2">
                 <Label htmlFor="operador">OPERADOR1</Label>
                 <Input id="operador" value={formData.operador} onChange={(e) => handleChange("operador", e.target.value)} />
@@ -130,6 +126,10 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
               <div className="space-y-2">
                 <Label htmlFor="dataEntrada">DATA ENTRADA</Label>
                 <Input id="dataEntrada" value={formData.dataEntrada} onChange={(e) => handleChange("dataEntrada", e.target.value)} placeholder="DD/MM/AAAA" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="container">CONTAINER *</Label>
+                <Input id="container" value={formData.container} onChange={(e) => handleChange("container", e.target.value)} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="armador">ARMADOR *</Label>
