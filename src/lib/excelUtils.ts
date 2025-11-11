@@ -43,38 +43,37 @@ const excelDateToJSDate = (serial: any): string => {
 };
 
 // Ordem exata das chaves da interface Container, correspondendo à ordem da planilha (30 colunas).
-// ASSUMIMOS QUE 'CONTAINER' É A PRIMEIRA COLUNA.
 const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
-  'container', // 1. CONTAINER (Movido para a primeira posição)
-  'operador', // 2. OPERADOR1 (Originalmente 1)
-  'motoristaEntrada', // 3. MOTORISTA ENTRADA (Originalmente 2)
-  'placa', // 4. PLACA1 (Entrada) (Originalmente 3)
-  'dataEntrada', // 5. DATA ENTRADA (Originalmente 4)
-  'armador', // 6. ARMADOR (Originalmente 6)
-  'tara', // 7. TARA (Originalmente 7)
-  'mgw', // 8. MGW (Originalmente 8)
-  'tipo', // 9. TIPO (Originalmente 9)
-  'padrao', // 10. PADRÃO (Originalmente 10)
-  'statusVazioCheio', // 11. STATUS (VAZIO/CHEIO) (Originalmente 11)
-  'dataPorto', // 12. DATA PORTO (Originalmente 12)
-  'freeTimeArmador', // 13. FREETimearmador (Originalmente 13)
-  'demurrage', // 14. Demurrage (Originalmente 14)
-  'prazoDias', // 15. Prazo(dias) (Originalmente 15)
-  'clienteEntrada', // 16. CLIENTE DE ENTRADA (Originalmente 16)
-  'transportadora', // 17. TRANSPORTADORA (Entrada) (Originalmente 17)
-  'estoque', // 18. ESTOQUE (Originalmente 18)
-  'transportadoraSaida', // 19. TRANSPORTADORA (Saída) (Originalmente 19)
-  'statusEntregaMinuta', // 20. STATUS ENTREGA MINUTA (Originalmente 20)
-  'statusMinuta', // 21. STATUS MINUTA (Originalmente 21)
-  'bookingAtrelado', // 22. BOOKING ATRELADO (Originalmente 22)
-  'lacre', // 23. LACRE (Originalmente 23)
-  'clienteSaidaDestino', // 24. CLIENTE SAIDA / DESTINO (Originalmente 24)
-  'atrelado', // 25. ATRELADO (Originalmente 25)
-  'operadorSaida', // 26. OPERADOR (Saída) (Originalmente 26)
-  'dataEstufagem', // 27. DATA DA ESTUFAGEM (Originalmente 27)
-  'dataSaidaSJP', // 28. DATA SAIDA SJP (Originalmente 28)
-  'motoristaSaidaSJP', // 29. MOTORISTA SAIDA SJP (Originalmente 29)
-  'placaSaida', // 30. PLACA (Saída) (Originalmente 30)
+  'operador', // 1. OPERADOR1
+  'motoristaEntrada', // 2. MOTORISTA ENTRADA
+  'placa', // 3. PLACA1 (Entrada)
+  'dataEntrada', // 4. DATA ENTRADA
+  'container', // 5. CONTAINER
+  'armador', // 6. ARMADOR
+  'tara', // 7. TARA
+  'mgw', // 8. MGW
+  'tipo', // 9. TIPO
+  'padrao', // 10. PADRÃO
+  'statusVazioCheio', // 11. STATUS (VAZIO/CHEIO)
+  'dataPorto', // 12. DATA PORTO
+  'freeTimeArmador', // 13. FREETimearmador
+  'demurrage', // 14. Demurrage
+  'prazoDias', // 15. Prazo(dias)
+  'clienteEntrada', // 16. CLIENTE DE ENTRADA
+  'transportadora', // 17. TRANSPORTADORA (Entrada)
+  'estoque', // 18. ESTOQUE
+  'transportadoraSaida', // 19. TRANSPORTADORA (Saída)
+  'statusEntregaMinuta', // 20. STATUS ENTREGA MINUTA
+  'statusMinuta', // 21. STATUS MINUTA
+  'bookingAtrelado', // 22. BOOKING ATRELADO
+  'lacre', // 23. LACRE
+  'clienteSaidaDestino', // 24. CLIENTE SAIDA / DESTINO
+  'atrelado', // 25. ATRELADO
+  'operadorSaida', // 26. OPERADOR (Saída)
+  'dataEstufagem', // 27. DATA DA ESTUFAGEM
+  'dataSaidaSJP', // 28. DATA SAIDA SJP
+  'motoristaSaidaSJP', // 29. MOTORISTA SAIDA SJP
+  'placaSaida', // 30. PLACA (Saída)
 ];
 
 
@@ -172,36 +171,36 @@ export const exportToExcel = (containers: Container[]) => {
   const worksheet = XLSX.utils.json_to_sheet(
     containers.map(c => ({
       // Ordem exata da planilha (usando os nomes de cabeçalho fornecidos pelo usuário)
-      'CONTAINER': c.container, // 1. CONTAINER
-      'OPERADOR1': c.operador, // 2. OPERADOR1
-      'MOTORISTA ENTRADA': c.motoristaEntrada, // 3. MOTORISTA ENTRADA
-      'PLACA1': c.placa, // 4. PLACA1
-      'DATA ENTRADA': c.dataEntrada, // 5. DATA ENTRADA
-      'ARMADOR': c.armador, // 6. ARMADOR
-      'TARA': c.tara, // 7. TARA
-      'MGW': c.mgw, // 8. MGW
-      'TIPO': c.tipo, // 9. TIPO
-      'PADRÃO': c.padrao, // 10. PADRÃO
-      'STATUS (VAZIO/CHEIO)': c.statusVazioCheio, // 11. STATUS (VAZIO/CHEIO)
-      'DATA PORTO': c.dataPorto, // 12. DATA PORTO
-      'FREETimearmador': c.freeTimeArmador, // 13. FREETimearmador
-      'Demurrage': c.demurrage, // 14. Demurrage
-      'Prazo(dias)': c.prazoDias, // 15. Prazo(dias)
-      'CLIENTE DE ENTRADA': c.clienteEntrada, // 16. CLIENTE DE ENTRADA
-      'TRANSPORTADORA': c.transportadora, // 17. TRANSPORTADORA (Entrada)
-      'ESTOQUE': c.estoque, // 18. ESTOQUE
-      'TRANSPORTADORA SAIDA': c.transportadoraSaida, // 19. TRANSPORTADORA (Saída)
-      'STATUS ENTREGA MINUTA': c.statusEntregaMinuta, // 20. STATUS ENTREGA MINUTA
-      'STATUS MINUTA': c.statusMinuta, // 21. STATUS MINUTA
-      'BOOKING ATRELADO': c.bookingAtrelado, // 22. BOOKING ATRELADO
-      'LACRE': c.lacre, // 23. LACRE
-      'CLIENTE SAIDA / DESTINO': c.clienteSaidaDestino, // 24. CLIENTE SAIDA / DESTINO
-      'ATRELADO': c.atrelado, // 25. ATRELADO
-      'OPERADOR SAIDA': c.operadorSaida, // 26. OPERADOR (Saída)
-      'DATA DA ESTUFAGEM': c.dataEstufagem, // 27. DATA DA ESTUFAGEM
-      'DATA SAIDA SJP': c.dataSaidaSJP, // 28. DATA SAIDA SJP
-      'MOTORISTA SAIDA SJP': c.motoristaSaidaSJP, // 29. MOTORISTA SAIDA SJP
-      'PLACA SAIDA': c.placaSaida, // 30. PLACA (Saída)
+      'OPERADOR1': c.operador,
+      'MOTORISTA ENTRADA': c.motoristaEntrada,
+      'PLACA1': c.placa,
+      'DATA ENTRADA': c.dataEntrada,
+      'CONTAINER': c.container,
+      'ARMADOR': c.armador,
+      'TARA': c.tara,
+      'MGW': c.mgw,
+      'TIPO': c.tipo,
+      'PADRÃO': c.padrao,
+      'STATUS (VAZIO/CHEIO)': c.statusVazioCheio,
+      'DATA PORTO': c.dataPorto,
+      'FREETimearmador': c.freeTimeArmador,
+      'Demurrage': c.demurrage,
+      'Prazo(dias)': c.prazoDias,
+      'CLIENTE DE ENTRADA': c.clienteEntrada,
+      'TRANSPORTADORA': c.transportadora, // Entrada
+      'ESTOQUE': c.estoque,
+      'TRANSPORTADORA SAIDA': c.transportadoraSaida, // Saída
+      'STATUS ENTREGA MINUTA': c.statusEntregaMinuta,
+      'STATUS MINUTA': c.statusMinuta,
+      'BOOKING ATRELADO': c.bookingAtrelado,
+      'LACRE': c.lacre,
+      'CLIENTE SAIDA / DESTINO': c.clienteSaidaDestino,
+      'ATRELADO': c.atrelado,
+      'OPERADOR SAIDA': c.operadorSaida, // Saída
+      'DATA DA ESTUFAGEM': c.dataEstufagem,
+      'DATA SAIDA SJP': c.dataSaidaSJP,
+      'MOTORISTA SAIDA SJP': c.motoristaSaidaSJP,
+      'PLACA SAIDA': c.placaSaida, // Saída
       // Campos de compatibilidade que não estão na planilha original, mas podem ser úteis
       'STATUS GERAL': c.status,
       'DIAS RESTANTES (COMPAT)': c.diasRestantes,

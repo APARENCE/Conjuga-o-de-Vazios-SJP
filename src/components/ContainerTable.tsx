@@ -88,7 +88,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
           {/* TableHeader: Fixo no topo (Z-index 30) */}
           <TableHeader className={fixedHeaderClasses}>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
-              {/* Colunas Fixas (Container e Armador) */}
+              {/* Colunas Fixas (CONTAINER e ARMADOR) */}
               <TableHead className={cn("font-semibold z-[35]", containerLeft, containerWidth)}>CONTAINER</TableHead>
               <TableHead className={cn("font-semibold z-30", armadorLeft, armadorWidth)}>ARMADOR</TableHead>
               
@@ -152,6 +152,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                   <TableCell className={cn(colWidths.md, "truncate")}>{container.motoristaEntrada}</TableCell>
                   <TableCell className={colWidths.sm}>{container.placa}</TableCell>
                   <TableCell className={colWidths.md}>{container.dataEntrada}</TableCell>
+                  {/* CONTAINER e ARMADOR (5ª e 6ª colunas) são pulados aqui, pois foram renderizados como fixos */}
                   <TableCell className={cn(colWidths.xs, "text-right")}>{container.tara || "-"}</TableCell>
                   <TableCell className={cn(colWidths.xs, "text-right")}>{container.mgw || "-"}</TableCell>
                   <TableCell className={colWidths.xs}>{container.tipo}</TableCell>
@@ -169,17 +170,17 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                   <TableCell className={cn(colWidths.md, "truncate")}>{container.clienteEntrada}</TableCell>
                   <TableCell className={cn(colWidths.lg, "truncate")}>{container.transportadora}</TableCell>
                   <TableCell className={colWidths.sm}>{container.estoque}</TableCell>
-                  <TableCell className={colWidths.lg}>{container.transportadoraSaida}</TableCell>
+                  <TableCell className={cn(colWidths.lg, "truncate")}>{container.transportadoraSaida}</TableCell>
                   <TableCell className={colWidths.md}>{container.statusEntregaMinuta}</TableCell>
                   <TableCell className={colWidths.md}>{container.statusMinuta}</TableCell>
-                  <TableCell className={colWidths.lg}>{container.bookingAtrelado}</TableCell>
+                  <TableCell className={cn(colWidths.lg, "truncate")}>{container.bookingAtrelado}</TableCell>
                   <TableCell className={colWidths.xs}>{container.lacre}</TableCell>
-                  <TableCell className={colWidths.lg}>{container.clienteSaidaDestino}</TableCell>
+                  <TableCell className={cn(colWidths.lg, "truncate")}>{container.clienteSaidaDestino}</TableCell>
                   <TableCell className={colWidths.sm}>{container.atrelado}</TableCell>
                   <TableCell className={colWidths.sm}>{container.operadorSaida}</TableCell>
                   <TableCell className={colWidths.md}>{container.dataEstufagem}</TableCell>
                   <TableCell className={colWidths.md}>{container.dataSaidaSJP}</TableCell>
-                  <TableCell className={colWidths.md}>{container.motoristaSaidaSJP}</TableCell>
+                  <TableCell className={cn(colWidths.md, "truncate")}>{container.motoristaSaidaSJP}</TableCell>
                   <TableCell className={colWidths.sm}>{container.placaSaida}</TableCell>
                   <TableCell className={colWidths.md}>{getStatusBadge(container.status)}</TableCell>
                   
