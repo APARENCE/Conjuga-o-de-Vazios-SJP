@@ -66,11 +66,19 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
   // Classes para o cabeçalho fixo (rolagem vertical)
   const fixedHeaderClasses = "sticky top-0 z-30 bg-muted/50 shadow-sm"; 
 
-  // Larguras fixas para as colunas fixas (MÁXIMA REDUÇÃO)
-  const containerWidth = "w-[85px] min-w-[85px]";
-  const armadorWidth = "w-[65px] min-w-[65px]";
+  // Larguras OTIMIZADAS para as colunas fixas
+  const containerWidth = "w-[100px] min-w-[100px]";
+  const armadorWidth = "w-[80px] min-w-[80px]";
   const containerLeft = "left-0";
-  const armadorLeft = "left-[85px]"; // Começa após a coluna Container (85px)
+  const armadorLeft = "left-[100px]"; // Começa após a coluna Container (100px)
+
+  // Larguras mínimas para colunas variáveis (ajustadas para melhor visualização)
+  const colWidths = {
+    xs: "w-[50px] min-w-[50px]", // Tara, MGW, Tipo, Padrão, Lacre
+    sm: "w-[65px] min-w-[65px]", // Operador, Placa, Free Time, Estoque, Atrelado, Placa Saida
+    md: "w-[80px] min-w-[80px]", // Datas, Status V/C, Demurrage, Prazo, Motorista, Cliente
+    lg: "w-[100px] min-w-[100px]", // Transportadora, Status Minuta, Cliente Saida
+  };
 
   return (
     <Card className="border-0 shadow-sm">
@@ -85,35 +93,35 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               <TableHead className={cn("font-semibold z-30", armadorLeft, armadorWidth)}>ARMADOR</TableHead>
               
               {/* Colunas Variáveis (Ordem da Planilha) */}
-              <TableHead className="font-semibold w-[60px] min-w-[60px]">OPERADOR</TableHead>
-              <TableHead className="font-semibold w-[80px] min-w-[80px]">MOTORISTA ENTRADA</TableHead>
-              <TableHead className="font-semibold w-[55px] min-w-[55px]">PLACA</TableHead>
-              <TableHead className="font-semibold w-[70px] min-w-[70px]">DATA ENTRADA</TableHead>
-              <TableHead className="font-semibold w-[50px] min-w-[50px]">TARA</TableHead>
-              <TableHead className="font-semibold w-[50px] min-w-[50px]">MGW</TableHead>
-              <TableHead className="font-semibold w-[50px] min-w-[50px]">TIPO</TableHead>
-              <TableHead className="font-semibold w-[50px] min-w-[50px]">PADRÃO</TableHead>
-              <TableHead className="font-semibold w-[70px] min-w-[70px]">STATUS (V/C)</TableHead>
-              <TableHead className="font-semibold w-[70px] min-w-[70px]">DATA PORTO</TableHead>
-              <TableHead className="font-semibold w-[60px] min-w-[60px]">FREE TIME</TableHead>
-              <TableHead className="font-semibold w-[70px] min-w-[70px]">DEMURRAGE</TableHead>
-              <TableHead className="font-semibold text-center w-[65px] min-w-[65px]">PRAZO(DIAS)</TableHead>
-              <TableHead className="font-semibold w-[80px] min-w-[80px]">CLIENTE ENTRADA</TableHead>
-              <TableHead className="font-semibold w-[80px] min-w-[80px]">TRANSPORTADORA</TableHead>
-              <TableHead className="font-semibold w-[60px] min-w-[60px]">ESTOQUE</TableHead>
-              <TableHead className="font-semibold w-[80px] min-w-[80px]">TRANSPORTADORA SAIDA</TableHead>
-              <TableHead className="font-semibold w-[70px] min-w-[70px]">STATUS ENTREGA MINUTA</TableHead>
-              <TableHead className="font-semibold w-[70px] min-w-[70px]">STATUS MINUTA</TableHead>
-              <TableHead className="font-semibold w-[80px] min-w-[80px]">BOOKING ATRELADO</TableHead>
-              <TableHead className="font-semibold w-[50px] min-w-[50px]">LACRE</TableHead>
-              <TableHead className="font-semibold w-[80px] min-w-[80px]">CLIENTE SAIDA / DESTINO</TableHead>
-              <TableHead className="font-semibold w-[60px] min-w-[60px]">ATRELADO</TableHead>
-              <TableHead className="font-semibold w-[60px] min-w-[60px]">OPERADOR SAIDA</TableHead>
-              <TableHead className="font-semibold w-[70px] min-w-[70px]">DATA ESTUFAGEM</TableHead>
-              <TableHead className="font-semibold w-[70px] min-w-[70px]">DATA SAIDA SJP</TableHead>
-              <TableHead className="font-semibold w-[80px] min-w-[80px]">MOTORISTA SAIDA SJP</TableHead>
-              <TableHead className="font-semibold w-[55px] min-w-[55px]">PLACA SAIDA</TableHead>
-              <TableHead className="font-semibold w-[75px] min-w-[75px]">STATUS GERAL</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.sm)}>OPERADOR</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md)}>MOTORISTA ENTRADA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.sm)}>PLACA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md)}>DATA ENTRADA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.xs)}>TARA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.xs)}>MGW</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.xs)}>TIPO</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.xs)}>PADRÃO</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md)}>STATUS (V/C)</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md)}>DATA PORTO</TableHead>
+              <TableHead className={cn("font-semibold text-center", colWidths.sm)}>FREE TIME</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md)}>DEMURRAGE</TableHead>
+              <TableHead className={cn("font-semibold text-center", colWidths.md)}>PRAZO(DIAS)</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md)}>CLIENTE ENTRADA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.lg)}>TRANSPORTADORA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.sm)}>ESTOQUE</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.lg)}>TRANSPORTADORA SAIDA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md)}>STATUS ENTREGA MINUTA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md)}>STATUS MINUTA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.lg)}>BOOKING ATRELADO</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.xs)}>LACRE</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.lg)}>CLIENTE SAIDA / DESTINO</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.sm)}>ATRELADO</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.sm)}>OPERADOR SAIDA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md)}>DATA ESTUFAGEM</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md)}>DATA SAIDA SJP</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md)}>MOTORISTA SAIDA SJP</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.sm)}>PLACA SAIDA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md)}>STATUS GERAL</TableHead>
               
               {/* Colunas de Ação */}
               <TableHead className="font-semibold text-center w-[45px] min-w-[45px]">Arquivos</TableHead>
@@ -139,40 +147,40 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                   </TableCell>
                   
                   {/* Colunas Variáveis (Ordem da Planilha) */}
-                  <TableCell className="w-[60px] min-w-[60px]">{container.operador}</TableCell>
-                  <TableCell className="w-[80px] min-w-[80px] truncate">{container.motoristaEntrada}</TableCell>
-                  <TableCell className="w-[55px] min-w-[55px]">{container.placa}</TableCell>
-                  <TableCell className="w-[70px] min-w-[70px]">{container.dataEntrada}</TableCell>
-                  <TableCell className="w-[50px] min-w-[50px] text-right">{container.tara || "-"}</TableCell>
-                  <TableCell className="w-[50px] min-w-[50px] text-right">{container.mgw || "-"}</TableCell>
-                  <TableCell className="w-[50px] min-w-[50px]">{container.tipo}</TableCell>
-                  <TableCell className="w-[50px] min-w-[50px]">{container.padrao}</TableCell>
-                  <TableCell className="w-[70px] min-w-[70px]">{container.statusVazioCheio}</TableCell>
-                  <TableCell className="w-[70px] min-w-[70px]">{container.dataPorto}</TableCell>
-                  <TableCell className="w-[60px] min-w-[60px] text-center">{container.freeTimeArmador || "-"}</TableCell>
-                  <TableCell className="w-[70px] min-w-[70px]">{container.demurrage}</TableCell>
-                  <TableCell className={cn("text-center w-[65px] min-w-[65px]", getDiasRestantesColor(container.prazoDias))}>
+                  <TableCell className={colWidths.sm}>{container.operador}</TableCell>
+                  <TableCell className={cn(colWidths.md, "truncate")}>{container.motoristaEntrada}</TableCell>
+                  <TableCell className={colWidths.sm}>{container.placa}</TableCell>
+                  <TableCell className={colWidths.md}>{container.dataEntrada}</TableCell>
+                  <TableCell className={cn(colWidths.xs, "text-right")}>{container.tara || "-"}</TableCell>
+                  <TableCell className={cn(colWidths.xs, "text-right")}>{container.mgw || "-"}</TableCell>
+                  <TableCell className={colWidths.xs}>{container.tipo}</TableCell>
+                  <TableCell className={colWidths.xs}>{container.padrao}</TableCell>
+                  <TableCell className={colWidths.md}>{container.statusVazioCheio}</TableCell>
+                  <TableCell className={colWidths.md}>{container.dataPorto}</TableCell>
+                  <TableCell className={cn(colWidths.sm, "text-center")}>{container.freeTimeArmador || "-"}</TableCell>
+                  <TableCell className={colWidths.md}>{container.demurrage}</TableCell>
+                  <TableCell className={cn("text-center", colWidths.md, getDiasRestantesColor(container.prazoDias))}>
                     <div className="flex items-center justify-center gap-1">
                         {getDiasRestantesIcon(container.prazoDias)}
                         {container.prazoDias}
                     </div>
                   </TableCell>
-                  <TableCell className="w-[80px] min-w-[80px] truncate">{container.clienteEntrada}</TableCell>
-                  <TableCell className="w-[80px] min-w-[80px] truncate">{container.transportadora}</TableCell>
-                  <TableCell className="w-[60px] min-w-[60px]">{container.estoque}</TableCell>
-                  <TableCell className="w-[80px] min-w-[80px] truncate">{container.transportadoraSaida}</TableCell>
-                  <TableCell className="w-[70px] min-w-[70px]">{container.statusEntregaMinuta}</TableCell>
-                  <TableCell className="w-[70px] min-w-[70px]">{container.statusMinuta}</TableCell>
-                  <TableCell className="w-[80px] min-w-[80px] truncate">{container.bookingAtrelado}</TableCell>
-                  <TableCell className="w-[50px] min-w-[50px]">{container.lacre}</TableCell>
-                  <TableCell className="w-[80px] min-w-[80px] truncate">{container.clienteSaidaDestino}</TableCell>
-                  <TableCell className="w-[60px] min-w-[60px]">{container.atrelado}</TableCell>
-                  <TableCell className="w-[60px] min-w-[60px]">{container.operadorSaida}</TableCell>
-                  <TableCell className="w-[70px] min-w-[70px]">{container.dataEstufagem}</TableCell>
-                  <TableCell className="w-[70px] min-w-[70px]">{container.dataSaidaSJP}</TableCell>
-                  <TableCell className="w-[80px] min-w-[80px] truncate">{container.motoristaSaidaSJP}</TableCell>
-                  <TableCell className="w-[55px] min-w-[55px]">{container.placaSaida}</TableCell>
-                  <TableCell className="w-[75px] min-w-[75px]">{getStatusBadge(container.status)}</TableCell>
+                  <TableCell className={cn(colWidths.md, "truncate")}>{container.clienteEntrada}</TableCell>
+                  <TableCell className={cn(colWidths.lg, "truncate")}>{container.transportadora}</TableCell>
+                  <TableCell className={colWidths.sm}>{container.estoque}</TableCell>
+                  <TableCell className={cn(colWidths.lg, "truncate")}>{container.transportadoraSaida}</TableCell>
+                  <TableCell className={colWidths.md}>{container.statusEntregaMinuta}</TableCell>
+                  <TableCell className={colWidths.md}>{container.statusMinuta}</TableCell>
+                  <TableCell className={cn(colWidths.lg, "truncate")}>{container.bookingAtrelado}</TableCell>
+                  <TableCell className={colWidths.xs}>{container.lacre}</TableCell>
+                  <TableCell className={cn(colWidths.lg, "truncate")}>{container.clienteSaidaDestino}</TableCell>
+                  <TableCell className={colWidths.sm}>{container.atrelado}</TableCell>
+                  <TableCell className={colWidths.sm}>{container.operadorSaida}</TableCell>
+                  <TableCell className={colWidths.md}>{container.dataEstufagem}</TableCell>
+                  <TableCell className={colWidths.md}>{container.dataSaidaSJP}</TableCell>
+                  <TableCell className={cn(colWidths.md, "truncate")}>{container.motoristaSaidaSJP}</TableCell>
+                  <TableCell className={colWidths.sm}>{container.placaSaida}</TableCell>
+                  <TableCell className={colWidths.md}>{getStatusBadge(container.status)}</TableCell>
                   
                   {/* Colunas de Ação */}
                   <TableCell className="text-center w-[45px] min-w-[45px]">
