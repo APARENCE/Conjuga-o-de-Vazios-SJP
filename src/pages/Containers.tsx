@@ -49,18 +49,23 @@ export default function Containers({
     return uniqueArmadores.sort();
   }, [containers]);
 
-  // Função para calcular dias restantes como número
-  const getDiasRestantes = (c: Container) => typeof c.diasRestantes === 'number' ? c.diasRestantes : 0;
+  // Função para calcular dias restantes como número (agora mapeado de prazoDias)
+  const getDiasRestantes = (c: Container) => typeof c.prazoDias === 'number' ? c.prazoDias : 0;
 
   // Filtrar containers
   const filteredContainers = useMemo(() => {
     return containers.filter(c => {
       const search = searchTerm.toLowerCase().trim();
+      
+      // Atualizando a pesquisa para incluir os novos campos
       const matchesSearch = !search || 
         c.container.toLowerCase().includes(search) ||
         c.armador.toLowerCase().includes(search) ||
-        c.motorista?.toLowerCase().includes(search) ||
-        c.placas?.toLowerCase().includes(search);
+        c.motoristaEntrada?.toLowerCase().includes(search) || // Novo campo
+        c.placa?.toLowerCase().includes(search) || // Novo campo
+        c.clienteEntrada?.toLowerCase().includes(search) || // Novo campo
+        c.clienteSaidaDestino?.toLowerCase().includes(search) || // Novo campo
+        c.bookingAtrelado?.toLowerCase().includes(search); // Novo campo
 
       let matchesStatus = true;
       const dias = getDiasRestantes(c);
@@ -146,8 +151,8 @@ export default function Containers({
             </div>
             <div className="flex flex-col gap-1">
               {getStatusBadge(container.status)}
-              <span className={cn("text-xs font-semibold", getDiasRestantesColor(container.diasRestantes))}>
-                {container.diasRestantes} dias
+              <span className={cn("text-xs font-semibold", getDiasRestantesColor(container.prazoDias))}>
+                {container.prazoDias} dias
               </span>
             </div>
           </div>
@@ -155,20 +160,20 @@ export default function Containers({
         <CardContent className="space-y-2">
           <div className="grid grid-cols-2 gap-1 text-xs">
             <div>
-              <span className="text-muted-foreground">Data Op:</span>
-              <p className="font-medium">{container.dataOperacao || "-"}</p>
+              <span className="text-muted-foreground">Data Entrada:</span>
+              <p className="font-medium">{container.dataEntrada || "-"}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Placas:</span>
-              <p className="font-medium">{container.placas || "-"}</p>
+              <span className="text-muted-foreground">Placa:</span>
+              <p className="font-medium">{container.placa || "-"}</p>
             </div>
             <div>
               <span className="text-muted-foreground">Motorista:</span>
-              <p className="font-medium truncate">{container.motorista || "-"}</p>
+              <p className="font-medium truncate">{container.motoristaEntrada || "-"}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Depot:</span>
-              <p className="font-medium truncate">{container.depotDevolucao || "-"}</p>
+              <span className="text-muted-foreground">Cliente:</span>
+              <p className="font-medium truncate">{container.clienteEntrada || "-"}</p>
             </div>
           </div>
           
@@ -218,7 +223,7 @@ export default function Containers({
               <div className="relative flex-1">
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
                 <Input
-                  placeholder="Pesquisar container, armador, motorista..."
+                  placeholder="Pesquisar container, armador, motorista, cliente..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-7 text-xs h-7"
@@ -466,33 +471,33 @@ export default function Containers({
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-sm text-muted-foreground">Status</span>
+                  <span className="text-sm text-muted-foreground">Status Geral</span>
                   <div className="mt-1">{getStatusBadge(selectedContainer.status)}</div>
                 </div>
                 <div>
-                  <span className="text-sm text-muted-foreground">Dias Restantes</span>
-                  <p className={cn("font-semibold", getDiasRestantesColor(selectedContainer.diasRestantes))}>
-                    {selectedContainer.diasRestantes}
+                  <span className="text-sm text-muted-foreground">Prazo (Dias)</span>
+                  <p className={cn("font-semibold", getDiasRestantesColor(selectedContainer.prazoDias))}>
+                    {selectedContainer.prazoDias}
                   </p>
                 </div>
               </div>
               
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Data Operação:</span>
-                  <span>{selectedContainer.dataOperacao || "-"}</span>
+                  <span className="text-sm text-muted-foreground">Data Entrada:</span>
+                  <span>{selectedContainer.dataEntrada || "-"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Placas:</span>
-                  <span>{selectedContainer.placas || "-"}</span>
+                  <span className="text-sm text-muted-foreground">Placa:</span>
+                  <span>{selectedContainer.placa || "-"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Motorista:</span>
-                  <span>{selectedContainer.motorista || "-"}</span>
+                  <span className="text-sm text-muted-foreground">Motorista Entrada:</span>
+                  <span>{selectedContainer.motoristaEntrada || "-"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Depot:</span>
-                  <span>{selectedContainer.depotDevolucao || "-"}</span>
+                  <span className="text-sm text-muted-foreground">Cliente Entrada:</span>
+                  <span>{selectedContainer.clienteEntrada || "-"}</span>
                 </div>
               </div>
               

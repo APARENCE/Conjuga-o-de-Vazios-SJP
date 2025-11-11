@@ -21,57 +21,65 @@ interface ContainerFormDialogProps {
   trigger?: React.ReactNode;
 }
 
+// Estrutura de dados inicial (com todos os novos campos)
+const initialFormData: Partial<Container> = {
+  operador: "",
+  motoristaEntrada: "",
+  placa: "",
+  dataEntrada: "",
+  container: "",
+  armador: "",
+  tara: 0,
+  mgw: 0,
+  tipo: "",
+  padrao: "",
+  statusVazioCheio: "",
+  dataPorto: "",
+  freeTimeArmador: 0,
+  demurrage: "",
+  prazoDias: 0,
+  clienteEntrada: "",
+  transportadora: "",
+  estoque: "",
+  transportadoraSaida: "",
+  statusEntregaMinuta: "",
+  statusMinuta: "",
+  bookingAtrelado: "",
+  lacre: "",
+  clienteSaidaDestino: "",
+  atrelado: "",
+  operadorSaida: "",
+  dataEstufagem: "",
+  dataSaidaSJP: "",
+  motoristaSaidaSJP: "",
+  placaSaida: "",
+  diasRestantes: 0,
+  status: "",
+};
+
 export function ContainerFormDialog({ container, onSave, trigger }: ContainerFormDialogProps) {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState<Partial<Container>>({
-    container: "",
-    armador: "",
-    dataOperacao: "",
-    dataPorto: "",
-    demurrage: "",
-    freeTime: 0,
-    diasRestantes: 0,
-    placas: "",
-    motorista: "",
-    origem: "",
-    baixaPatio: "",
-    containerTroca: "",
-    armadorTroca: "",
-    depotDevolucao: "",
-    dataDevolucao: "",
-    status: "",
-  });
+  const [formData, setFormData] = useState<Partial<Container>>(initialFormData);
 
   useEffect(() => {
     if (container) {
       setFormData(container);
+    } else {
+      setFormData(initialFormData);
     }
-  }, [container]);
+  }, [container, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    
+    // Garante que diasRestantes seja atualizado com prazoDias
+    const dataToSave = {
+        ...formData,
+        diasRestantes: formData.prazoDias,
+    };
+    
+    onSave(dataToSave);
     setOpen(false);
-    if (!container) {
-      setFormData({
-        container: "",
-        armador: "",
-        dataOperacao: "",
-        dataPorto: "",
-        demurrage: "",
-        freeTime: 0,
-        diasRestantes: 0,
-        placas: "",
-        motorista: "",
-        origem: "",
-        baixaPatio: "",
-        containerTroca: "",
-        armadorTroca: "",
-        depotDevolucao: "",
-        dataDevolucao: "",
-        status: "",
-      });
-    }
   };
 
   const handleChange = (field: keyof Container, value: string | number) => {
@@ -88,21 +96,22 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[90vh]">
+      <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>{container ? "Editar Container" : "Novo Container"}</DialogTitle>
           <DialogDescription>
             {container ? "Edite os dados do container" : "Preencha os dados do novo container"}
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[60vh] pr-4">
+        <ScrollArea className="max-h-[70vh] pr-4">
           <form onSubmit={handleSubmit} className="space-y-6">
             
-            {/* Seção 1: Identificação e Status */}
-            <div className="grid grid-cols-2 gap-4 border-b pb-4">
-              <h3 className="col-span-2 text-sm font-semibold text-muted-foreground">Identificação e Status</h3>
+            {/* Seção 1: Identificação e Entrada (6 colunas) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 border-b pb-4">
+              <h3 className="col-span-full text-sm font-semibold text-muted-foreground">Identificação e Entrada</h3>
+              
               <div className="space-y-2">
-                <Label htmlFor="container">CONTEINER *</Label>
+                <Label htmlFor="container">CONTAINER *</Label>
                 <Input
                   id="container"
                   value={formData.container}
@@ -119,33 +128,117 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
                   required
                 />
               </div>
-              <div className="space-y-2 col-span-2">
-                <Label htmlFor="status">STATUS</Label>
+              <div className="space-y-2">
+                <Label htmlFor="dataEntrada">DATA ENTRADA</Label>
                 <Input
-                  id="status"
-                  value={formData.status}
-                  onChange={(e) => handleChange("status", e.target.value)}
+                  id="dataEntrada"
+                  value={formData.dataEntrada}
+                  onChange={(e) => handleChange("dataEntrada", e.target.value)}
+                  placeholder="DD/MM/AAAA"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="placa">PLACA</Label>
+                <Input
+                  id="placa"
+                  value={formData.placa}
+                  onChange={(e) => handleChange("placa", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="motoristaEntrada">MOTORISTA ENTRADA</Label>
+                <Input
+                  id="motoristaEntrada"
+                  value={formData.motoristaEntrada}
+                  onChange={(e) => handleChange("motoristaEntrada", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="operador">OPERADOR</Label>
+                <Input
+                  id="operador"
+                  value={formData.operador}
+                  onChange={(e) => handleChange("operador", e.target.value)}
                 />
               </div>
             </div>
 
-            {/* Seção 2: Datas e Prazos */}
-            <div className="grid grid-cols-2 gap-4 border-b pb-4">
-              <h3 className="col-span-2 text-sm font-semibold text-muted-foreground">Datas e Prazos</h3>
+            {/* Seção 2: Especificações e Prazos (6 colunas) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 border-b pb-4">
+              <h3 className="col-span-full text-sm font-semibold text-muted-foreground">Especificações e Prazos</h3>
+              
               <div className="space-y-2">
-                <Label htmlFor="dataOperacao">DATA DE OPERAÇÃO</Label>
+                <Label htmlFor="tara">TARA (kg)</Label>
                 <Input
-                  id="dataOperacao"
-                  value={formData.dataOperacao}
-                  onChange={(e) => handleChange("dataOperacao", e.target.value)}
+                  id="tara"
+                  type="number"
+                  value={formData.tara}
+                  onChange={(e) => handleChange("tara", parseFloat(e.target.value) || 0)}
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="mgw">MGW (kg)</Label>
+                <Input
+                  id="mgw"
+                  type="number"
+                  value={formData.mgw}
+                  onChange={(e) => handleChange("mgw", parseFloat(e.target.value) || 0)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="tipo">TIPO</Label>
+                <Input
+                  id="tipo"
+                  value={formData.tipo}
+                  onChange={(e) => handleChange("tipo", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="padrao">PADRÃO</Label>
+                <Input
+                  id="padrao"
+                  value={formData.padrao}
+                  onChange={(e) => handleChange("padrao", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="statusVazioCheio">STATUS (VAZIO/CHEIO)</Label>
+                <Input
+                  id="statusVazioCheio"
+                  value={formData.statusVazioCheio}
+                  onChange={(e) => handleChange("statusVazioCheio", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="estoque">ESTOQUE</Label>
+                <Input
+                  id="estoque"
+                  value={formData.estoque}
+                  onChange={(e) => handleChange("estoque", e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Seção 3: Prazos e Clientes (6 colunas) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 border-b pb-4">
+              <h3 className="col-span-full text-sm font-semibold text-muted-foreground">Prazos e Clientes</h3>
+              
               <div className="space-y-2">
                 <Label htmlFor="dataPorto">DATA PORTO</Label>
                 <Input
                   id="dataPorto"
                   value={formData.dataPorto}
                   onChange={(e) => handleChange("dataPorto", e.target.value)}
+                  placeholder="DD/MM/AAAA"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="freeTimeArmador">FREE TIME ARMADOR (dias)</Label>
+                <Input
+                  id="freeTimeArmador"
+                  type="number"
+                  value={formData.freeTimeArmador}
+                  onChange={(e) => handleChange("freeTimeArmador", parseInt(e.target.value) || 0)}
                 />
               </div>
               <div className="space-y-2">
@@ -157,95 +250,146 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="freeTime">FREE TIME (dias)</Label>
+                <Label htmlFor="prazoDias">PRAZO (DIAS)</Label>
                 <Input
-                  id="freeTime"
+                  id="prazoDias"
                   type="number"
-                  value={formData.freeTime}
-                  onChange={(e) => handleChange("freeTime", parseInt(e.target.value) || 0)}
+                  value={formData.prazoDias}
+                  onChange={(e) => handleChange("prazoDias", parseInt(e.target.value) || 0)}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="diasRestantes">DIAS RESTANTES</Label>
+                <Label htmlFor="clienteEntrada">CLIENTE DE ENTRADA</Label>
                 <Input
-                  id="diasRestantes"
-                  type="number"
-                  value={formData.diasRestantes}
-                  onChange={(e) => handleChange("diasRestantes", parseInt(e.target.value) || 0)}
+                  id="clienteEntrada"
+                  value={formData.clienteEntrada}
+                  onChange={(e) => handleChange("clienteEntrada", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="transportadora">TRANSPORTADORA (Entrada)</Label>
+                <Input
+                  id="transportadora"
+                  value={formData.transportadora}
+                  onChange={(e) => handleChange("transportadora", e.target.value)}
                 />
               </div>
             </div>
 
-            {/* Seção 3: Logística e Motorista */}
-            <div className="grid grid-cols-2 gap-4 border-b pb-4">
-              <h3 className="col-span-2 text-sm font-semibold text-muted-foreground">Logística</h3>
+            {/* Seção 4: Minuta e Booking (6 colunas) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 border-b pb-4">
+              <h3 className="col-span-full text-sm font-semibold text-muted-foreground">Minuta e Booking</h3>
+              
               <div className="space-y-2">
-                <Label htmlFor="placas">PLACAS</Label>
+                <Label htmlFor="transportadoraSaida">TRANSPORTADORA (Saída)</Label>
                 <Input
-                  id="placas"
-                  value={formData.placas}
-                  onChange={(e) => handleChange("placas", e.target.value)}
+                  id="transportadoraSaida"
+                  value={formData.transportadoraSaida}
+                  onChange={(e) => handleChange("transportadoraSaida", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="motorista">MOTORISTA</Label>
+                <Label htmlFor="statusEntregaMinuta">STATUS ENTREGA MINUTA</Label>
                 <Input
-                  id="motorista"
-                  value={formData.motorista}
-                  onChange={(e) => handleChange("motorista", e.target.value)}
+                  id="statusEntregaMinuta"
+                  value={formData.statusEntregaMinuta}
+                  onChange={(e) => handleChange("statusEntregaMinuta", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="origem">ORIGEM</Label>
+                <Label htmlFor="statusMinuta">STATUS MINUTA</Label>
                 <Input
-                  id="origem"
-                  value={formData.origem}
-                  onChange={(e) => handleChange("origem", e.target.value)}
+                  id="statusMinuta"
+                  value={formData.statusMinuta}
+                  onChange={(e) => handleChange("statusMinuta", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="depotDevolucao">DEPOT DE DEVOLUÇÃO</Label>
+                <Label htmlFor="bookingAtrelado">BOOKING ATRELADO</Label>
                 <Input
-                  id="depotDevolucao"
-                  value={formData.depotDevolucao}
-                  onChange={(e) => handleChange("depotDevolucao", e.target.value)}
+                  id="bookingAtrelado"
+                  value={formData.bookingAtrelado}
+                  onChange={(e) => handleChange("bookingAtrelado", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="dataDevolucao">DATA DE DEVOLUÇÃO</Label>
+                <Label htmlFor="lacre">LACRE</Label>
                 <Input
-                  id="dataDevolucao"
-                  value={formData.dataDevolucao}
-                  onChange={(e) => handleChange("dataDevolucao", e.target.value)}
+                  id="lacre"
+                  value={formData.lacre}
+                  onChange={(e) => handleChange("lacre", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="atrelado">ATRELADO</Label>
+                <Input
+                  id="atrelado"
+                  value={formData.atrelado}
+                  onChange={(e) => handleChange("atrelado", e.target.value)}
                 />
               </div>
             </div>
 
-            {/* Seção 4: Troca e Baixa */}
-            <div className="grid grid-cols-2 gap-4">
-              <h3 className="col-span-2 text-sm font-semibold text-muted-foreground">Troca e Baixa</h3>
+            {/* Seção 5: Saída SJP (5 colunas) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              <h3 className="col-span-full text-sm font-semibold text-muted-foreground">Saída SJP</h3>
+              
               <div className="space-y-2">
-                <Label htmlFor="containerTroca">CONTAINER TROCA</Label>
+                <Label htmlFor="clienteSaidaDestino">CLIENTE SAIDA / DESTINO</Label>
                 <Input
-                  id="containerTroca"
-                  value={formData.containerTroca}
-                  onChange={(e) => handleChange("containerTroca", e.target.value)}
+                  id="clienteSaidaDestino"
+                  value={formData.clienteSaidaDestino}
+                  onChange={(e) => handleChange("clienteSaidaDestino", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="armadorTroca">ARMADOR TROCA</Label>
+                <Label htmlFor="dataEstufagem">DATA DA ESTUFAGEM</Label>
                 <Input
-                  id="armadorTroca"
-                  value={formData.armadorTroca}
-                  onChange={(e) => handleChange("armadorTroca", e.target.value)}
+                  id="dataEstufagem"
+                  value={formData.dataEstufagem}
+                  onChange={(e) => handleChange("dataEstufagem", e.target.value)}
+                  placeholder="DD/MM/AAAA"
                 />
               </div>
-              <div className="space-y-2 col-span-2">
-                <Label htmlFor="baixaPatio">BAIXA PÁTIO SJP</Label>
+              <div className="space-y-2">
+                <Label htmlFor="dataSaidaSJP">DATA SAIDA SJP</Label>
                 <Input
-                  id="baixaPatio"
-                  value={formData.baixaPatio}
-                  onChange={(e) => handleChange("baixaPatio", e.target.value)}
+                  id="dataSaidaSJP"
+                  value={formData.dataSaidaSJP}
+                  onChange={(e) => handleChange("dataSaidaSJP", e.target.value)}
+                  placeholder="DD/MM/AAAA"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="motoristaSaidaSJP">MOTORISTA SAIDA SJP</Label>
+                <Input
+                  id="motoristaSaidaSJP"
+                  value={formData.motoristaSaidaSJP}
+                  onChange={(e) => handleChange("motoristaSaidaSJP", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="placaSaida">PLACA SAIDA</Label>
+                <Input
+                  id="placaSaida"
+                  value={formData.placaSaida}
+                  onChange={(e) => handleChange("placaSaida", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="operadorSaida">OPERADOR SAIDA</Label>
+                <Input
+                  id="operadorSaida"
+                  value={formData.operadorSaida}
+                  onChange={(e) => handleChange("operadorSaida", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">STATUS GERAL</Label>
+                <Input
+                  id="status"
+                  value={formData.status}
+                  onChange={(e) => handleChange("status", e.target.value)}
                 />
               </div>
             </div>

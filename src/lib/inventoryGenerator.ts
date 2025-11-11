@@ -17,7 +17,7 @@ export const generateInventoryFromContainers = (containers: Container[]): Invent
     const containerStatusLower = String(c.status || '').toLowerCase();
     let itemStatus: InventoryItem['status'];
 
-    if (containerStatusLower.includes("ok") || containerStatusLower.includes("devolvido")) {
+    if (containerStatusLower.includes("ok") || containerStatusLower.includes("devolvido") || c.dataSaidaSJP) {
       itemStatus = "Devolvido (RIC OK)";
     } else if (containerStatusLower.includes("aguardando") || containerStatusLower.includes("verificar")) {
       itemStatus = "Aguardando Devolução";
@@ -25,36 +25,32 @@ export const generateInventoryFromContainers = (containers: Container[]): Invent
       itemStatus = "Em Uso";
     }
 
-    // 1. Rastrear Container de Troca
-    if (c.containerTroca) {
-      inventory.push({
-        ...baseItem,
-        itemType: 'Troca',
-        status: itemStatus,
-        details: `Container Troca: ${c.containerTroca} (Armador: ${c.armadorTroca || 'N/A'})`,
-      });
-    }
-
-    // 2. Rastrear Baixa Pátio
-    if (c.baixaPatio) {
+    // 1. Rastrear Saída SJP (Baixa)
+    if (c.dataSaidaSJP) {
       inventory.push({
         ...baseItem,
         itemType: 'Baixa Pátio',
         status: itemStatus,
-        details: `Baixa Pátio SJP: ${c.baixaPatio}`,
+        details: `Saída SJP registrada em: ${c.dataSaidaSJP}`,
       });
     }
+
+    // 2. Rastrear Container de Troca (Se houver campos de troca no futuro, eles seriam adicionados aqui. Por enquanto, mantemos a estrutura simplificada.)
+    // Como os campos de troca foram removidos da interface, esta lógica é removida.
     
-    // 3. Rastrear Devolução (Se houver data de devolução e depot)
-    if (c.dataDevolucao && c.depotDevolucao) {
+    // 3. Rastrear Devolução (Usando status geral)
+    if (itemStatus === "Devolvido (RIC OK)") {
+        // Se o status for devolvido, criamos um item de rastreio de devolução
         inventory.push({
             ...baseItem,
             itemType: 'Devolução',
             status: itemStatus,
-            details: `Devolução em ${c.dataDevolucao} no Depot: ${c.depotDevolucao}`,
+            details: `Status de devolução: ${c.status}`,
         });
     }
   });
 
+  // Remove duplicatas se um container tiver múltiplos itens de rastreio (ex: Baixa e Devolução)
+  // Para simplificar, vamos apenas retornar o que foi gerado, mas o Inventário agora foca mais em Saída/Status.
   return inventory;
 };

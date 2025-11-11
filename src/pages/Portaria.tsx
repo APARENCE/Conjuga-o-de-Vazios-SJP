@@ -65,7 +65,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
     if (actionType === 'entrada') {
       updateData = {
         container: searchNumber,
-        dataOperacao: dateOnly,
+        dataEntrada: dateOnly, // Usando o novo campo
         status: "Em Operação (Entrada)",
       };
       toastMessage = `Entrada registrada para o container ${searchNumber}.`;
@@ -82,27 +82,24 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
         onContainerAdd({
             ...updateData,
             armador: "N/A", // Valor padrão para campos obrigatórios
-            depotDevolucao: "N/A",
-            dataDevolucao: "",
-            freeTime: 0,
-            diasRestantes: 0,
-            placas: "",
-            motorista: "",
-            origem: "",
-            demurrage: "",
+            // Definindo defaults para os novos campos obrigatórios
+            operador: "", motoristaEntrada: "", placa: "", tara: 0, mgw: 0, tipo: "", padrao: "", statusVazioCheio: "", dataPorto: "", freeTimeArmador: 0,
+            demurrage: "", prazoDias: 0, clienteEntrada: "", transportadora: "", estoque: "", transportadoraSaida: "", statusEntregaMinuta: "", statusMinuta: "", bookingAtrelado: "",
+            lacre: "", clienteSaidaDestino: "", atrelado: "", operadorSaida: "", dataEstufagem: "", dataSaidaSJP: "", motoristaSaidaSJP: "", placaSaida: "",
+            diasRestantes: 0, // Mapeado de prazoDias
             files: [newFile],
         });
         toastMessage = `Novo container ${searchNumber} registrado com sucesso.`;
       }
 
-    } else { // 'baixa'
+    } else { // 'baixa' (Saída SJP)
       if (!existingContainer) {
         toast({ title: "Erro", description: `Container ${searchNumber} não encontrado para baixa.`, variant: "destructive" });
         return;
       }
       
       updateData = {
-        baixaPatio: dateOnly,
+        dataSaidaSJP: dateOnly, // Usando o novo campo de saída
         status: "Baixa Pátio SJP",
       };
       toastMessage = `Baixa registrada para o container ${searchNumber}.`;
@@ -179,7 +176,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                   <p className="font-medium">Container Encontrado:</p>
                   <p className="text-sm">Armador: <span className="font-semibold">{existingContainer.armador || 'N/A'}</span></p>
                   <p className="text-sm">Status Atual: {getStatusBadge(existingContainer.status)}</p>
-                  <p className="text-sm">Dias Restantes: <span className="font-semibold">{existingContainer.diasRestantes}</span></p>
+                  <p className="text-sm">Prazo (Dias): <span className="font-semibold">{existingContainer.prazoDias}</span></p>
                 </div>
               )}
               
@@ -212,7 +209,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                     onClick={() => setActionType('baixa')}
                     className="flex-1 gap-2"
                   >
-                    <LogOut className="h-4 w-4" /> Baixa (Saída)
+                    <LogOut className="h-4 w-4" /> Baixa (Saída SJP)
                   </Button>
                 </div>
               </div>
