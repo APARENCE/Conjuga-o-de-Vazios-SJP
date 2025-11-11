@@ -82,8 +82,14 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
   };
   
   // Classe para ocultar colunas não essenciais em telas menores que 2XL
+  // Vamos usar 'hidden lg:table-cell' para ocultar em telas pequenas/médias, mas manter visível em desktop (lg+)
   const hiddenColClass = "hidden 2xl:table-cell";
   const hiddenColHeaderClass = "hidden 2xl:table-cell";
+  
+  // Classes para colunas que serão visíveis em telas maiores (lg+)
+  const lgVisibleColClass = "hidden lg:table-cell";
+  const lgVisibleColHeaderClass = "hidden lg:table-cell";
+
 
   return (
     <Card className="border-0 shadow-sm">
@@ -106,15 +112,17 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               <TableHead className={cn("font-semibold", colWidths.sm)}>PLACA1</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>DATA SAIDA SJP</TableHead>
               
+              {/* NOVAS COLUNAS ESSENCIAIS (Visíveis em LG+) */}
+              <TableHead className={cn("font-semibold", colWidths.xs, lgVisibleColHeaderClass)}>TIPO</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md, lgVisibleColHeaderClass)}>STATUS (V/C)</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md, lgVisibleColHeaderClass)}>DATA PORTO</TableHead>
+              <TableHead className={cn("font-semibold text-center", colWidths.sm, lgVisibleColHeaderClass)}>FREE TIME</TableHead>
+              
               {/* Colunas Ocultas (Visíveis apenas com rolagem horizontal ou em 2XL) */}
               <TableHead className={cn("font-semibold", colWidths.sm, hiddenColHeaderClass)}>OPERADOR1</TableHead>
               <TableHead className={cn("font-semibold", colWidths.xs, hiddenColHeaderClass)}>TARA</TableHead>
               <TableHead className={cn("font-semibold", colWidths.xs, hiddenColHeaderClass)}>MGW</TableHead>
-              <TableHead className={cn("font-semibold", colWidths.xs, hiddenColHeaderClass)}>TIPO</TableHead>
-              <TableHead className={cn("font-semibold", colWidths.xs, hiddenColHeaderClass)}>PADRÃO</TableHead>
-              <TableHead className={cn("font-semibold", colWidths.md, hiddenColHeaderClass)}>STATUS (V/C)</TableHead>
-              <TableHead className={cn("font-semibold", colWidths.md, hiddenColHeaderClass)}>DATA PORTO</TableHead>
-              <TableHead className={cn("font-semibold text-center", colWidths.sm, hiddenColHeaderClass)}>FREE TIME</TableHead>
+              {/* TIPO, STATUS V/C, DATA PORTO, FREE TIME foram movidos */}
               <TableHead className={cn("font-semibold", colWidths.md, hiddenColHeaderClass)}>DEMURRAGE</TableHead>
               <TableHead className={cn("font-semibold", colWidths.lg, hiddenColHeaderClass)}>TRANSPORTADORA (Entrada)</TableHead>
               <TableHead className={cn("font-semibold", colWidths.sm, hiddenColHeaderClass)}>ESTOQUE</TableHead>
@@ -171,15 +179,16 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                   <TableCell className={colWidths.sm}>{container.placa}</TableCell>
                   <TableCell className={colWidths.md}>{container.dataSaidaSJP}</TableCell>
                   
+                  {/* NOVAS COLUNAS ESSENCIAIS (Visíveis em LG+) */}
+                  <TableCell className={cn(colWidths.xs, lgVisibleColClass)}>{container.tipo}</TableCell>
+                  <TableCell className={cn(colWidths.md, lgVisibleColClass)}>{container.statusVazioCheio}</TableCell>
+                  <TableCell className={cn(colWidths.md, lgVisibleColClass)}>{container.dataPorto}</TableCell>
+                  <TableCell className={cn(colWidths.sm, "text-center", lgVisibleColClass)}>{container.freeTimeArmador || "-"}</TableCell>
+
                   {/* Colunas Ocultas (Visíveis apenas com rolagem horizontal ou em 2XL) */}
                   <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.operador}</TableCell>
                   <TableCell className={cn(colWidths.xs, "text-right", hiddenColClass)}>{container.tara || "-"}</TableCell>
                   <TableCell className={cn(colWidths.xs, "text-right", hiddenColClass)}>{container.mgw || "-"}</TableCell>
-                  <TableCell className={cn(colWidths.xs, hiddenColClass)}>{container.tipo}</TableCell>
-                  <TableCell className={cn(colWidths.xs, hiddenColClass)}>{container.padrao}</TableCell>
-                  <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.statusVazioCheio}</TableCell>
-                  <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.dataPorto}</TableCell>
-                  <TableCell className={cn(colWidths.sm, "text-center", hiddenColClass)}>{container.freeTimeArmador || "-"}</TableCell>
                   <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.demurrage}</TableCell>
                   <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.transportadora}</TableCell>
                   <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.estoque}</TableCell>
@@ -187,10 +196,10 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                   <TableCell className={colWidths.md}>{container.statusEntregaMinuta}</TableCell>
                   <TableCell className={colWidths.md}>{container.statusMinuta}</TableCell>
                   <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.bookingAtrelado}</TableCell>
-                  <TableCell className={cn(colWidths.xs, hiddenColClass)}>{container.lacre}</TableCell>
+                  <TableCell className={colWidths.xs}>{container.lacre}</TableCell>
                   <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.clienteSaidaDestino}</TableCell>
-                  <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.atrelado}</TableCell>
-                  <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.operadorSaida}</TableCell>
+                  <TableCell className={colWidths.sm}>{container.atrelado}</TableCell>
+                  <TableCell className={colWidths.sm}>{container.operadorSaida}</TableCell>
                   <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.dataEstufagem}</TableCell>
                   <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.motoristaSaidaSJP}</TableCell>
                   <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.placaSaida}</TableCell>
