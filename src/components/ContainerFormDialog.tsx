@@ -100,8 +100,9 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
             
             {/* Seção 1: Identificação e Status */}
             <div className="grid grid-cols-2 gap-4 border-b pb-4">
+              <h3 className="col-span-2 text-sm font-semibold text-muted-foreground">Identificação e Status</h3>
               <div className="space-y-2">
-                <Label htmlFor="container">Container *</Label>
+                <Label htmlFor="container">CONTEINER *</Label>
                 <Input
                   id="container"
                   value={formData.container}
@@ -110,7 +111,7 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="armador">Armador *</Label>
+                <Label htmlFor="armador">ARMADOR *</Label>
                 <Input
                   id="armador"
                   value={formData.armador}
@@ -119,7 +120,7 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
                 />
               </div>
               <div className="space-y-2 col-span-2">
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status">STATUS</Label>
                 <Input
                   id="status"
                   value={formData.status}
@@ -132,7 +133,7 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
             <div className="grid grid-cols-2 gap-4 border-b pb-4">
               <h3 className="col-span-2 text-sm font-semibold text-muted-foreground">Datas e Prazos</h3>
               <div className="space-y-2">
-                <Label htmlFor="dataOperacao">Data de Operação</Label>
+                <Label htmlFor="dataOperacao">DATA DE OPERAÇÃO</Label>
                 <Input
                   id="dataOperacao"
                   value={formData.dataOperacao}
@@ -140,7 +141,7 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="dataPorto">Data Porto</Label>
+                <Label htmlFor="dataPorto">DATA PORTO</Label>
                 <Input
                   id="dataPorto"
                   value={formData.dataPorto}
@@ -148,7 +149,7 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="demurrage">Demurrage</Label>
+                <Label htmlFor="demurrage">DEMURRAGE</Label>
                 <Input
                   id="demurrage"
                   value={formData.demurrage}
@@ -156,7 +157,7 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="freeTime">Free Time (dias)</Label>
+                <Label htmlFor="freeTime">FREE TIME (dias)</Label>
                 <Input
                   id="freeTime"
                   type="number"
@@ -165,7 +166,7 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="diasRestantes">Dias Restantes</Label>
+                <Label htmlFor="diasRestantes">DIAS RESTANTES</Label>
                 <Input
                   id="diasRestantes"
                   type="number"
@@ -179,23 +180,15 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
             <div className="grid grid-cols-2 gap-4 border-b pb-4">
               <h3 className="col-span-2 text-sm font-semibold text-muted-foreground">Logística</h3>
               <div className="space-y-2">
-                <Label htmlFor="origem">Origem</Label>
-                <Input
-                  id="origem"
-                  value={formData.origem}
-                  onChange={(e) => handleChange("origem", e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="placas">Placas</Label>
+                <Label htmlFor="placas">PLACAS</Label>
                 <Input
                   id="placas"
                   value={formData.placas}
                   onChange={(e) => handleChange("placas", e.target.value)}
                 />
               </div>
-              <div className="space-y-2 col-span-2">
-                <Label htmlFor="motorista">Motorista</Label>
+              <div className="space-y-2">
+                <Label htmlFor="motorista">MOTORISTA</Label>
                 <Input
                   id="motorista"
                   value={formData.motorista}
@@ -203,7 +196,15 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="depotDevolucao">Depot de Devolução</Label>
+                <Label htmlFor="origem">ORIGEM</Label>
+                <Input
+                  id="origem"
+                  value={formData.origem}
+                  onChange={(e) => handleChange("origem", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="depotDevolucao">DEPOT DE DEVOLUÇÃO</Label>
                 <Input
                   id="depotDevolucao"
                   value={formData.depotDevolucao}
@@ -211,7 +212,7 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="dataDevolucao">Data de Devolução</Label>
+                <Label htmlFor="dataDevolucao">DATA DE DEVOLUÇÃO</Label>
                 <Input
                   id="dataDevolucao"
                   value={formData.dataDevolucao}
@@ -224,27 +225,27 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
             <div className="grid grid-cols-2 gap-4">
               <h3 className="col-span-2 text-sm font-semibold text-muted-foreground">Troca e Baixa</h3>
               <div className="space-y-2">
-                <Label htmlFor="baixaPatio">Baixa Pátio SJP</Label>
-                <Input
-                  id="baixaPatio"
-                  value={formData.baixaPatio}
-                  onChange={(e) => handleChange("baixaPatio", e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="containerTroca">Container (Troca)</Label>
+                <Label htmlFor="containerTroca">CONTAINER TROCA</Label>
                 <Input
                   id="containerTroca"
                   value={formData.containerTroca}
                   onChange={(e) => handleChange("containerTroca", e.target.value)}
                 />
               </div>
-              <div className="space-y-2 col-span-2">
-                <Label htmlFor="armadorTroca">Armador (Troca)</Label>
+              <div className="space-y-2">
+                <Label htmlFor="armadorTroca">ARMADOR TROCA</Label>
                 <Input
                   id="armadorTroca"
                   value={formData.armadorTroca}
                   onChange={(e) => handleChange("armadorTroca", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="baixaPatio">BAIXA PÁTIO SJP</Label>
+                <Input
+                  id="baixaPatio"
+                  value={formData.baixaPatio}
+                  onChange={(e) => handleChange("baixaPatio", e.target.value)}
                 />
               </div>
             </div>

@@ -9,32 +9,30 @@ const excelDateToJSDate = (serial: any): string => {
 
   if (typeof serial === "number") {
     // Excel stores dates as numbers (days since 1900-01-01)
+    // Usamos 1900 como base, mas ajustamos para o fuso horário UTC para evitar desvios de 1 dia.
     const utc_days = Math.floor(serial - 25569);
     date = new Date(utc_days * 86400 * 1000);
-  } else if (typeof serial === "string") {
-    // Tenta parsear strings comuns de data
     
-    // 1. Formato ISO (YYYY-MM-DD)
-    const isoMatch = serial.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (isoMatch) {
-      date = new Date(serial);
-    } 
-    
-    // 2. Formato Americano (MM/DD/YYYY ou MM/DD/YY)
-    const usMatch = serial.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-    if (usMatch) {
-      // Tenta criar a data no formato MM/DD/YYYY
-      date = new Date(`${usMatch[1]}/${usMatch[2]}/${usMatch[3]}`);
+    // Se a data for inválida após a conversão, tentamos tratar como string
+    if (isNaN(date.getTime())) {
+        date = null;
     }
+  } 
+  
+  if (typeof serial === "string") {
+    // Tenta parsear strings comuns de data (DD/MM/YYYY, YYYY-MM-DD, etc.)
     
-    // 3. Formato Brasileiro (DD/MM/YYYY ou DD/MM/YY) - Se já estiver nesse formato, apenas retorna
+    // Formato Brasileiro (DD/MM/YYYY)
     const brMatch = serial.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-    if (brMatch && !date) {
-        // Se não foi reconhecido como US, assume BR e retorna a string original
-        return serial;
+    if (brMatch) {
+        // Cria a data no formato YYYY-MM-DD para evitar problemas de fuso horário
+        date = new Date(`${brMatch[3]}-${brMatch[2]}-${brMatch[1]}`);
+    } else {
+        // Tenta parsear como data ISO ou US (fallback)
+        date = new Date(serial);
     }
 
-    // Se não conseguiu parsear como data, retorna a string original
+    // Se a data for inválida, retorna a string original
     if (!date || isNaN(date.getTime())) {
         return serial;
     }
@@ -53,63 +51,40 @@ const excelDateToJSDate = (serial: any): string => {
 };
 
 // Mapping of expected header names (case-insensitive, trimmed) to Container keys
+// Baseado na planilha fornecida:
 const HEADER_MAP: { [key: string]: keyof Container } = {
-  // Container Identification
-  'container': 'container',
-  'conteiner': 'container', // Coluna A (Principal)
-  'nº container': 'container',
-  'n container': 'container',
-  
-  // Container Troca
-  'conteinner': 'containerTroca', // Coluna M (Troca)
-  'container troca': 'containerTroca',
-  'troca conteinner': 'containerTroca',
-  
-  // Armador/Shipping Line
-  'armador': 'armador', // Coluna B (Principal)
-  'linha': 'armador',
-  
-  // Armador Troca
-  'armador troca': 'armadorTroca', // Coluna N (Troca)
-  'troca armador': 'armadorTroca',
-  'armadortroca': 'armadorTroca', // Variação sem espaço
-  
-  // Dates and Times
+  // Colunas A-E (Identificação e Prazos)
+  'conteiner': 'container',
+  'armador': 'armador',
   'data de operação': 'dataOperacao',
-  'data operacao': 'dataOperacao',
-  'data operação': 'dataOperacao',
-  'data op': 'dataOperacao',
   'data porto': 'dataPorto',
-  'data chegada porto': 'dataPorto',
-  'data de devolução': 'dataDevolucao',
-  'data devolucao': 'dataDevolucao',
-  'data devolução': 'dataDevolucao',
-  'data dev': 'dataDevolucao',
-  
-  // Financial/Time Metrics
   'demurrage': 'demurrage',
-  'vencimento demurrage': 'demurrage',
   'free time': 'freeTime',
-  'freetime': 'freeTime',
   'dias restantes': 'diasRestantes',
-  'diasrestantes': 'diasRestantes',
-  'dias free': 'diasRestantes',
   
-  // Logistics
+  // Colunas H-L (Logística)
   'placas': 'placas',
-  'placa': 'placas',
   'motorista': 'motorista',
   'origem': 'origem',
-  'baixa patio sjp': 'baixaPatio',
-  'baixa pátio sjp': 'baixaPatio',
-  'baixa patio': 'baixaPatio',
-  'baixa pátio': 'baixaPatio',
   'depot de devolução': 'depotDevolucao',
-  'depot devolução': 'depotDevolucao',
-  'depot devolucao': 'depotDevolucao',
-  'depot': 'depotDevolucao',
+  'data de devolução': 'dataDevolucao',
+  
+  // Colunas M-O (Troca e Baixa)
+  'container troca': 'containerTroca',
+  'armador troca': 'armadorTroca',
+  'baixa pátio sjp': 'baixaPatio',
+  
+  // Coluna P (Status)
   'status': 'status',
-  'situação': 'status',
+  
+  // Adicionando variações comuns para robustez
+  'nº container': 'container',
+  'data operacao': 'dataOperacao',
+  'data devolução': 'dataDevolucao',
+  'depot devolucao': 'depotDevolucao',
+  'baixa patio sjp': 'baixaPatio',
+  'freetime': 'freeTime',
+  'diasrestantes': 'diasRestantes',
 };
 
 export const parseExcelFile = (file: File): Promise<Container[]> => {
@@ -119,10 +94,12 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
     reader.onload = (e) => {
       try {
         const data = e.target?.result;
+        // Usamos raw: false para que o XLSX tente formatar datas e números
         const workbook = XLSX.read(data, { type: 'binary', cellDates: true, raw: false });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
+        // Usamos header: 1 para obter a primeira linha como cabeçalho
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: "" }) as any[][];
         
         if (jsonData.length < 2) {
@@ -175,7 +152,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
                 // Trata valores numéricos, aceitando vírgula como separador decimal
                 const numericValue = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : Number(value);
                 partialContainer[key] = isNaN(numericValue) ? 0 : numericValue;
-              } else if (['dataOperacao', 'dataPorto', 'demurrage', 'dataDevolucao'].includes(key)) {
+              } else if (['dataOperacao', 'dataPorto', 'dataDevolucao', 'baixaPatio'].includes(key)) {
                 // Trata campos de data
                 partialContainer[key] = excelDateToJSDate(value);
               } else {
@@ -225,23 +202,23 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
 export const exportToExcel = (containers: Container[]) => {
   const worksheet = XLSX.utils.json_to_sheet(
     containers.map(c => ({
-      // Nova Ordem de Exportação
-      'CONTAINER': c.container,
+      // Ordem exata da planilha
+      'CONTEINER': c.container,
       'ARMADOR': c.armador,
-      'STATUS': c.status,
-      'DATA OPERAÇÃO': c.dataOperacao,
+      'DATA DE OPERAÇÃO': c.dataOperacao,
       'DATA PORTO': c.dataPorto,
       'DEMURRAGE': c.demurrage,
       'FREE TIME': c.freeTime,
       'DIAS RESTANTES': c.diasRestantes,
-      'ORIGEM': c.origem,
       'PLACAS': c.placas,
       'MOTORISTA': c.motorista,
-      'DEPOT DEVOLUÇÃO': c.depotDevolucao,
-      'DATA DEVOLUÇÃO': c.dataDevolucao,
-      'BAIXA PÁTIO SJP': c.baixaPatio,
+      'ORIGEM': c.origem,
+      'DEPOT DE DEVOLUÇÃO': c.depotDevolucao,
+      'DATA DE DEVOLUÇÃO': c.dataDevolucao,
       'CONTAINER TROCA': c.containerTroca,
       'ARMADOR TROCA': c.armadorTroca,
+      'BAIXA PÁTIO SJP': c.baixaPatio,
+      'STATUS': c.status,
     }))
   );
   

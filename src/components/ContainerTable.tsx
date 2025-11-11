@@ -80,24 +80,24 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
           <TableHeader className={fixedHeaderClasses}>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
               {/* Colunas Fixas */}
-              <TableHead className={cn("font-semibold left-0 z-[35]", containerWidth)}>Container</TableHead>
-              <TableHead className={cn("font-semibold z-30", armadorLeft, armadorWidth)}>Armador</TableHead>
+              <TableHead className={cn("font-semibold left-0 z-[35]", containerWidth)}>CONTEINER</TableHead>
+              <TableHead className={cn("font-semibold z-30", armadorLeft, armadorWidth)}>ARMADOR</TableHead>
               
-              {/* Colunas Variáveis (Nova Ordem) */}
-              <TableHead className="font-semibold w-[75px] min-w-[75px]">Status</TableHead>
-              <TableHead className="font-semibold w-[70px] min-w-[70px]">Data Op</TableHead>
-              <TableHead className="font-semibold w-[70px] min-w-[70px]">Data Porto</TableHead>
-              <TableHead className="font-semibold w-[70px] min-w-[70px]">Demurrage</TableHead>
-              <TableHead className="font-semibold text-center w-[45px] min-w-[45px]">Free Time</TableHead>
-              <TableHead className="font-semibold text-center w-[65px] min-w-[65px]">Dias Restantes</TableHead>
-              <TableHead className="font-semibold w-[55px] min-w-[55px]">Origem</TableHead>
-              <TableHead className="font-semibold w-[55px] min-w-[55px]">Placas</TableHead>
-              <TableHead className="font-semibold w-[75px] min-w-[75px]">Motorista</TableHead>
-              <TableHead className="font-semibold w-[75px] min-w-[75px]">Depot Dev.</TableHead>
-              <TableHead className="font-semibold w-[70px] min-w-[70px]">Data Dev.</TableHead>
-              <TableHead className="font-semibold w-[70px] min-w-[70px]">Baixa Pátio</TableHead>
-              <TableHead className="font-semibold w-[75px] min-w-[75px]">Cont. Troca</TableHead>
-              <TableHead className="font-semibold w-[65px] min-w-[65px]">Arm. Troca</TableHead>
+              {/* Colunas Variáveis (Ordem da Planilha) */}
+              <TableHead className="font-semibold w-[70px] min-w-[70px]">DATA OP.</TableHead>
+              <TableHead className="font-semibold w-[70px] min-w-[70px]">DATA PORTO</TableHead>
+              <TableHead className="font-semibold w-[70px] min-w-[70px]">DEMURRAGE</TableHead>
+              <TableHead className="font-semibold text-center w-[45px] min-w-[45px]">FREE TIME</TableHead>
+              <TableHead className="font-semibold text-center w-[65px] min-w-[65px]">DIAS RESTANTES</TableHead>
+              <TableHead className="font-semibold w-[55px] min-w-[55px]">PLACAS</TableHead>
+              <TableHead className="font-semibold w-[75px] min-w-[75px]">MOTORISTA</TableHead>
+              <TableHead className="font-semibold w-[55px] min-w-[55px]">ORIGEM</TableHead>
+              <TableHead className="font-semibold w-[75px] min-w-[75px]">DEPOT DEV.</TableHead>
+              <TableHead className="font-semibold w-[70px] min-w-[70px]">DATA DEV.</TableHead>
+              <TableHead className="font-semibold w-[75px] min-w-[75px]">CONT. TROCA</TableHead>
+              <TableHead className="font-semibold w-[65px] min-w-[65px]">ARM. TROCA</TableHead>
+              <TableHead className="font-semibold w-[70px] min-w-[70px]">BAIXA PÁTIO</TableHead>
+              <TableHead className="font-semibold w-[75px] min-w-[75px]">STATUS</TableHead>
               
               {/* Colunas de Ação */}
               <TableHead className="font-semibold text-center w-[45px] min-w-[45px]">Arquivos</TableHead>
@@ -122,8 +122,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                     {container.armador}
                   </TableCell>
                   
-                  {/* Colunas Variáveis (Nova Ordem) */}
-                  <TableCell className="w-[75px] min-w-[75px]">{getStatusBadge(container.status)}</TableCell>
+                  {/* Colunas Variáveis (Ordem da Planilha) */}
                   <TableCell className="w-[70px] min-w-[70px]">{container.dataOperacao}</TableCell>
                   <TableCell className="w-[70px] min-w-[70px]">{container.dataPorto}</TableCell>
                   <TableCell className="w-[70px] min-w-[70px]">{container.demurrage}</TableCell>
@@ -134,14 +133,15 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                         {container.diasRestantes}
                     </div>
                   </TableCell>
-                  <TableCell className="w-[55px] min-w-[55px]">{container.origem}</TableCell>
                   <TableCell className="w-[55px] min-w-[55px]">{container.placas}</TableCell>
                   <TableCell className="w-[75px] min-w-[75px] truncate">{container.motorista}</TableCell>
+                  <TableCell className="w-[55px] min-w-[55px]">{container.origem}</TableCell>
                   <TableCell className="w-[75px] min-w-[75px]">{container.depotDevolucao}</TableCell>
                   <TableCell className="w-[70px] min-w-[70px]">{container.dataDevolucao}</TableCell>
-                  <TableCell className="w-[70px] min-w-[70px]">{container.baixaPatio || "-"}</TableCell>
                   <TableCell className="w-[75px] min-w-[75px]">{container.containerTroca || "-"}</TableCell>
                   <TableCell className="w-[65px] min-w-[65px]">{container.armadorTroca || "-"}</TableCell>
+                  <TableCell className="w-[70px] min-w-[70px]">{container.baixaPatio || "-"}</TableCell>
+                  <TableCell className="w-[75px] min-w-[75px]">{getStatusBadge(container.status)}</TableCell>
                   
                   {/* Colunas de Ação */}
                   <TableCell className="text-center w-[45px] min-w-[45px]">
