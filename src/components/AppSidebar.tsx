@@ -60,8 +60,8 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
       )}
     >
       <SidebarHeader className="border-b border-border p-1">
-        <h2 className="text-sm font-bold text-primary break-words leading-tight">Conjugação de vazios</h2>
-        <p className="text-xs text-muted-foreground">Patio- SJP</p>
+        <h2 className="text-sm font-bold text-primary break-words leading-tight">Controle de Patio SJP</h2>
+        <p className="text-xs text-muted-foreground">TLOG</p>
       </SidebarHeader>
 
       <SidebarContent className="p-1">
