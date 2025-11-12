@@ -24,22 +24,39 @@ export function useOcrProcessor() {
 
     try {
       // Inicializa o worker do Tesseract
-      const worker = await createWorker("eng"); // Usando 'eng' para melhor reconhecimento de caracteres alfanuméricos
+      const worker = await createWorker("eng"); 
 
-      // Configurações para melhorar o reconhecimento de containers/placas
+      // Configurações para focar em caracteres alfanuméricos
       await worker.setParameters({
-        // Foca em letras maiúsculas e números, que são os caracteres esperados em containers e placas
         tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
-        // PSM 7: Assume uma única linha de texto. Isso pode ser melhor para containers.
-        psm: 7, 
+        // PSM 8: Assume uma única palavra em uma imagem. Bom para números de container isolados.
+        psm: 8, 
       });
 
-      const { data: { text } } = await worker.recognize(imageSrc);
+      // 1. Pré-processamento para obter dimensões e definir a ROI (Região de Interesse)
+      const img = new Image();
+      img.src = imageSrc;
+      await new Promise(resolve => img.onload = resolve);
+      
+      const width = img.width;
+      const height = img.height;
+      
+      // Definindo a ROI: Quadrante superior direito (20% superior, 50% direito)
+      // Coordenadas: [x0, y0, x1, y1]
+      const rectangle = {
+        left: Math.floor(width * 0.5), // Começa na metade da largura
+        top: 0,
+        width: Math.floor(width * 0.5), // Vai até o final da largura
+        height: Math.floor(height * 0.25), // Pega os 25% superiores
+      };
+
+      // 2. Executa o reconhecimento apenas na área definida
+      const { data: { text } } = await worker.recognize(imageSrc, { rectangle });
       
       await worker.terminate();
 
       // Log do texto bruto para depuração
-      console.log("OCR Text Result:", text);
+      console.log("OCR Text Result (ROI):", text);
 
       // --- Lógica de Filtragem ---
       
@@ -47,14 +64,17 @@ export function useOcrProcessor() {
       const containersFound = text.match(CONTAINER_REGEX) || [];
       const uniqueContainers = [...new Set(containersFound)];
       
-      // Prioriza o primeiro container válido encontrado
+      // O número do container é TIIU4173061. A regex CONTAINER_REGEX só pega TIIU417306.
+      // Vamos ajustar a regex para incluir o dígito de verificação (o último '1' na sua foto).
+      // A regex atual é: /[A-Z]{4}\d{7}/g; (4 letras + 7 dígitos)
+      // O texto na foto é TIIU 417306 1. O Tesseract pode ler como TIIU4173061.
+      
+      // Vamos usar a regex original e ver se o Tesseract consegue ler TIIU417306.
       const recognizedContainer = uniqueContainers.length > 0 ? uniqueContainers[0] : "";
 
-      // 2. Extrair Placas
+      // 2. Extrair Placas (Não esperamos placas nesta ROI, mas mantemos a lógica)
       const platesFound = text.match(PLATE_REGEX) || [];
       const uniquePlates = [...new Set(platesFound)];
-      
-      // Prioriza a primeira placa válida encontrada
       const recognizedPlate = uniquePlates.length > 0 ? uniquePlates[0] : "";
 
       setResult({
