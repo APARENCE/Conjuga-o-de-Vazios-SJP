@@ -41,12 +41,13 @@ export function useOcrProcessor() {
       const width = img.width;
       const height = img.height;
       
-      // Definindo a ROI: Quadrante superior direito (50% direito, 25% superior)
+      // Definindo a ROI: Quadrante superior direito (50% direito, 15% superior)
+      // Reduzimos a altura para 15% para evitar ruídos de textos menores abaixo do número principal.
       const rectangle = {
         left: Math.floor(width * 0.5), 
         top: 0,
         width: Math.floor(width * 0.5), 
-        height: Math.floor(height * 0.25), 
+        height: Math.floor(height * 0.15), // Reduzido de 25% para 15%
       };
 
       // 2. Executa o reconhecimento apenas na área definida
@@ -71,8 +72,7 @@ export function useOcrProcessor() {
       // Prioriza o primeiro container válido encontrado
       const recognizedContainer = uniqueContainers.length > 0 ? uniqueContainers[0] : "";
 
-      // 2. Extrair Placas (Ainda que não esperemos placas nesta ROI, mantemos a lógica de limpeza)
-      // Por enquanto, focamos apenas no container na ROI
+      // 2. Extrair Placas (Não esperamos placas nesta ROI)
       const recognizedPlate = ""; 
 
       setResult({
