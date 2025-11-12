@@ -29,7 +29,7 @@ export function useOcrProcessor() {
       // Configurações para focar em caracteres alfanuméricos
       await worker.setParameters({
         tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
-        // PSM 8: Assume uma única palavra em uma imagem. Bom para números de container isolados.
+        // PSM 8: Assume uma única palavra em uma imagem. Ideal para a ROI do container.
         psm: 8, 
       });
 
@@ -41,41 +41,43 @@ export function useOcrProcessor() {
       const width = img.width;
       const height = img.height;
       
-      // Definindo a ROI: Quadrante superior direito (20% superior, 50% direito)
-      // Coordenadas: [x0, y0, x1, y1]
+      // Definindo a ROI: Quadrante superior direito (50% direito, 25% superior)
       const rectangle = {
-        left: Math.floor(width * 0.5), // Começa na metade da largura
+        left: Math.floor(width * 0.5), 
         top: 0,
-        width: Math.floor(width * 0.5), // Vai até o final da largura
-        height: Math.floor(height * 0.25), // Pega os 25% superiores
+        width: Math.floor(width * 0.5), 
+        height: Math.floor(height * 0.25), 
       };
 
       // 2. Executa o reconhecimento apenas na área definida
-      const { data: { text } } = await worker.recognize(imageSrc, { rectangle });
+      const { data: { text: rawText } } = await worker.recognize(imageSrc, { rectangle });
       
       await worker.terminate();
 
-      // Log do texto bruto para depuração
-      console.log("OCR Text Result (ROI):", text);
+      // Limpa o texto: remove espaços, quebras de linha e caracteres especiais
+      const cleanedText = rawText.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      
+      // Log do texto bruto e limpo para depuração
+      console.log("OCR Text Result (ROI):", rawText);
+      console.log("OCR Cleaned Text:", cleanedText);
 
       // --- Lógica de Filtragem ---
       
       // 1. Extrair Containers
-      const containersFound = text.match(CONTAINER_REGEX) || [];
+      // Aplicamos a regex no texto limpo
+      const containersFound = cleanedText.match(CONTAINER_REGEX) || [];
       const uniqueContainers = [...new Set(containersFound)];
       
-      // O número do container é TIIU4173061. A regex CONTAINER_REGEX só pega TIIU417306.
-      // Vamos ajustar a regex para incluir o dígito de verificação (o último '1' na sua foto).
-      // A regex atual é: /[A-Z]{4}\d{7}/g; (4 letras + 7 dígitos)
-      // O texto na foto é TIIU 417306 1. O Tesseract pode ler como TIIU4173061.
-      
-      // Vamos usar a regex original e ver se o Tesseract consegue ler TIIU417306.
+      // Prioriza o primeiro container válido encontrado
       const recognizedContainer = uniqueContainers.length > 0 ? uniqueContainers[0] : "";
 
-      // 2. Extrair Placas (Não esperamos placas nesta ROI, mas mantemos a lógica)
-      const platesFound = text.match(PLATE_REGEX) || [];
-      const uniquePlates = [...new Set(platesFound)];
-      const recognizedPlate = uniquePlates.length > 0 ? uniquePlates[0] : "";
+      // 2. Extrair Placas (Ainda que não esperemos placas nesta ROI, mantemos a lógica de limpeza)
+      // Para placas, vamos usar o texto bruto, pois a placa pode estar em outra área.
+      // No entanto, como estamos focando apenas na ROI do container, a placa provavelmente não será encontrada aqui.
+      // Se precisarmos de OCR para placas, teremos que definir outra ROI ou rodar o OCR na imagem inteira.
+      
+      // Por enquanto, focamos apenas no container na ROI
+      const recognizedPlate = ""; 
 
       setResult({
         container: recognizedContainer,
