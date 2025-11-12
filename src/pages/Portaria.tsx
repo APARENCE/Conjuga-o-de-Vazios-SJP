@@ -4,7 +4,7 @@ import { PortariaCamera } from "@/components/PortariaCamera";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Truck, LogIn, LogOut, AlertTriangle, CheckCircle2, Search } from "lucide-react";
+import { Truck, LogIn, LogOut, AlertTriangle, CheckCircle2, Search, User, Car } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,8 @@ interface PortariaPageProps {
 
 export default function Portaria({ containers, onContainerUpdate, onContainerAdd }: PortariaPageProps) {
   const [containerNumber, setContainerNumber] = useState("");
+  const [placa, setPlaca] = useState(""); // Novo estado
+  const [motorista, setMotorista] = useState(""); // Novo estado
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [actionType, setActionType] = useState<'entrada' | 'baixa'>('entrada');
   const { toast } = useToast();
@@ -33,7 +35,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
     setCapturedImage(imageSrc);
     toast({
       title: "Foto Capturada",
-      description: "Confirme o número do container e a ação.",
+      description: "Confirme os dados e a ação.",
     });
   };
 
@@ -45,6 +47,11 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
     if (!capturedImage) {
       toast({ title: "Erro", description: "Capture a foto do container. A foto é obrigatória.", variant: "destructive" });
       return;
+    }
+    
+    if (actionType === 'entrada' && (!placa || !motorista)) {
+        toast({ title: "Erro", description: "Placa e Motorista são obrigatórios para a Entrada.", variant: "destructive" });
+        return;
     }
 
     const now = new Date().toLocaleString('pt-BR');
@@ -66,6 +73,8 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
       updateData = {
         container: searchNumber,
         dataEntrada: dateOnly, // Usando o novo campo
+        placa: placa.toUpperCase().trim(), // Salvando a placa
+        motoristaEntrada: motorista.trim(), // Salvando o motorista
         status: "Em Operação (Entrada)",
       };
       toastMessage = `Entrada registrada para o container ${searchNumber}.`;
@@ -83,7 +92,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
             ...updateData,
             armador: "N/A", // Valor padrão para campos obrigatórios
             // Definindo defaults para os novos campos obrigatórios
-            operador: "", motoristaEntrada: "", placa: "", tara: 0, mgw: 0, tipo: "", padrao: "", statusVazioCheio: "", dataPorto: "", freeTimeArmador: 0,
+            operador: "", tara: 0, mgw: 0, tipo: "", padrao: "", statusVazioCheio: "", dataPorto: "", freeTimeArmador: 0,
             demurrage: "", prazoDias: 0, clienteEntrada: "", transportadora: "", estoque: "", transportadoraSaida: "", statusEntregaMinuta: "", statusMinuta: "", bookingAtrelado: "",
             lacre: "", clienteSaidaDestino: "", atrelado: "", operadorSaida: "", dataEstufagem: "", dataSaidaSJP: "", motoristaSaidaSJP: "", placaSaida: "",
             diasRestantes: 0, // Mapeado de prazoDias
@@ -100,6 +109,8 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
       
       updateData = {
         dataSaidaSJP: dateOnly, // Usando o novo campo de saída
+        placaSaida: placa.toUpperCase().trim(), // Usando a placa de saída
+        motoristaSaidaSJP: motorista.trim(), // Usando o motorista de saída
         status: "Baixa Pátio SJP",
       };
       toastMessage = `Baixa registrada para o container ${searchNumber}.`;
@@ -114,6 +125,8 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
 
     // Limpa o estado
     setContainerNumber("");
+    setPlaca("");
+    setMotorista("");
     setCapturedImage(null);
     
     toast({ title: "Sucesso", description: toastMessage, variant: "default" });
@@ -133,13 +146,13 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
   const isActionDisabled = !searchNumber || !capturedImage || (actionType === 'baixa' && !existingContainer);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-            <Truck className="h-7 w-7 text-primary" /> Controle de Portaria
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <Truck className="h-6 w-6 text-primary" /> Controle de Portaria
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground text-sm mt-1">
             Registro rápido de entrada e baixa de containers com captura de imagem.
           </p>
         </div>
@@ -148,35 +161,59 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Coluna 1: Câmera e Captura */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">1. Captura de Imagem</h2>
+          <h2 className="text-lg font-semibold">1. Captura de Imagem</h2>
           <PortariaCamera onCapture={handleCapture} />
         </div>
 
         {/* Coluna 2: Ação e Status */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">2. Detalhes e Ação</h2>
+          <h2 className="text-lg font-semibold">2. Detalhes e Ação</h2>
           
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Número do Container</CardTitle>
+              <CardTitle className="text-md">Dados da Operação</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              
+              {/* Container Number */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Ex: ABCU1234567"
+                  placeholder="Número do Container (Ex: ABCU1234567)"
                   value={containerNumber}
                   onChange={(e) => setContainerNumber(e.target.value)}
-                  className="pl-10 text-lg font-mono uppercase"
+                  className="pl-10 text-sm font-mono uppercase h-9"
                 />
+              </div>
+              
+              {/* Placa e Motorista (Apenas para Entrada/Baixa) */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="relative">
+                    <Car className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Placa"
+                      value={placa}
+                      onChange={(e) => setPlaca(e.target.value)}
+                      className="pl-10 text-sm uppercase h-9"
+                    />
+                </div>
+                <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Motorista"
+                      value={motorista}
+                      onChange={(e) => setMotorista(e.target.value)}
+                      className="pl-10 text-sm h-9"
+                    />
+                </div>
               </div>
 
               {existingContainer && (
-                <div className="border p-3 rounded-lg bg-muted/50 space-y-1">
+                <div className="border p-3 rounded-lg bg-muted/50 space-y-1 text-sm">
                   <p className="font-medium">Container Encontrado:</p>
-                  <p className="text-sm">Armador: <span className="font-semibold">{existingContainer.armador || 'N/A'}</span></p>
-                  <p className="text-sm">Status Atual: {getStatusBadge(existingContainer.status)}</p>
-                  <p className="text-sm">Prazo (Dias): <span className="font-semibold">{existingContainer.prazoDias}</span></p>
+                  <p className="text-xs">Armador: <span className="font-semibold">{existingContainer.armador || 'N/A'}</span></p>
+                  <p className="text-xs">Status Atual: {getStatusBadge(existingContainer.status)}</p>
+                  <p className="text-xs">Prazo (Dias): <span className="font-semibold">{existingContainer.prazoDias}</span></p>
                 </div>
               )}
               
@@ -195,19 +232,19 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
               <Separator />
 
               <div className="space-y-2">
-                <p className="font-medium">Ação a ser registrada:</p>
+                <p className="font-medium text-sm">Ação a ser registrada:</p>
                 <div className="flex gap-2">
                   <Button 
                     variant={actionType === 'entrada' ? 'default' : 'outline'}
                     onClick={() => setActionType('entrada')}
-                    className="flex-1 gap-2"
+                    className="flex-1 gap-2 h-9 text-sm"
                   >
                     <LogIn className="h-4 w-4" /> Entrada
                   </Button>
                   <Button 
                     variant={actionType === 'baixa' ? 'destructive' : 'outline'}
                     onClick={() => setActionType('baixa')}
-                    className="flex-1 gap-2"
+                    className="flex-1 gap-2 h-9 text-sm"
                   >
                     <LogOut className="h-4 w-4" /> Baixa (Saída SJP)
                   </Button>
@@ -217,7 +254,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
               <Button
                 onClick={handleAction}
                 disabled={isActionDisabled}
-                className="w-full h-12 text-lg gap-2"
+                className="w-full h-10 text-md gap-2"
               >
                 {actionType === 'entrada' ? <LogIn className="h-5 w-5" /> : <LogOut className="h-5 w-5" />}
                 Registrar {actionType === 'entrada' ? 'Entrada' : 'Baixa'}
