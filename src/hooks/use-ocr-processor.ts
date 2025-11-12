@@ -72,10 +72,6 @@ export function useOcrProcessor() {
       const recognizedContainer = uniqueContainers.length > 0 ? uniqueContainers[0] : "";
 
       // 2. Extrair Placas (Ainda que não esperemos placas nesta ROI, mantemos a lógica de limpeza)
-      // Para placas, vamos usar o texto bruto, pois a placa pode estar em outra área.
-      // No entanto, como estamos focando apenas na ROI do container, a placa provavelmente não será encontrada aqui.
-      // Se precisarmos de OCR para placas, teremos que definir outra ROI ou rodar o OCR na imagem inteira.
-      
       // Por enquanto, focamos apenas no container na ROI
       const recognizedPlate = ""; 
 
