@@ -38,7 +38,7 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
 
   const menuItems = [
     { title: "Containers", url: "/", icon: Home },
-    { title: "Portaria", url: "/portaria", icon: Truck }, // Novo item de menu
+    { title: "Gate", url: "/portaria", icon: Truck }, // Renomeado para Gate
     { title: "Análise", url: "/analise", icon: BarChart3 },
     { title: "Inventário", url: "/inventario", icon: PackageOpen },
   ];

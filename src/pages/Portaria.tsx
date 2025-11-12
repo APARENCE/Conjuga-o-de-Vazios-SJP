@@ -150,7 +150,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Truck className="h-6 w-6 text-primary" /> Controle de Portaria
+            <Truck className="h-6 w-6 text-primary" /> Controle de Gate
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
             Registro rápido de entrada e baixa de containers com captura de imagem.
