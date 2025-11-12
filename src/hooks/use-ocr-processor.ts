@@ -3,8 +3,9 @@ import { createWorker } from "tesseract.js";
 
 // Regex para Container (4 letras + 7 dígitos)
 const CONTAINER_REGEX = /[A-Z]{4}\d{7}/g;
-// Regex para Placa (3 letras + 4 dígitos ou 3 letras + 1 letra + 3 dígitos - padrão Mercosul)
-const PLATE_REGEX = /[A-Z]{3}\d[A-Z0-9]\d{2}/g; 
+// Regex para Placa: 3 letras + 4 dígitos (padrão antigo) OU 3 letras + 1 letra/dígito + 3 dígitos (padrão Mercosul)
+// Tornando mais flexível: 3 ou 4 letras seguidas por 3 a 4 caracteres alfanuméricos.
+const PLATE_REGEX = /[A-Z]{3,4}[0-9A-Z]{3,4}/g; 
 
 interface OcrResult {
   container: string;
@@ -29,6 +30,9 @@ export function useOcrProcessor() {
       const { data: { text } } = await worker.recognize(imageSrc);
       
       await worker.terminate();
+
+      // Log do texto bruto para depuração
+      console.log("OCR Text Result:", text);
 
       // --- Lógica de Filtragem ---
       
