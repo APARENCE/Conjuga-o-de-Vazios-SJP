@@ -1,8 +1,9 @@
 import React, { useRef, useCallback, useState } from "react";
 import Webcam from "react-webcam";
 import { Button } from "@/components/ui/button";
-import { Camera, RefreshCw, Check, Download } from "lucide-react"; // Importando Download
+import { Camera, RefreshCw, Upload, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 interface PortariaCameraProps {
   onCapture: (imageSrc: string) => void;
@@ -10,8 +11,10 @@ interface PortariaCameraProps {
 
 export function PortariaCamera({ onCapture }: PortariaCameraProps) {
   const webcamRef = useRef<Webcam>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [isCameraReady, setIsCameraReady] = useState(false);
+  const { toast } = useToast();
 
   const capture = useCallback(() => {
     if (webcamRef.current) {
@@ -20,21 +23,14 @@ export function PortariaCamera({ onCapture }: PortariaCameraProps) {
         setImageSrc(image);
         onCapture(image); // Chama o onCapture imediatamente após a foto
       } else {
-        // Adiciona um toast de erro se a captura falhar
-        console.error("Falha ao capturar a imagem. Verifique as permissões da câmera.");
+        toast({
+          title: "Erro na Câmera",
+          description: "Falha ao capturar a imagem. Verifique as permissões.",
+          variant: "destructive",
+        });
       }
     }
-  }, [webcamRef, onCapture]);
-
-  const handleConfirm = () => {
-    // A confirmação agora apenas limpa a imagem localmente, pois o OCR e o registro são feitos na Portaria.tsx
-    // O onCapture já foi chamado no momento da captura.
-    // Se você quiser que o onCapture seja chamado apenas na confirmação, precisaríamos mudar a lógica.
-    // Mantendo a lógica atual: onCapture (e OCR) é feito na captura.
-    // A confirmação é apenas para indicar que a foto está OK e o usuário pode prosseguir com a ação.
-    // Para simplificar, vamos apenas permitir que o usuário prossiga para a ação principal na Portaria.tsx.
-    // Não precisamos de um handler de confirmação aqui, pois a Portaria.tsx já tem a imagem.
-  };
+  }, [webcamRef, onCapture, toast]);
 
   const handleRetake = () => {
     setImageSrc(null);
@@ -51,10 +47,35 @@ export function PortariaCamera({ onCapture }: PortariaCameraProps) {
       document.body.removeChild(link);
     }
   };
-
-  // Função chamada quando a câmera está pronta
+  
   const handleUserMedia = () => {
     setIsCameraReady(true);
+  };
+
+  // Novo handler para upload de arquivo
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        toast({
+            title: "Tipo de arquivo inválido",
+            description: "Por favor, selecione um arquivo de imagem.",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setImageSrc(result);
+      onCapture(result); // Aciona o OCR com a imagem carregada
+    };
+    reader.readAsDataURL(file);
+    
+    // Limpa o input para permitir o upload do mesmo arquivo novamente
+    event.target.value = '';
   };
 
   return (
@@ -74,6 +95,16 @@ export function PortariaCamera({ onCapture }: PortariaCameraProps) {
           </div>
         ) : (
           <div className="relative">
+            {/* Input de arquivo oculto */}
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            
+            {/* Webcam para captura ao vivo */}
             <Webcam
               audio={false}
               ref={webcamRef}
@@ -81,9 +112,8 @@ export function PortariaCamera({ onCapture }: PortariaCameraProps) {
               videoConstraints={{
                 facingMode: "environment", // Tenta usar a câmera traseira
               }}
-              onUserMedia={handleUserMedia} // Adiciona o handler para saber quando está pronto
+              onUserMedia={handleUserMedia}
               className="w-full h-auto rounded-lg"
-              // Estilos para garantir que o vídeo ocupe o espaço
               style={{ minHeight: '200px', objectFit: 'cover' }}
             />
             
@@ -93,9 +123,16 @@ export function PortariaCamera({ onCapture }: PortariaCameraProps) {
                 </div>
             )}
 
-            <div className="flex justify-center mt-4">
-              <Button onClick={capture} disabled={!isCameraReady} className="gap-2">
+            <div className="flex justify-center gap-4 mt-4">
+              <Button onClick={capture} disabled={!isCameraReady} className="gap-2 flex-1">
                 <Camera className="h-4 w-4" /> Capturar Foto
+              </Button>
+              <Button 
+                variant="secondary" 
+                onClick={() => fileInputRef.current?.click()} 
+                className="gap-2 flex-1"
+              >
+                <Upload className="h-4 w-4" /> Upload Foto
               </Button>
             </div>
           </div>
