@@ -3,8 +3,7 @@ import { createWorker } from "tesseract.js";
 
 // Regex para Container (4 letras + 7 dígitos)
 const CONTAINER_REGEX = /[A-Z]{4}\d{7}/g;
-// Regex para Placa: 3 letras + 4 dígitos (padrão antigo) OU 3 letras + 1 letra/dígito + 3 dígitos (padrão Mercosul)
-// Tornando mais flexível: 3 ou 4 letras seguidas por 3 a 4 caracteres alfanuméricos.
+// Regex para Placa: 3 ou 4 letras seguidas por 3 a 4 caracteres alfanuméricos.
 const PLATE_REGEX = /[A-Z]{3,4}[0-9A-Z]{3,4}/g; 
 
 interface OcrResult {
@@ -24,8 +23,17 @@ export function useOcrProcessor() {
     setResult({ container: "", plate: "", isProcessing: true });
 
     try {
-      // Inicializa o worker do Tesseract (pode ser lento na primeira vez)
+      // Inicializa o worker do Tesseract
       const worker = await createWorker("eng"); // Usando 'eng' para melhor reconhecimento de caracteres alfanuméricos
+
+      // Configurações para melhorar o reconhecimento de containers/placas
+      await worker.setParameters({
+        // Foca em letras maiúsculas e números, que são os caracteres esperados em containers e placas
+        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+        // PSM 6: Assume um único bloco uniforme de texto.
+        // Isso é bom para documentos ou fotos onde o texto está agrupado.
+        psm: 6, 
+      });
 
       const { data: { text } } = await worker.recognize(imageSrc);
       
