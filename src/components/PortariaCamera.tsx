@@ -1,7 +1,7 @@
 import React, { useRef, useCallback, useState } from "react";
 import Webcam from "react-webcam";
 import { Button } from "@/components/ui/button";
-import { Camera, RefreshCw, Check, X } from "lucide-react";
+import { Camera, RefreshCw, Check, Download } from "lucide-react"; // Importando Download
 import { Card, CardContent } from "@/components/ui/card";
 
 interface PortariaCameraProps {
@@ -18,17 +18,22 @@ export function PortariaCamera({ onCapture }: PortariaCameraProps) {
       const image = webcamRef.current.getScreenshot();
       if (image) {
         setImageSrc(image);
+        onCapture(image); // Chama o onCapture imediatamente após a foto
       } else {
         // Adiciona um toast de erro se a captura falhar
         console.error("Falha ao capturar a imagem. Verifique as permissões da câmera.");
       }
     }
-  }, [webcamRef]);
+  }, [webcamRef, onCapture]);
 
   const handleConfirm = () => {
-    if (imageSrc) {
-      onCapture(imageSrc);
-    }
+    // A confirmação agora apenas limpa a imagem localmente, pois o OCR e o registro são feitos na Portaria.tsx
+    // O onCapture já foi chamado no momento da captura.
+    // Se você quiser que o onCapture seja chamado apenas na confirmação, precisaríamos mudar a lógica.
+    // Mantendo a lógica atual: onCapture (e OCR) é feito na captura.
+    // A confirmação é apenas para indicar que a foto está OK e o usuário pode prosseguir com a ação.
+    // Para simplificar, vamos apenas permitir que o usuário prossiga para a ação principal na Portaria.tsx.
+    // Não precisamos de um handler de confirmação aqui, pois a Portaria.tsx já tem a imagem.
   };
 
   const handleRetake = () => {
@@ -36,6 +41,17 @@ export function PortariaCamera({ onCapture }: PortariaCameraProps) {
     setIsCameraReady(false); // Força a re-inicialização se necessário
   };
   
+  const handleDownload = () => {
+    if (imageSrc) {
+      const link = document.createElement('a');
+      link.href = imageSrc;
+      link.download = `container_capture_${new Date().toISOString().split('T')[0]}.jpeg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   // Função chamada quando a câmera está pronta
   const handleUserMedia = () => {
     setIsCameraReady(true);
@@ -48,8 +64,8 @@ export function PortariaCamera({ onCapture }: PortariaCameraProps) {
           <div className="relative">
             <img src={imageSrc} alt="Captured Container" className="w-full h-auto rounded-lg" />
             <div className="flex justify-center gap-4 mt-4">
-              <Button onClick={handleConfirm} className="bg-success hover:bg-success/90 gap-2">
-                <Check className="h-4 w-4" /> Confirmar
+              <Button onClick={handleDownload} variant="secondary" className="gap-2">
+                <Download className="h-4 w-4" /> Download
               </Button>
               <Button variant="outline" onClick={handleRetake} className="gap-2">
                 <RefreshCw className="h-4 w-4" /> Refazer
