@@ -30,9 +30,8 @@ export function useOcrProcessor() {
       await worker.setParameters({
         // Foca em letras maiúsculas e números, que são os caracteres esperados em containers e placas
         tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
-        // PSM 6: Assume um único bloco uniforme de texto.
-        // Isso é bom para documentos ou fotos onde o texto está agrupado.
-        psm: 6, 
+        // PSM 7: Assume uma única linha de texto. Isso pode ser melhor para containers.
+        psm: 7, 
       });
 
       const { data: { text } } = await worker.recognize(imageSrc);
