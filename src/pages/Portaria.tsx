@@ -1,13 +1,15 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Container } from "@/types/container";
 import { PortariaCamera } from "@/components/PortariaCamera";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Truck, LogIn, LogOut, AlertTriangle, CheckCircle2, Search, User, Car } from "lucide-react";
+import { Truck, LogIn, LogOut, AlertTriangle, CheckCircle2, Search, User, Car, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { useOcrProcessor } from "@/hooks/use-ocr-processor"; // Importando o novo hook
+import { cn } from "@/lib/utils";
 
 interface PortariaPageProps {
   containers: Container[];
@@ -17,11 +19,14 @@ interface PortariaPageProps {
 
 export default function Portaria({ containers, onContainerUpdate, onContainerAdd }: PortariaPageProps) {
   const [containerNumber, setContainerNumber] = useState("");
-  const [placa, setPlaca] = useState(""); // Novo estado
-  const [motorista, setMotorista] = useState(""); // Novo estado
+  const [placa, setPlaca] = useState("");
+  const [motorista, setMotorista] = useState("");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [actionType, setActionType] = useState<'entrada' | 'baixa'>('entrada');
   const { toast } = useToast();
+  
+  // Inicializa o processador OCR
+  const { container: ocrContainer, plate: ocrPlate, isProcessing, processImage } = useOcrProcessor();
 
   const searchNumber = containerNumber.toUpperCase().trim();
   
@@ -31,12 +36,43 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
     return containers.find(c => String(c.container || '').toUpperCase().trim() === searchNumber);
   }, [containers, searchNumber]);
 
-  const handleCapture = (imageSrc: string) => {
+  // Efeito para preencher os campos após o OCR
+  useEffect(() => {
+    if (!isProcessing && ocrContainer) {
+      setContainerNumber(ocrContainer);
+      toast({
+        title: "OCR Concluído",
+        description: `Container (${ocrContainer}) reconhecido.`,
+      });
+    }
+    if (!isProcessing && ocrPlate) {
+      setPlaca(ocrPlate);
+      if (!ocrContainer) { // Se só reconheceu a placa, avisa
+        toast({
+            title: "OCR Concluído",
+            description: `Placa (${ocrPlate}) reconhecida.`,
+        });
+      }
+    }
+    if (!isProcessing && capturedImage && !ocrContainer && !ocrPlate) {
+        toast({
+            title: "OCR Concluído",
+            description: "Nenhum container ou placa reconhecido. Por favor, insira manualmente.",
+            variant: "warning",
+        });
+    }
+  }, [isProcessing, ocrContainer, ocrPlate, capturedImage, toast]);
+
+
+  const handleCapture = async (imageSrc: string) => {
     setCapturedImage(imageSrc);
     toast({
       title: "Foto Capturada",
-      description: "Confirme os dados e a ação.",
+      description: "Iniciando reconhecimento OCR...",
     });
+    
+    // Inicia o processamento OCR
+    await processImage(imageSrc);
   };
 
   const handleAction = () => {
@@ -143,7 +179,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
     return <Badge variant="secondary">{status}</Badge>;
   };
 
-  const isActionDisabled = !searchNumber || !capturedImage || (actionType === 'baixa' && !existingContainer);
+  const isActionDisabled = !searchNumber || !capturedImage || isProcessing || (actionType === 'baixa' && !existingContainer);
 
   return (
     <div className="space-y-6 p-4">
@@ -182,7 +218,8 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                   placeholder="Número do Container (Ex: ABCU1234567)"
                   value={containerNumber}
                   onChange={(e) => setContainerNumber(e.target.value)}
-                  className="pl-10 text-sm font-mono uppercase h-9"
+                  className={cn("pl-10 text-sm font-mono uppercase h-9", isProcessing && "opacity-50")}
+                  disabled={isProcessing}
                 />
               </div>
               
@@ -194,7 +231,8 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                       placeholder="Placa"
                       value={placa}
                       onChange={(e) => setPlaca(e.target.value)}
-                      className="pl-10 text-sm uppercase h-9"
+                      className={cn("pl-10 text-sm uppercase h-9", isProcessing && "opacity-50")}
+                      disabled={isProcessing}
                     />
                 </div>
                 <div className="relative">
@@ -203,7 +241,8 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                       placeholder="Motorista"
                       value={motorista}
                       onChange={(e) => setMotorista(e.target.value)}
-                      className="pl-10 text-sm h-9"
+                      className={cn("pl-10 text-sm h-9", isProcessing && "opacity-50")}
+                      disabled={isProcessing}
                     />
                 </div>
               </div>
@@ -238,6 +277,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                     variant={actionType === 'entrada' ? 'default' : 'outline'}
                     onClick={() => setActionType('entrada')}
                     className="flex-1 gap-2 h-9 text-sm"
+                    disabled={isProcessing}
                   >
                     <LogIn className="h-4 w-4" /> Entrada
                   </Button>
@@ -245,6 +285,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                     variant={actionType === 'baixa' ? 'destructive' : 'outline'}
                     onClick={() => setActionType('baixa')}
                     className="flex-1 gap-2 h-9 text-sm"
+                    disabled={isProcessing}
                   >
                     <LogOut className="h-4 w-4" /> Baixa (Saída SJP)
                   </Button>
@@ -256,13 +297,19 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                 disabled={isActionDisabled}
                 className="w-full h-10 text-md gap-2"
               >
-                {actionType === 'entrada' ? <LogIn className="h-5 w-5" /> : <LogOut className="h-5 w-5" />}
-                Registrar {actionType === 'entrada' ? 'Entrada' : 'Baixa'}
+                {isProcessing ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                ) : actionType === 'entrada' ? (
+                    <LogIn className="h-5 w-5" />
+                ) : (
+                    <LogOut className="h-5 w-5" />
+                )}
+                {isProcessing ? 'Processando OCR...' : `Registrar ${actionType === 'entrada' ? 'Entrada' : 'Baixa'}`}
               </Button>
               
-              {capturedImage && (
+              {capturedImage && !isProcessing && (
                 <div className="text-sm text-success flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4" /> Foto capturada e pronta para registro.
+                    <CheckCircle2 className="h-4 w-4" /> Foto capturada e OCR concluído.
                 </div>
               )}
             </CardContent>
