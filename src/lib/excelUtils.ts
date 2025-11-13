@@ -1,6 +1,47 @@
 import * as XLSX from 'xlsx';
 import { Container } from '@/types/container';
 
+// Helper function to convert DD/MM/YYYY string to Date object (for internal use)
+const parseDateString = (dateString: string): Date | null => {
+  const parts = dateString.split('/');
+  if (parts.length !== 3) return null;
+  // Cria a data no formato YYYY-MM-DD para evitar problemas de fuso horário
+  const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+  return isNaN(date.getTime()) ? null : date;
+};
+
+// Helper function to format any date-like value to DD/MM/YYYY string
+const formatDateToBR = (dateValue: any): string => {
+  if (!dateValue || dateValue === "-" || dateValue === "") return "";
+  
+  let date: Date | null = null;
+
+  if (dateValue instanceof Date) {
+    date = dateValue;
+  } else if (typeof dateValue === 'string') {
+    // Tenta parsear strings que já estão em DD/MM/YYYY
+    date = parseDateString(dateValue);
+    
+    // Se falhar, tenta parsear como string ISO ou outro formato
+    if (!date) {
+        const tempDate = new Date(dateValue);
+        if (!isNaN(tempDate.getTime())) {
+            date = tempDate;
+        }
+    }
+  }
+  
+  if (date && !isNaN(date.getTime())) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear());
+    
+    return `${day}/${month}/${year}`;
+  }
+  
+  return String(dateValue); // Retorna o valor original se não for uma data válida
+};
+
 // Helper function to convert Excel date serial number or string date to DD/MM/YYYY format
 const excelDateToJSDate = (serial: any): string => {
   if (!serial || serial === "-" || serial === "") return "";
@@ -32,11 +73,7 @@ const excelDateToJSDate = (serial: any): string => {
   }
 
   if (date && !isNaN(date.getTime())) {
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = String(date.getFullYear());
-    
-    return `${day}/${month}/${year}`;
+    return formatDateToBR(date);
   }
   
   return String(serial);
@@ -75,6 +112,14 @@ const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
   'motoristaSaidaSJP', // 29. MOTORISTA SAIDA SJP
   'placaSaida', // 30. PLACA (Saída)
   'depotDevolucao', // 31. DEPOT DE DEVOLUÇÃO (Adicionado para análise)
+];
+
+// Lista de chaves que representam campos de data no objeto Container
+const DATE_KEYS: (keyof Container)[] = [
+    'dataEntrada', 
+    'dataPorto', 
+    'dataEstufagem', 
+    'dataSaidaSJP'
 ];
 
 
@@ -128,7 +173,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
                 // Trata valores numéricos
                 const numericValue = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : Number(value);
                 partialContainer[key] = isNaN(numericValue) ? 0 : numericValue;
-              } else if (['dataEntrada', 'dataPorto', 'dataEstufagem', 'dataSaidaSJP'].includes(key)) {
+              } else if (DATE_KEYS.includes(key)) {
                 // Trata campos de data
                 partialContainer[key] = excelDateToJSDate(value);
               } else {
@@ -175,7 +220,7 @@ export const exportToExcel = (containers: Container[]) => {
       'OPERADOR1': c.operador,
       'MOTORISTA ENTRADA': c.motoristaEntrada,
       'PLACA1': c.placa,
-      'DATA ENTRADA': c.dataEntrada,
+      'DATA ENTRADA': formatDateToBR(c.dataEntrada), // Formatando data
       'CONTAINER': c.container,
       'ARMADOR': c.armador,
       'TARA': c.tara,
@@ -183,7 +228,7 @@ export const exportToExcel = (containers: Container[]) => {
       'TIPO': c.tipo,
       'PADRÃO': c.padrao,
       'STATUS (VAZIO/CHEIO)': c.statusVazioCheio,
-      'DATA PORTO': c.dataPorto,
+      'DATA PORTO': formatDateToBR(c.dataPorto), // Formatando data
       'FREETimearmador': c.freeTimeArmador,
       'Demurrage': c.demurrage,
       'Prazo(dias)': c.prazoDias,
@@ -198,8 +243,8 @@ export const exportToExcel = (containers: Container[]) => {
       'CLIENTE SAIDA / DESTINO': c.clienteSaidaDestino,
       'ATRELADO': c.atrelado,
       'OPERADOR SAIDA': c.operadorSaida, // Saída
-      'DATA DA ESTUFAGEM': c.dataEstufagem,
-      'DATA SAIDA SJP': c.dataSaidaSJP,
+      'DATA DA ESTUFAGEM': formatDateToBR(c.dataEstufagem), // Formatando data
+      'DATA SAIDA SJP': formatDateToBR(c.dataSaidaSJP), // Formatando data
       'MOTORISTA SAIDA SJP': c.motoristaSaidaSJP,
       'PLACA SAIDA': c.placaSaida, // Saída
       'DEPOT DE DEVOLUÇÃO': c.depotDevolucao, // Novo campo de exportação
