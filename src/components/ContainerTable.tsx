@@ -187,7 +187,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                     <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.statusVazioCheio}</TableCell>
                     <TableCell className={colWidths.md}>{formatDateToBR(container.dataPorto)}</TableCell>
                     <TableCell className={cn(colWidths.sm, "text-center", hiddenColClass)}>{container.freeTimeArmador || "-"}</TableCell>
-                    <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.demurrage}</TableCell>
+                    <TableCell className={colWidths.md}>{container.demurrage}</TableCell>
                     <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.transportadora}</TableCell>
                     <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.estoque}</TableCell>
                     <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.transportadoraSaida}</TableCell>

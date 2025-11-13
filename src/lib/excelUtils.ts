@@ -59,14 +59,15 @@ const excelDateToJSDate = (serial: any): string => {
     const utc_days = Math.floor(serial - 25569);
     date = new Date(utc_days * 86400 * 1000);
     
+    // Ajuste de fuso horário para garantir que a data seja correta
+    date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+
     if (isNaN(date.getTime())) {
         date = null;
     }
   } 
   
   if (typeof serial === "string") {
-    // Se o XLSX.read com cellDates: true retornou uma string, ela pode ser um formato ISO ou DD/MM/YYYY
-    
     // Tenta parsear como DD/MM/YYYY
     const brMatch = serial.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
     if (brMatch) {
@@ -90,6 +91,7 @@ const excelDateToJSDate = (serial: any): string => {
 };
 
 // Ordem exata das chaves da interface Container, correspondendo à ordem da planilha (31 colunas).
+// Ajustado para a nova ordem fornecida pelo usuário.
 const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
   'operador', // 1. OPERADOR1
   'motoristaEntrada', // 2. MOTORISTA ENTRADA
@@ -121,7 +123,7 @@ const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
   'dataSaidaSJP', // 28. DATA SAIDA SJP
   'motoristaSaidaSJP', // 29. MOTORISTA SAIDA SJP
   'placaSaida', // 30. PLACA (Saída)
-  'depotDevolucao', // 31. DEPOT DE DEVOLUÇÃO (Adicionado para análise)
+  'depotDevolucao', // 31. DEPOT DE DEVOLUÇÃO (Mantido como último campo)
 ];
 
 // Lista de chaves que representam campos de data no objeto Container
