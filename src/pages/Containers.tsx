@@ -192,7 +192,7 @@ export default function Containers({
           <div className="grid grid-cols-2 gap-1 text-xs">
             <div>
               <span className="text-muted-foreground">Data Entrada:</span>
-              <p className="font-medium">{formatDateToBR(container.dataEntrada) || "-"}</p>
+              <p className="font-medium">{container.dataEntrada || "-"}</p>
             </div>
             <div>
               <span className="text-muted-foreground">Placa:</span>
