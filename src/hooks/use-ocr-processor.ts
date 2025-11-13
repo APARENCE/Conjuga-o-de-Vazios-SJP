@@ -19,16 +19,15 @@ export function useOcrProcessor() {
     isProcessing: false,
   });
 
-  const runOcrAttempt = async (worker: Tesseract.Worker, imageSrc: string, rectangle: Tesseract.Rectangle | undefined, psm: number, whitelist?: string): Promise<string> => {
-    const params: Tesseract.SetParameters = {
-      psm: psm,
-    };
-    if (whitelist) {
-        params.tessedit_char_whitelist = whitelist;
-    }
-    await worker.setParameters(params);
+  // Simplificando runOcrAttempt, pois não precisamos mais de rectangle ou psm complexos
+  const runOcrAttempt = async (worker: Tesseract.Worker, imageSrc: string): Promise<string> => {
+    // Usamos PSM 7 (Assume uma única linha de texto) ou 6 (bloco uniforme) para a imagem já cortada.
+    await worker.setParameters({
+      psm: 7, 
+      tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+    });
     
-    const { data: { text: rawText } } = await worker.recognize(imageSrc, { rectangle });
+    const { data: { text: rawText } } = await worker.recognize(imageSrc);
     return rawText;
   };
 
@@ -36,68 +35,40 @@ export function useOcrProcessor() {
     setResult({ container: "", plate: "", isProcessing: true });
 
     try {
-      const img = new Image();
-      img.src = imageSrc;
-      await new Promise(resolve => img.onload = resolve);
-      
-      const width = img.width;
-      const height = img.height;
-      
-      // ROI Focada: Área superior central (30% a 75% da largura, 5% a 20% da altura)
-      // Esta área corresponde à posição típica do número do container.
-      const focusedRectangle = {
-        left: Math.floor(width * 0.30), 
-        top: Math.floor(height * 0.05),
-        width: Math.floor(width * 0.45), // 75% - 30% = 45%
-        height: Math.floor(height * 0.15), // 20% - 5% = 15%
-      };
-      
       // Inicializa o worker do Tesseract
       const worker = await createWorker("eng"); 
-      await worker.setParameters({
-        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
-      });
-
+      
       let recognizedContainer = "";
       let recognizedPlate = "";
       
-      // --- Etapa 1: Tentativas Otimizadas para o Container Completo (11 caracteres) ---
-      // PSM 6 (Assume um bloco uniforme de texto) é frequentemente o melhor para números de container.
-      const psms = [6, 7, 8, 3]; 
+      // --- Etapa 1: Tentativa Otimizada para o Container/Placa na Imagem Cortada ---
+      // A imagem já está cortada para focar no número do container.
+      const rawText = await runOcrAttempt(worker, imageSrc);
       
-      for (const psm of psms) {
-        // Usamos a ROI focada para PSM 6, 7 e 8, e a imagem inteira para PSM 3 (fallback).
-        const rectangle = (psm === 3) ? undefined : focusedRectangle;
-        
-        const rawText = await runOcrAttempt(worker, imageSrc, rectangle, psm);
-        
-        // Limpa o texto: remove espaços, quebras de linha e caracteres especiais
-        const cleanedText = rawText.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        
-        console.log(`OCR Attempt PSM ${psm} - Cleaned Text:`, cleanedText);
+      // Limpa o texto: remove espaços, quebras de linha e caracteres especiais
+      const cleanedText = rawText.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      
+      console.log(`OCR Attempt - Cleaned Text:`, cleanedText);
 
-        // Extrair Containers
-        const containersFound = cleanedText.match(CONTAINER_REGEX) || [];
-        const uniqueContainers = [...new Set(containersFound)];
-        
-        if (uniqueContainers.length > 0) {
-          // Filtra para garantir que estamos pegando o padrão de 11 caracteres
-          const validContainer = uniqueContainers.find(c => c.length === 11);
-          if (validContainer) {
-            recognizedContainer = validContainer;
-            console.log(`Container found with PSM ${psm}:`, recognizedContainer);
-            break; // Encontrou, pode parar
+      // 1. Extrair Containers
+      const containersFound = cleanedText.match(CONTAINER_REGEX) || [];
+      const uniqueContainers = [...new Set(containersFound)];
+      
+      if (uniqueContainers.length > 0) {
+        const validContainer = uniqueContainers.find(c => c.length === 11);
+        if (validContainer) {
+          recognizedContainer = validContainer;
+          console.log("Container found:", recognizedContainer);
+        }
+      }
+      
+      // 2. Extrair Placa (Se o container não foi encontrado, ou se a placa estiver na mesma área)
+      if (!recognizedContainer) {
+          const platesFound = cleanedText.match(PLATE_REGEX) || [];
+          if (platesFound.length > 0) {
+              recognizedPlate = platesFound[0];
+              console.log("Plate found:", recognizedPlate);
           }
-        }
-        
-        // Tentativa de extrair placa (apenas na tentativa de imagem inteira PSM 3, se ainda não tivermos uma placa)
-        if (psm === 3 && !recognizedPlate) {
-            const platesFoundFull = cleanedText.match(PLATE_REGEX) || [];
-            if (platesFoundFull.length > 0) {
-                recognizedPlate = platesFoundFull[0];
-                console.log("Plate found with FULL IMAGE PSM 3:", recognizedPlate);
-            }
-        }
       }
       
       await worker.terminate();
