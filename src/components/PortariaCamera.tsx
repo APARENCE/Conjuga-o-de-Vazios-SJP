@@ -72,9 +72,9 @@ export function PortariaCamera({ onCapture }: PortariaCameraProps) {
     return (
       <Card className="w-full">
         <CardContent className="p-4">
-          <h3 className="text-sm font-semibold mb-2">Ajuste a Área de Leitura (1:4)</h3>
+          <h3 className="text-sm font-semibold mb-2">Ajuste a Área de Leitura (4:1)</h3>
           <p className="text-xs text-muted-foreground mb-4">
-            Posicione o número do container dentro do quadrado vermelho para garantir a leitura correta.
+            Posicione o número do container dentro da área destacada para garantir a leitura correta.
           </p>
           <ImageCropper
             imageSrc={originalImageSrc}

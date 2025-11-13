@@ -288,3 +288,19 @@ All colors MUST be HSL.
     @apply px-0.5 py-0; /* Reduzindo o padding horizontal para o mínimo */
   }
 }
+
+/* Estilos para o React Image Crop */
+.ReactCrop__crop-selection {
+  /* Borda vermelha para destacar a área de foco do container */
+  border: 2px solid hsl(var(--danger)) !important; 
+  /* Fundo semi-transparente para a área cortada */
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.ReactCrop__drag-handle {
+  /* Alças de redimensionamento maiores e mais visíveis */
+  width: 10px !important;
+  height: 10px !important;
+  background-color: hsl(var(--primary)) !important;
+  border: 1px solid hsl(var(--primary-foreground)) !important;
+}
