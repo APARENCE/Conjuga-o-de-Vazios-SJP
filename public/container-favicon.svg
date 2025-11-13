@@ -1,6 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#2196F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-container">
-  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-  <line x1="7" y1="7" x2="7" y2="17"/>
-  <line x1="17" y1="7" x2="17" y2="17"/>
-  <line x1="3" y1="12" x2="21" y2="12"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="none">
+  <style>
+    .primary-color { fill: #3b82f6; } /* Cor primária (azul) */
+    .secondary-color { fill: #1e40af; } /* Cor secundária (azul escuro) */
+    .highlight-color { fill: #ffffff; } /* Cor de destaque (branco) */
+  </style>
+  
+  <!-- Corpo principal do container -->
+  <rect x="2" y="5" width="20" height="14" rx="2" ry="2" class="primary-color"/>
+  
+  <!-- Linhas de reforço verticais -->
+  <rect x="2" y="5" width="2" height="14" class="secondary-color"/>
+  <rect x="20" y="5" width="2" height="14" class="secondary-color"/>
+  
+  <!-- Linhas de reforço horizontais (topo e base) -->
+  <rect x="2" y="5" width="20" height="2" class="secondary-color"/>
+  <rect x="2" y="17" width="20" height="2" class="secondary-color"/>
+  
+  <!-- Detalhe da porta (simulação de número) -->
+  <rect x="10" y="9" width="4" height="2" rx="0.5" ry="0.5" class="highlight-color"/>
+  <rect x="10" y="13" width="4" height="2" rx="0.5" ry="0.5" class="highlight-color"/>
+  
+  <!-- Alça de canto superior esquerdo -->
+  <circle cx="3" cy="6" r="1" class="highlight-color"/>
+  
+  <!-- Sombra sutil para profundidade -->
+  <path d="M 2 19 L 22 19 L 22 20 C 22 21.1 21.1 22 20 22 L 4 22 C 2.9 22 2 21.1 2 20 L 2 19 Z" fill="#000000" opacity="0.1"/>
 </svg>
