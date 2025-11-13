@@ -54,22 +54,19 @@ const excelDateToJSDate = (serial: any): string => {
   
   let date: Date | null = null;
 
-  if (typeof serial === "number") {
-    // CORREÇÃO: Usamos a base de 1900 (25569 dias) e multiplicamos por milissegundos por dia.
-    // O erro de 1925 ocorre quando o fuso horário local é aplicado. 
-    // Vamos usar a função nativa do XLSX para maior precisão.
-    
-    // Se o XLSX.read com cellDates: true retornou um número, é um serial.
-    // Usamos a função de conversão do XLSX para garantir a precisão.
+  if (serial instanceof Date) {
+    // Se XLSX já converteu para Date (cellDates: true)
+    date = serial;
+  } else if (typeof serial === "number") {
+    // Se for um número serial (fallback se cellDates: true falhar)
     const dateObj = XLSX.SSF.parse_date_code(serial);
     if (dateObj) {
         // Cria uma data UTC a partir dos componentes (ano, mês, dia)
+        // Isso evita o problema de fuso horário local que causa o erro de 1925.
         date = new Date(Date.UTC(dateObj.y, dateObj.m - 1, dateObj.d));
     }
-  } 
-  
-  if (typeof serial === "string") {
-    // Tenta parsear como DD/MM/YYYY
+  } else if (typeof serial === "string") {
+    // Tenta parsear strings (DD/MM/YYYY ou ISO)
     const brMatch = serial.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
     if (brMatch) {
         // DD/MM/YYYY
@@ -84,7 +81,7 @@ const excelDateToJSDate = (serial: any): string => {
     }
   }
 
-  if (date && !isNaN(date.getTime())) {
+  if (date && !isNaN(date.getTime()) && date.getFullYear() > 1900) {
     return formatDateToBR(date);
   }
   
@@ -143,6 +140,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
       try {
         const data = e.target?.result;
         // Lendo como array de arrays (raw: false para manter formatação de data)
+        // Mantemos cellDates: true para que o XLSX tente converter para Date object
         const workbook = XLSX.read(data, { type: 'binary', cellDates: true, raw: false });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
