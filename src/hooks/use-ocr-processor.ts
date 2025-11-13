@@ -44,12 +44,11 @@ export function useOcrProcessor() {
       const height = img.height;
       
       // ROI Focada: Quadrante superior direito (50% direito, 30% superior)
-      // Aumentamos a altura para garantir que o número completo esteja na área de foco.
       const focusedRectangle = {
         left: Math.floor(width * 0.5), 
         top: 0,
         width: Math.floor(width * 0.5), 
-        height: Math.floor(height * 0.30), // Aumentado para 30%
+        height: Math.floor(height * 0.30), 
       };
       
       // Inicializa o worker do Tesseract
@@ -62,12 +61,12 @@ export function useOcrProcessor() {
       let recognizedPlate = "";
       
       // --- Etapa 1: Tentativas Otimizadas para o Container Completo (11 caracteres) ---
-      // Priorizamos PSM 7 (Single Text Line) e PSM 8 (Single Word) na ROI focada.
-      const psms = [7, 8, 6, 3]; 
+      // PSM 6 (Assume um bloco uniforme de texto) é frequentemente o melhor para números de container.
+      const psms = [6, 7, 8, 3]; 
       
       for (const psm of psms) {
-        // Usamos a ROI focada para PSM 7 e 8, e a imagem inteira para PSM 6 e 3.
-        const rectangle = (psm === 7 || psm === 8) ? focusedRectangle : undefined;
+        // Usamos a ROI focada para PSM 6, 7 e 8, e a imagem inteira para PSM 3.
+        const rectangle = (psm === 3) ? undefined : focusedRectangle;
         
         const rawText = await runOcrAttempt(worker, imageSrc, rectangle, psm);
         
@@ -99,9 +98,6 @@ export function useOcrProcessor() {
             }
         }
       }
-      
-      // --- Etapa 2: Fallback de 10+1 removido para focar na leitura direta de 11 dígitos ---
-      // Se o container não foi reconhecido com 11 dígitos, ele permanece vazio.
       
       await worker.terminate();
 
