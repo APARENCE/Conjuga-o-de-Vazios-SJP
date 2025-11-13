@@ -1,8 +1,9 @@
 import * as XLSX from 'xlsx';
 import { Container } from '@/types/container';
 
-// Helper function to convert DD/MM/YYYY string to Date object (for internal use)
+// Helper function to convert DD/MM/YYYY string to object Date (for internal use)
 const parseDateString = (dateString: string): Date | null => {
+  if (!dateString) return null;
   const parts = dateString.split('/');
   if (parts.length !== 3) return null;
   // Cria a data no formato YYYY-MM-DD para evitar problemas de fuso horário
@@ -10,8 +11,12 @@ const parseDateString = (dateString: string): Date | null => {
   return isNaN(date.getTime()) ? null : date;
 };
 
-// Helper function to format any date-like value to DD/MM/YYYY string
-const formatDateToBR = (dateValue: any): string => {
+/**
+ * Formata qualquer valor de data (Date object, string ISO, ou string DD/MM/YYYY) para DD/MM/YYYY.
+ * @param dateValue O valor da data.
+ * @returns A data formatada como string DD/MM/YYYY ou o valor original se não for uma data válida.
+ */
+export const formatDateToBR = (dateValue: any): string => {
   if (!dateValue || dateValue === "-" || dateValue === "") return "";
   
   let date: Date | null = null;
@@ -19,13 +24,14 @@ const formatDateToBR = (dateValue: any): string => {
   if (dateValue instanceof Date) {
     date = dateValue;
   } else if (typeof dateValue === 'string') {
-    // Tenta parsear strings que já estão em DD/MM/YYYY
+    // 1. Tenta parsear strings que já estão em DD/MM/YYYY
     date = parseDateString(dateValue);
     
-    // Se falhar, tenta parsear como string ISO ou outro formato
+    // 2. Se falhar, tenta parsear como string ISO ou outro formato
     if (!date) {
         const tempDate = new Date(dateValue);
-        if (!isNaN(tempDate.getTime())) {
+        // Verifica se a data é válida e se não é a data zero (1970)
+        if (!isNaN(tempDate.getTime()) && tempDate.getFullYear() > 1900) {
             date = tempDate;
         }
     }
@@ -59,16 +65,20 @@ const excelDateToJSDate = (serial: any): string => {
   } 
   
   if (typeof serial === "string") {
+    // Se o XLSX.read com cellDates: true retornou uma string, ela pode ser um formato ISO ou DD/MM/YYYY
+    
+    // Tenta parsear como DD/MM/YYYY
     const brMatch = serial.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
     if (brMatch) {
         // DD/MM/YYYY
         date = new Date(`${brMatch[3]}-${brMatch[2]}-${brMatch[1]}`);
     } else {
+        // Tenta parsear como ISO ou outro formato
         date = new Date(serial);
     }
 
     if (!date || isNaN(date.getTime())) {
-        return serial;
+        return serial; // Retorna a string original se não for data
     }
   }
 

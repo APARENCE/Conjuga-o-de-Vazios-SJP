@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import React from "react";
+import { formatDateToBR } from "@/lib/excelUtils"; // Importando a função de formatação
 
 interface ContainerTableProps {
   containers: Container[];
@@ -171,11 +172,11 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                       </div>
                     </TableCell>
                     <TableCell className={colWidths.md}>{getStatusBadge(container.status)}</TableCell>
-                    <TableCell className={colWidths.md}>{container.dataEntrada}</TableCell>
+                    <TableCell className={colWidths.md}>{formatDateToBR(container.dataEntrada)}</TableCell>
                     <TableCell className={cn(colWidths.md, "truncate")}>{container.clienteEntrada}</TableCell>
                     <TableCell className={cn(colWidths.md, "truncate")}>{container.motoristaEntrada}</TableCell>
                     <TableCell className={colWidths.sm}>{container.placa}</TableCell>
-                    <TableCell className={colWidths.md}>{container.dataSaidaSJP}</TableCell>
+                    <TableCell className={colWidths.md}>{formatDateToBR(container.dataSaidaSJP)}</TableCell>
                     
                     {/* Colunas Ocultas (Visíveis apenas com rolagem horizontal ou em 2XL) */}
                     <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.operador}</TableCell>
@@ -184,7 +185,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                     <TableCell className={cn(colWidths.xs, hiddenColClass)}>{container.tipo}</TableCell>
                     <TableCell className={cn(colWidths.xs, hiddenColClass)}>{container.padrao}</TableCell>
                     <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.statusVazioCheio}</TableCell>
-                    <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.dataPorto}</TableCell>
+                    <TableCell className={colWidths.md}>{formatDateToBR(container.dataPorto)}</TableCell>
                     <TableCell className={cn(colWidths.sm, "text-center", hiddenColClass)}>{container.freeTimeArmador || "-"}</TableCell>
                     <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.demurrage}</TableCell>
                     <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.transportadora}</TableCell>
@@ -197,8 +198,8 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                     <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.clienteSaidaDestino}</TableCell>
                     <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.atrelado}</TableCell>
                     <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.operadorSaida}</TableCell>
-                    <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.dataEstufagem}</TableCell>
-                    <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.motoristaSaidaSJP}</TableCell>
+                    <TableCell className={colWidths.md}>{formatDateToBR(container.dataEstufagem)}</TableCell>
+                    <TableCell className={colWidths.md}>{formatDateToBR(container.motoristaSaidaSJP)}</TableCell>
                     <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.placaSaida}</TableCell>
                     
                     {/* Colunas de Ação */}

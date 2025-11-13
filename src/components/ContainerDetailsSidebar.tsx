@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { FileUploadDialog } from "./FileUploadDialog";
 import { ContainerFile } from "@/types/container";
 import { cn } from "@/lib/utils";
+import { formatDateToBR } from "@/lib/excelUtils"; // Importando a função de formatação
 
 interface ContainerDetailsSidebarProps {
   container: Container | null;
@@ -30,7 +31,7 @@ const FIELD_GROUPS = [
       { key: "operador", label: "OPERADOR1" },
       { key: "motoristaEntrada", label: "MOTORISTA ENTRADA" },
       { key: "placa", label: "PLACA1" },
-      { key: "dataEntrada", label: "DATA ENTRADA" },
+      { key: "dataEntrada", label: "DATA ENTRADA", isDate: true },
       { key: "tara", label: "TARA (kg)" },
       { key: "mgw", label: "MGW (kg)" },
       { key: "tipo", label: "TIPO" },
@@ -42,7 +43,7 @@ const FIELD_GROUPS = [
     title: "Prazos e Clientes",
     icon: Calendar,
     fields: [
-      { key: "dataPorto", label: "DATA PORTO" },
+      { key: "dataPorto", label: "DATA PORTO", isDate: true },
       { key: "freeTimeArmador", label: "FREE TIME ARMADOR (dias)" },
       { key: "demurrage", label: "DEMURRAGE" },
       { key: "prazoDias", label: "PRAZO (DIAS)", color: (d: number) => d === 0 ? "text-danger" : d <= 3 ? "text-warning" : "text-success" },
@@ -63,14 +64,14 @@ const FIELD_GROUPS = [
       { key: "clienteSaidaDestino", label: "CLIENTE SAIDA / DESTINO" },
       { key: "atrelado", label: "ATRELADO" },
       { key: "operadorSaida", label: "OPERADOR (Saída)" },
-      { key: "dataEstufagem", label: "DATA DA ESTUFAGEM" },
+      { key: "dataEstufagem", label: "DATA DA ESTUFAGEM", isDate: true },
     ],
   },
   {
     title: "Baixa SJP e Status Geral",
     icon: Clock,
     fields: [
-      { key: "dataSaidaSJP", label: "DATA SAIDA SJP" },
+      { key: "dataSaidaSJP", label: "DATA SAIDA SJP", isDate: true },
       { key: "motoristaSaidaSJP", label: "MOTORISTA SAIDA SJP" },
       { key: "placaSaida", label: "PLACA (Saída)" },
       { key: "status", label: "STATUS GERAL", highlight: true },
@@ -83,9 +84,13 @@ export function ContainerDetailsSidebar({ container, onClose, onContainerUpdate 
 
   if (!container) return null;
 
-  const renderValue = (key: keyof Container, value: any, colorFn?: (d: any) => string) => {
-    const displayValue = value === 0 ? "0" : (value || "-");
+  const renderValue = (key: keyof Container, value: any, isDate: boolean, colorFn?: (d: any) => string) => {
+    let displayValue = value === 0 ? "0" : (value || "-");
     
+    if (isDate) {
+        displayValue = formatDateToBR(value) || "-";
+    }
+
     let classes = "font-medium text-sm";
     if (colorFn) {
         classes = cn(classes, colorFn(value));
@@ -134,7 +139,7 @@ export function ContainerDetailsSidebar({ container, onClose, onContainerUpdate 
                   return (
                     <div key={field.key} className="flex flex-col">
                       <span className="text-muted-foreground">{field.label}</span>
-                      {renderValue(field.key as keyof Container, value, field.color)}
+                      {renderValue(field.key as keyof Container, value, !!field.isDate, field.color)}
                     </div>
                   );
                 })}

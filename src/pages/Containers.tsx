@@ -19,7 +19,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { VencimentoAlert } from "@/components/VencimentoAlert";
-import { ContainerDetailsSidebar } from "@/components/ContainerDetailsSidebar"; // Importando a nova sidebar
+import { ContainerDetailsSidebar } from "@/components/ContainerDetailsSidebar";
+import { formatDateToBR } from "@/lib/excelUtils"; // Importando a função de formatação
 
 interface ContainersPageProps {
   containers: Container[];
@@ -191,7 +192,7 @@ export default function Containers({
           <div className="grid grid-cols-2 gap-1 text-xs">
             <div>
               <span className="text-muted-foreground">Data Entrada:</span>
-              <p className="font-medium">{container.dataEntrada || "-"}</p>
+              <p className="font-medium">{formatDateToBR(container.dataEntrada) || "-"}</p>
             </div>
             <div>
               <span className="text-muted-foreground">Placa:</span>
