@@ -3,8 +3,7 @@ import { createWorker } from "tesseract.js";
 import { CONTAINER_PREFIXES } from "@/data/containerPrefixes"; // Importando prefixos
 
 // Regex para Container: 4 letras + 7 dígitos.
-// Usamos uma regex mais ampla para capturar sequências de 11 caracteres alfanuméricos
-const CONTAINER_PATTERN = /([A-Z]{4}\d{7})|([A-Z]{4}\s*\d{7})|([A-Z]{4}\d{6}\s*\d)|([A-Z]{4}\d{5}\s*\d{2})/g;
+const CONTAINER_PATTERN = /([A-Z]{4}\d{7})/;
 
 // Regex para Placa: 3 ou 4 letras seguidas por 3 a 4 caracteres alfanuméricos.
 const PLATE_REGEX = /[A-Z]{3,4}[0-9A-Z]{3,4}/g; 
@@ -23,9 +22,9 @@ export function useOcrProcessor() {
   });
 
   const runOcrAttempt = async (worker: Tesseract.Worker, imageSrc: string): Promise<string> => {
-    // Usamos PSM 7 (Assume uma única linha de texto) para a imagem já cortada.
+    // Usamos PSM 6 (Assume um bloco uniforme de texto) para tentar melhorar a precisão em números longos.
     await worker.setParameters({
-      psm: 7, 
+      psm: 6, 
       tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
     });
     
@@ -44,46 +43,41 @@ export function useOcrProcessor() {
       
       const rawText = await runOcrAttempt(worker, imageSrc);
       
-      // Limpa o texto: remove caracteres especiais, mas mantém espaços e quebras de linha por enquanto
-      const semiCleanedText = rawText.toUpperCase().replace(/[^A-Z0-9\s]/g, '');
+      // Limpa o texto: remove todos os caracteres que não são letras ou números
+      const cleanedText = rawText.toUpperCase().replace(/[^A-Z0-9]/g, '');
       
       // 1. Tenta encontrar o padrão de 11 caracteres (4 letras + 7 dígitos)
-      // Remove todos os espaços para criar uma string contínua de alfanuméricos
-      const continuousText = semiCleanedText.replace(/\s/g, '');
-      
-      // Regex para encontrar 4 letras seguidas por 7 dígitos em qualquer lugar da string contínua
-      const fullContainerRegex = /([A-Z]{4}\d{7})/;
-      const match = continuousText.match(fullContainerRegex);
+      const match = cleanedText.match(CONTAINER_PATTERN);
 
       if (match && match[1]) {
         recognizedContainer = match[1];
       } else {
-        // Se a regex falhar, tentamos uma abordagem mais manual:
-        // 1. Encontrar um prefixo conhecido (TIIU, MAEU, etc.)
-        // 2. Extrair os próximos 7 dígitos após o prefixo
+        // 2. Abordagem de prefixo e validação (mais robusta)
         
-        const prefixMatch = CONTAINER_PREFIXES.find(prefix => continuousText.includes(prefix));
-        
-        if (prefixMatch) {
-            const startIndex = continuousText.indexOf(prefixMatch) + 4;
-            const potentialDigits = continuousText.substring(startIndex);
-            
-            // Pega os primeiros 7 dígitos da sequência
-            const digitsMatch = potentialDigits.match(/\d{7}/);
-            
-            if (digitsMatch && digitsMatch[0]) {
-                recognizedContainer = prefixMatch + digitsMatch[0];
+        // Itera sobre os prefixos conhecidos
+        for (const prefix of CONTAINER_PREFIXES) {
+            if (cleanedText.includes(prefix)) {
+                const startIndex = cleanedText.indexOf(prefix) + 4;
+                const potentialDigits = cleanedText.substring(startIndex);
+                
+                // Pega os primeiros 7 dígitos da sequência após o prefixo
+                const digitsMatch = potentialDigits.match(/\d{7}/);
+                
+                if (digitsMatch && digitsMatch[0]) {
+                    recognizedContainer = prefix + digitsMatch[0];
+                    break; // Encontrou, sai do loop
+                }
             }
         }
       }
       
-      // 2. Extrair Placa (Se o container não foi encontrado)
+      // 3. Extrair Placa (Se o container não foi encontrado)
       if (!recognizedContainer) {
-          // Usamos o texto semi-limpo (com espaços) para a placa, pois placas podem ter espaços
-          const platesFound = semiCleanedText.match(PLATE_REGEX) || [];
+          // Para placas, usamos o texto original (rawText) para permitir espaços ou hífens, 
+          // mas limpamos o resultado final.
+          const platesFound = rawText.toUpperCase().match(PLATE_REGEX) || [];
           if (platesFound.length > 0) {
-              recognizedPlate = platesFound[0].replace(/\s/g, ''); // Remove espaços da placa final
-              console.log("Plate found:", recognizedPlate);
+              recognizedPlate = platesFound[0].replace(/[^A-Z0-9]/g, ''); // Limpa caracteres não alfanuméricos
           }
       }
       
