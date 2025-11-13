@@ -85,6 +85,17 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
       toast({ title: "Erro", description: "Insira o número do container.", variant: "destructive" });
       return;
     }
+    
+    // NOVA VALIDAÇÃO: O número do container deve ter 11 caracteres (4 letras + 7 dígitos)
+    if (searchNumber.length !== 11 || !/^[A-Z]{4}\d{7}$/.test(searchNumber)) {
+        toast({ 
+            title: "Erro de Validação", 
+            description: "O número do container deve ter 11 caracteres (4 letras e 7 dígitos). Corrija manualmente ou ajuste o corte.", 
+            variant: "destructive" 
+        });
+        return;
+    }
+    
     if (!capturedImage) {
       toast({ title: "Erro", description: "Capture a foto do container. A foto é obrigatória.", variant: "destructive" });
       return;
@@ -195,7 +206,15 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
     return <Badge variant="secondary">{status}</Badge>;
   };
 
-  const isActionDisabled = !searchNumber || !capturedImage || isProcessing || (actionType === 'baixa' && !existingContainer);
+  // O botão de ação é desabilitado se:
+  // 1. Não houver número de container (mesmo que seja manual)
+  // 2. Não houver imagem capturada
+  // 3. O OCR estiver processando
+  // 4. For uma baixa E o container não existir
+  // 5. O número do container não tiver 11 caracteres (validação visual)
+  const isContainerValid = searchNumber.length === 11 && /^[A-Z]{4}\d{7}$/.test(searchNumber);
+  
+  const isActionDisabled = !isContainerValid || !capturedImage || isProcessing || (actionType === 'baixa' && !existingContainer);
 
   return (
     <div className="space-y-6 p-4">
@@ -234,11 +253,18 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                   placeholder="Número do Container (Ex: ABCU1234567)"
                   value={containerNumber}
                   onChange={(e) => setContainerNumber(e.target.value)}
-                  className={cn("pl-10 text-sm font-mono uppercase h-9", isProcessing && "opacity-50")}
+                  className={cn(
+                    "pl-10 text-sm font-mono uppercase h-9", 
+                    isProcessing && "opacity-50",
+                    searchNumber && !isContainerValid && "border-danger focus-visible:ring-danger" // Feedback visual de erro
+                  )}
                   disabled={isProcessing}
                 />
                 {isProcessing && (
                     <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-primary" />
+                )}
+                {searchNumber && !isContainerValid && !isProcessing && (
+                    <p className="text-xs text-danger mt-1">O container deve ter 11 caracteres (4 letras + 7 dígitos).</p>
                 )}
               </div>
               
@@ -275,13 +301,13 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                 </div>
               )}
               
-              {!existingContainer && searchNumber && actionType === 'entrada' && (
+              {!existingContainer && searchNumber && actionType === 'entrada' && isContainerValid && (
                 <div className="text-primary text-sm flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4" /> Container não encontrado. Será criado como novo na entrada.
                 </div>
               )}
               
-              {!existingContainer && searchNumber && actionType === 'baixa' && (
+              {!existingContainer && searchNumber && actionType === 'baixa' && isContainerValid && (
                 <div className="text-danger text-sm flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4" /> Container não encontrado. Não é possível registrar baixa.
                 </div>
@@ -326,14 +352,14 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                 {isProcessing ? 'Processando OCR...' : `Registrar ${actionType === 'entrada' ? 'Entrada' : 'Baixa'}`}
               </Button>
               
-              {capturedImage && !isProcessing && (ocrContainer || ocrPlate) && (
+              {capturedImage && !isProcessing && isContainerValid && (
                 <div className="text-sm text-success flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4" /> OCR concluído. Verifique os campos preenchidos.
+                    <CheckCircle2 className="h-4 w-4" /> OCR concluído. Container válido.
                 </div>
               )}
-              {capturedImage && !isProcessing && !ocrContainer && !ocrPlate && (
+              {capturedImage && !isProcessing && !isContainerValid && (
                 <div className="text-sm text-warning flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4" /> OCR concluído, mas não reconheceu container ou placa. Insira manualmente.
+                    <AlertTriangle className="h-4 w-4" /> OCR concluído, mas o container não é válido (11 caracteres). Corrija.
                 </div>
               )}
             </CardContent>
