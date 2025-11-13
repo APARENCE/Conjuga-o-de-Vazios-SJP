@@ -8,7 +8,7 @@ import { Truck, LogIn, LogOut, AlertTriangle, CheckCircle2, Search, User, Car, L
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { useOcrProcessor } from "@/hooks/use-ocr-processor"; // Importando o novo hook
+import { useOcrProcessor } from "@/hooks/use-ocr-processor";
 import { cn } from "@/lib/utils";
 
 interface PortariaPageProps {
@@ -90,8 +90,9 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
         return;
     }
 
-    const now = new Date().toLocaleString('pt-BR');
-    const dateOnly = now.split(' ')[0];
+    // Formata a data atual como DD/MM/AAAA
+    const now = new Date();
+    const dateOnly = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
     
     const newFile = {
         id: `photo-${Date.now()}`,
@@ -108,10 +109,15 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
     if (actionType === 'entrada') {
       updateData = {
         container: searchNumber,
-        dataEntrada: dateOnly, // Usando o novo campo
-        placa: placa.toUpperCase().trim(), // Salvando a placa
-        motoristaEntrada: motorista.trim(), // Salvando o motorista
+        dataEntrada: dateOnly,
+        placa: placa.toUpperCase().trim(),
+        motoristaEntrada: motorista.trim(),
         status: "Em Operação (Entrada)",
+        
+        // Limpa campos de saída se for uma re-entrada
+        dataSaidaSJP: "",
+        placaSaida: "",
+        motoristaSaidaSJP: "",
       };
       toastMessage = `Entrada registrada para o container ${searchNumber}.`;
       
@@ -130,7 +136,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
             // Definindo defaults para os novos campos obrigatórios
             operador: "", tara: 0, mgw: 0, tipo: "", padrao: "", statusVazioCheio: "", dataPorto: "", freeTimeArmador: 0,
             demurrage: "", prazoDias: 0, clienteEntrada: "", transportadora: "", estoque: "", transportadoraSaida: "", statusEntregaMinuta: "", statusMinuta: "", bookingAtrelado: "",
-            lacre: "", clienteSaidaDestino: "", atrelado: "", operadorSaida: "", dataEstufagem: "", dataSaidaSJP: "", motoristaSaidaSJP: "", placaSaida: "",
+            lacre: "", clienteSaidaDestino: "", atrelado: "", operadorSaida: "", dataEstufagem: "", depotDevolucao: "",
             diasRestantes: 0, // Mapeado de prazoDias
             files: [newFile],
         });
@@ -144,10 +150,15 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
       }
       
       updateData = {
-        dataSaidaSJP: dateOnly, // Usando o novo campo de saída
-        placaSaida: placa.toUpperCase().trim(), // Usando a placa de saída
-        motoristaSaidaSJP: motorista.trim(), // Usando o motorista de saída
+        dataSaidaSJP: dateOnly,
+        placaSaida: placa.toUpperCase().trim(),
+        motoristaSaidaSJP: motorista.trim(),
         status: "Baixa Pátio SJP",
+        
+        // Limpa campos de entrada se for uma baixa (embora não seja estritamente necessário, é bom para consistência)
+        // dataEntrada: existingContainer.dataEntrada, // Mantém a data de entrada original
+        // placa: existingContainer.placa,
+        // motoristaEntrada: existingContainer.motoristaEntrada,
       };
       toastMessage = `Baixa registrada para o container ${searchNumber}.`;
       
