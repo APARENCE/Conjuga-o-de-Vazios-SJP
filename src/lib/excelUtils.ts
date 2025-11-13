@@ -40,7 +40,12 @@ export const formatDateToBR = (dateValue: any): string => {
   }
   
   if (date && !isNaN(date.getTime())) {
-    // Usa o método local para obter dia, mês e ano, garantindo o fuso horário local
+    // **CORREÇÃO:** Usamos getDate() para o dia e getMonth() + 1 para o mês.
+    // Se a data foi criada a partir de um serial do Excel (que é UTC-based), 
+    // precisamos usar os métodos UTC para garantir que o dia não seja deslocado pelo fuso horário local.
+    // No entanto, como o XLSX.SSF.parse_date_code já cria uma data local, 
+    // vamos confiar nos métodos locais (getDate, getMonth) e garantir que a criação da data seja robusta.
+    
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = String(date.getFullYear());
