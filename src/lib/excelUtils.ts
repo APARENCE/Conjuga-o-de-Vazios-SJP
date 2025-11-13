@@ -32,7 +32,27 @@ export const formatDateToBR = (dateValue: any): string => {
     }
     
     // 2. Tenta parsear como string ISO ou outro formato
-    const tempDate = new Date(dateValue);
+    let tempDate = new Date(dateValue);
+    
+    // 3. Lógica de Fallback: Se a data for inválida, tenta interpretar como MM/DD/YYYY
+    if (isNaN(tempDate.getTime())) {
+        const parts = dateValue.split(/[\/\-]/);
+        if (parts.length === 3) {
+            // Tenta reverter para MM/DD/YYYY (Mês, Dia, Ano)
+            const [p1, p2, p3] = parts.map(p => parseInt(p, 10));
+            // Assumindo que p1 é o mês e p2 é o dia (formato americano)
+            if (p1 > 12 && p2 <= 12) {
+                // Se o primeiro número é maior que 12, é provável que seja o dia (DD/MM/YYYY)
+                // Mas se o problema é a inversão, vamos tentar forçar a leitura americana se a leitura padrão falhar.
+                // A forma mais segura é tentar criar a data com a ordem americana (YYYY, MM-1, DD)
+                tempDate = new Date(p3, p1 - 1, p2);
+            } else if (p1 <= 12 && p2 <= 31) {
+                // Tenta a ordem americana (MM/DD/YYYY)
+                tempDate = new Date(p3, p1 - 1, p2);
+            }
+        }
+    }
+
     // Verifica se a data é válida e se não é a data zero (1970)
     if (!isNaN(tempDate.getTime()) && tempDate.getFullYear() > 1900) {
         date = tempDate;
