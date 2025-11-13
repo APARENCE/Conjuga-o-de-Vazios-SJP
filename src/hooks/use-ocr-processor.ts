@@ -1,8 +1,8 @@
 import { useState, useCallback } from "react";
 import { createWorker } from "tesseract.js";
 
-// Regex para Container (4 letras + 7 dígitos)
-// Ajustamos para garantir que o padrão de 11 caracteres seja capturado.
+// Regex para Container: 4 letras + 7 dígitos.
+// Mantemos a regex estrita, mas confiamos na limpeza do texto para juntar os caracteres.
 const CONTAINER_REGEX = /[A-Z]{4}\d{7}/g;
 // Regex para Placa: 3 ou 4 letras seguidas por 3 a 4 caracteres alfanuméricos.
 const PLATE_REGEX = /[A-Z]{3,4}[0-9A-Z]{3,4}/g; 
@@ -58,12 +58,14 @@ export function useOcrProcessor() {
       let recognizedContainer = "";
       let recognizedPlate = "";
       
-      // --- Tentativas Focadas (PSM 8 e 6) ---
-      const psms = [8, 6, 3]; // PSM 8 (Single word), 6 (Uniform block), 3 (Default)
+      // --- Tentativas Otimizadas (PSM 7, 8, 6, 3) ---
+      // PSM 7 (Single Text Line) é bom para números longos.
+      // PSM 8 (Single Word) é bom para caracteres isolados.
+      const psms = [7, 8, 6, 3]; 
       
       for (const psm of psms) {
-        // Para a primeira tentativa (PSM 8), focamos na ROI. Para as outras, tentamos a imagem inteira se a focada falhar.
-        const rectangle = psm === 8 ? focusedRectangle : undefined;
+        // Usamos a ROI focada para PSM 7 e 8, e a imagem inteira para PSM 6 e 3.
+        const rectangle = (psm === 7 || psm === 8) ? focusedRectangle : undefined;
         
         const rawText = await runOcrAttempt(worker, imageSrc, rectangle, psm);
         
@@ -86,7 +88,7 @@ export function useOcrProcessor() {
           }
         }
         
-        // Se for a tentativa de imagem inteira (PSM 3), tentamos extrair a placa também
+        // Tentativa de extrair placa (apenas na tentativa de imagem inteira PSM 3, se ainda não tivermos uma placa)
         if (psm === 3 && !recognizedPlate) {
             const platesFoundFull = cleanedText.match(PLATE_REGEX) || [];
             if (platesFoundFull.length > 0) {
