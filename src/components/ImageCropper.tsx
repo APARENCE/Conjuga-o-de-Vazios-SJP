@@ -84,7 +84,6 @@ export function ImageCropper({ imageSrc, onCropComplete, onCancel }: ImageCroppe
     const initialCrop = centerAspectCrop(width, height, ASPECT_RATIO);
     
     // 2. Ajusta a posição vertical para o topo (10% do topo)
-    // Isso simula o "auto-ajuste" para a área mais provável do número do container.
     initialCrop.y = 10; 
     
     setCrop(initialCrop);

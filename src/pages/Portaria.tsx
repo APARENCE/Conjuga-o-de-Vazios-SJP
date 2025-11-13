@@ -86,15 +86,9 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
       return;
     }
     
-    // NOVA VALIDAÇÃO: O número do container deve ter 11 caracteres (4 letras + 7 dígitos)
-    if (searchNumber.length !== 11 || !/^[A-Z]{4}\d{7}$/.test(searchNumber)) {
-        toast({ 
-            title: "Erro de Validação", 
-            description: "O número do container deve ter 11 caracteres (4 letras e 7 dígitos). Corrija manualmente ou ajuste o corte.", 
-            variant: "destructive" 
-        });
-        return;
-    }
+    // Revertendo a validação estrita de 11 caracteres.
+    // A validação de 11 caracteres é mantida apenas como feedback visual no input,
+    // mas não bloqueia a ação se o usuário corrigir manualmente.
     
     if (!capturedImage) {
       toast({ title: "Erro", description: "Capture a foto do container. A foto é obrigatória.", variant: "destructive" });
@@ -207,12 +201,11 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
   };
 
   // O botão de ação é desabilitado se:
-  // 1. Não houver número de container (mesmo que seja manual)
+  // 1. Não houver número de container (apenas verifica se está vazio)
   // 2. Não houver imagem capturada
   // 3. O OCR estiver processando
   // 4. For uma baixa E o container não existir
-  // 5. O número do container não tiver 11 caracteres (validação visual)
-  const isContainerValid = searchNumber.length === 11 && /^[A-Z]{4}\d{7}$/.test(searchNumber);
+  const isContainerValid = searchNumber.length > 0; // Apenas verifica se não está vazio
   
   const isActionDisabled = !isContainerValid || !capturedImage || isProcessing || (actionType === 'baixa' && !existingContainer);
 
@@ -256,15 +249,16 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                   className={cn(
                     "pl-10 text-sm font-mono uppercase h-9", 
                     isProcessing && "opacity-50",
-                    searchNumber && !isContainerValid && "border-danger focus-visible:ring-danger" // Feedback visual de erro
+                    // Mantendo o feedback visual de 11 caracteres, mas não bloqueando a ação
+                    searchNumber.length > 0 && searchNumber.length !== 11 && "border-warning focus-visible:ring-warning" 
                   )}
                   disabled={isProcessing}
                 />
                 {isProcessing && (
                     <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-primary" />
                 )}
-                {searchNumber && !isContainerValid && !isProcessing && (
-                    <p className="text-xs text-danger mt-1">O container deve ter 11 caracteres (4 letras + 7 dígitos).</p>
+                {searchNumber.length > 0 && searchNumber.length !== 11 && !isProcessing && (
+                    <p className="text-xs text-warning mt-1">Atenção: O container deve ter 11 caracteres (4 letras + 7 dígitos). Corrija se necessário.</p>
                 )}
               </div>
               
@@ -301,13 +295,13 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                 </div>
               )}
               
-              {!existingContainer && searchNumber && actionType === 'entrada' && isContainerValid && (
+              {!existingContainer && searchNumber && actionType === 'entrada' && (
                 <div className="text-primary text-sm flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4" /> Container não encontrado. Será criado como novo na entrada.
                 </div>
               )}
               
-              {!existingContainer && searchNumber && actionType === 'baixa' && isContainerValid && (
+              {!existingContainer && searchNumber && actionType === 'baixa' && (
                 <div className="text-danger text-sm flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4" /> Container não encontrado. Não é possível registrar baixa.
                 </div>
@@ -352,14 +346,9 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                 {isProcessing ? 'Processando OCR...' : `Registrar ${actionType === 'entrada' ? 'Entrada' : 'Baixa'}`}
               </Button>
               
-              {capturedImage && !isProcessing && isContainerValid && (
+              {capturedImage && !isProcessing && (
                 <div className="text-sm text-success flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4" /> OCR concluído. Container válido.
-                </div>
-              )}
-              {capturedImage && !isProcessing && !isContainerValid && (
-                <div className="text-sm text-warning flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4" /> OCR concluído, mas o container não é válido (11 caracteres). Corrija.
+                    <CheckCircle2 className="h-4 w-4" /> OCR concluído. Verifique e prossiga.
                 </div>
               )}
             </CardContent>
