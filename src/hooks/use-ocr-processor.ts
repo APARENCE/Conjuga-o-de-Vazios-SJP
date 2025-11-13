@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { createWorker } from "tesseract.js";
 
 // Regex para Container (4 letras + 7 dígitos)
+// Ajustamos para garantir que o padrão de 11 caracteres seja capturado.
 const CONTAINER_REGEX = /[A-Z]{4}\d{7}/g;
 // Regex para Placa: 3 ou 4 letras seguidas por 3 a 4 caracteres alfanuméricos.
 const PLATE_REGEX = /[A-Z]{3,4}[0-9A-Z]{3,4}/g; 
@@ -58,40 +59,40 @@ export function useOcrProcessor() {
       let recognizedPlate = "";
       
       // --- Tentativas Focadas (PSM 8 e 6) ---
-      const focusedPsms = [8, 6]; 
+      const psms = [8, 6, 3]; // PSM 8 (Single word), 6 (Uniform block), 3 (Default)
       
-      for (const psm of focusedPsms) {
-        const rawText = await runOcrAttempt(worker, imageSrc, focusedRectangle, psm);
+      for (const psm of psms) {
+        // Para a primeira tentativa (PSM 8), focamos na ROI. Para as outras, tentamos a imagem inteira se a focada falhar.
+        const rectangle = psm === 8 ? focusedRectangle : undefined;
+        
+        const rawText = await runOcrAttempt(worker, imageSrc, rectangle, psm);
+        
+        // Limpa o texto: remove espaços, quebras de linha e caracteres especiais
         const cleanedText = rawText.toUpperCase().replace(/[^A-Z0-9]/g, '');
         
-        console.log(`OCR Attempt FOCUSED PSM ${psm} - Cleaned Text:`, cleanedText);
+        console.log(`OCR Attempt PSM ${psm} - Cleaned Text:`, cleanedText);
 
+        // Extrair Containers
         const containersFound = cleanedText.match(CONTAINER_REGEX) || [];
-        if (containersFound.length > 0) {
-          recognizedContainer = containersFound[0];
-          console.log(`Container found with FOCUSED PSM ${psm}:`, recognizedContainer);
-          break; 
-        }
-      }
-      
-      // --- Tentativa de Fallback (Imagem Inteira, PSM 3) ---
-      if (!recognizedContainer) {
-        const rawTextFull = await runOcrAttempt(worker, imageSrc, undefined, 3); // undefined para ler a imagem inteira
-        const cleanedTextFull = rawTextFull.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const uniqueContainers = [...new Set(containersFound)];
         
-        console.log("OCR Attempt FULL IMAGE PSM 3 - Cleaned Text:", cleanedTextFull);
-        
-        const containersFoundFull = cleanedTextFull.match(CONTAINER_REGEX) || [];
-        if (containersFoundFull.length > 0) {
-          recognizedContainer = containersFoundFull[0];
-          console.log("Container found with FULL IMAGE PSM 3:", recognizedContainer);
+        if (uniqueContainers.length > 0) {
+          // Filtra para garantir que estamos pegando o padrão de 11 caracteres
+          const validContainer = uniqueContainers.find(c => c.length === 11);
+          if (validContainer) {
+            recognizedContainer = validContainer;
+            console.log(`Container found with PSM ${psm}:`, recognizedContainer);
+            break; // Encontrou, pode parar
+          }
         }
         
-        // Tentativa de extrair placa da imagem inteira (se o container falhou)
-        const platesFoundFull = cleanedTextFull.match(PLATE_REGEX) || [];
-        if (platesFoundFull.length > 0) {
-            recognizedPlate = platesFoundFull[0];
-            console.log("Plate found with FULL IMAGE PSM 3:", recognizedPlate);
+        // Se for a tentativa de imagem inteira (PSM 3), tentamos extrair a placa também
+        if (psm === 3 && !recognizedPlate) {
+            const platesFoundFull = cleanedText.match(PLATE_REGEX) || [];
+            if (platesFoundFull.length > 0) {
+                recognizedPlate = platesFoundFull[0];
+                console.log("Plate found with FULL IMAGE PSM 3:", recognizedPlate);
+            }
         }
       }
       
