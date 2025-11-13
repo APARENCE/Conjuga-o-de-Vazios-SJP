@@ -101,11 +101,13 @@ export default function Containers({
       // Verificação adicional: se o termo de pesquisa for o container exato
       if (uniqueContainer.container.toLowerCase().trim() === search) {
         setSelectedContainer(uniqueContainer);
+        setSearchTerm(""); // Limpa o campo de pesquisa após abrir a sidebar
       } else if (selectedContainer?.id !== uniqueContainer.id) {
         // Se for um filtro que resultou em 1, mas não é a pesquisa exata do container, 
         // ainda podemos abrir, mas a verificação exata é mais segura para evitar aberturas acidentais.
         // Vamos manter a abertura se for o único resultado.
         setSelectedContainer(uniqueContainer);
+        setSearchTerm(""); // Limpa o campo de pesquisa após abrir a sidebar
       }
     } else if (search && filteredContainers.length !== 1) {
       // Se o usuário está digitando e o resultado não é único, ou se limpou a pesquisa, feche a sidebar
