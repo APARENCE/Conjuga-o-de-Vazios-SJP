@@ -43,12 +43,13 @@ export function useOcrProcessor() {
       const width = img.width;
       const height = img.height;
       
-      // ROI Focada: Quadrante superior direito (50% direito, 30% superior)
+      // ROI Focada: Área superior central (30% a 75% da largura, 5% a 20% da altura)
+      // Esta área corresponde à posição típica do número do container.
       const focusedRectangle = {
-        left: Math.floor(width * 0.5), 
-        top: 0,
-        width: Math.floor(width * 0.5), 
-        height: Math.floor(height * 0.30), 
+        left: Math.floor(width * 0.30), 
+        top: Math.floor(height * 0.05),
+        width: Math.floor(width * 0.45), // 75% - 30% = 45%
+        height: Math.floor(height * 0.15), // 20% - 5% = 15%
       };
       
       // Inicializa o worker do Tesseract
@@ -65,7 +66,7 @@ export function useOcrProcessor() {
       const psms = [6, 7, 8, 3]; 
       
       for (const psm of psms) {
-        // Usamos a ROI focada para PSM 6, 7 e 8, e a imagem inteira para PSM 3.
+        // Usamos a ROI focada para PSM 6, 7 e 8, e a imagem inteira para PSM 3 (fallback).
         const rectangle = (psm === 3) ? undefined : focusedRectangle;
         
         const rawText = await runOcrAttempt(worker, imageSrc, rectangle, psm);
