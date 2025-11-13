@@ -11,7 +11,7 @@ interface ImageCropperProps {
   onCancel: () => void;
 }
 
-// Proporção 16:9 é comum para fotos de containers, mas vamos usar 4:1 para focar na linha do número.
+// Proporção 4:1 é ideal para focar na linha do número.
 const ASPECT_RATIO = 4 / 1; 
 
 // Função para centralizar o corte inicial
@@ -24,7 +24,7 @@ function centerAspectCrop(
     makeAspectCrop(
       {
         unit: '%',
-        width: 90, // Começa com 90% da largura
+        width: 80, // Reduzindo a largura inicial para 80%
       },
       aspect,
       mediaWidth,
@@ -79,11 +79,13 @@ export function ImageCropper({ imageSrc, onCropComplete, onCancel }: ImageCroppe
 
   function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
     const { width, height } = e.currentTarget;
-    // Define o corte inicial focado na área superior central (onde o número do container deve estar)
+    
+    // 1. Define o corte inicial (80% da largura, proporção 4:1)
     const initialCrop = centerAspectCrop(width, height, ASPECT_RATIO);
     
-    // Ajusta a posição inicial para o topo (5% do topo)
-    initialCrop.y = 5; 
+    // 2. Ajusta a posição vertical para o topo (10% do topo)
+    // Isso simula o "auto-ajuste" para a área mais provável do número do container.
+    initialCrop.y = 10; 
     
     setCrop(initialCrop);
     setCompletedCrop(initialCrop as PixelCrop);
