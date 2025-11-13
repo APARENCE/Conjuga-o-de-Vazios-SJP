@@ -25,7 +25,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import React from "react";
 
 interface ContainerTableProps {
@@ -63,17 +62,6 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
     return null;
   };
 
-  // Referência para o contêiner de rolagem
-  const parentRef = React.useRef<HTMLDivElement>(null);
-
-  // Inicializa o virtualizador
-  const rowVirtualizer = useVirtualizer({
-    count: containers.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 35, // Altura estimada de cada linha em pixels (ajustada para compact-table)
-    overscan: 10, // Renderiza 10 linhas extras acima e abaixo
-  });
-
   // Classes para colunas fixas (rolagem horizontal)
   const fixedCellClasses = "sticky bg-background z-20"; 
   
@@ -102,7 +90,6 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
     <Card className="border-0 shadow-sm">
       {/* Contêiner de rolagem com altura máxima */}
       <div 
-        ref={parentRef} 
         className="overflow-x-auto overflow-y-auto max-h-[75vh] lg:max-h-[85vh]"
         style={{ height: 'calc(75vh - 40px)' }} // Altura ajustada para o contêiner de rolagem
       >
@@ -152,12 +139,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               <TableHead className="font-semibold text-center w-[45px] min-w-[45px]">Ações</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody
-            style={{
-              height: `${rowVirtualizer.getTotalSize()}px`, // Define a altura total para a barra de rolagem
-              position: 'relative',
-            }}
-          >
+          <TableBody>
           {containers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={33} className="text-center py-8 text-muted-foreground">
@@ -165,23 +147,13 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                 </TableCell>
               </TableRow>
             ) : (
-              rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                const container = containers[virtualRow.index];
+              containers.map((container) => {
                 
                 return (
                   <TableRow 
                     key={container.id} 
-                    data-index={virtualRow.index}
-                    ref={rowVirtualizer.measureElement}
                     className="hover:bg-muted/30 cursor-pointer"
                     onClick={() => onContainerSelect(container)}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      transform: `translateY(${virtualRow.start}px)`, // Move a linha para a posição correta
-                    }}
                   >
                     {/* Colunas Fixas (CONTAINER e ARMADOR) */}
                     <TableCell className={cn("font-bold z-[25]", containerLeft, fixedCellClasses, containerWidth)}>

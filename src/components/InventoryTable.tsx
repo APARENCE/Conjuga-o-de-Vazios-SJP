@@ -10,7 +10,6 @@ import {
 import { Card } from "@/components/ui/card";
 import { Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import React from "react";
 
 interface InventoryTableProps {
@@ -35,22 +34,10 @@ export function InventoryTable({ inventory }: InventoryTableProps) {
     return <Badge variant="outline">{status || 'Outro'}</Badge>;
   };
 
-  // Referência para o contêiner de rolagem
-  const parentRef = React.useRef<HTMLDivElement>(null);
-
-  // Inicializa o virtualizador
-  const rowVirtualizer = useVirtualizer({
-    count: inventory.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 35, // Altura estimada de cada linha
-    overscan: 10,
-  });
-
   return (
     <Card className="border-0 shadow-sm">
       {/* Adicionando altura máxima para rolagem interna e fixar o cabeçalho */}
       <div 
-        ref={parentRef}
         className="overflow-x-auto overflow-y-auto max-h-[75vh] lg:max-h-[85vh]"
         style={{ height: 'calc(75vh - 40px)' }} // Altura ajustada para o contêiner de rolagem
       >
@@ -65,12 +52,7 @@ export function InventoryTable({ inventory }: InventoryTableProps) {
               <TableHead className="font-semibold min-w-[90px]">Última Atualização</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody
-            style={{
-              height: `${rowVirtualizer.getTotalSize()}px`, // Define a altura total para a barra de rolagem
-              position: 'relative',
-            }}
-          >
+          <TableBody>
           {inventory.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
@@ -79,22 +61,12 @@ export function InventoryTable({ inventory }: InventoryTableProps) {
                 </TableCell>
               </TableRow>
             ) : (
-              rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                const item = inventory[virtualRow.index];
+              inventory.map((item) => {
                 
                 return (
                   <TableRow 
                     key={item.id + item.itemType} 
-                    data-index={virtualRow.index}
-                    ref={rowVirtualizer.measureElement}
                     className="hover:bg-muted/30"
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      transform: `translateY(${virtualRow.start}px)`, // Move a linha para a posição correta
-                    }}
                   >
                     <TableCell className="font-bold min-w-[90px]">{item.container}</TableCell>
                     <TableCell className="min-w-[70px]">{item.armador}</TableCell>
