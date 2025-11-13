@@ -3,10 +3,20 @@ import { Button } from "@/components/ui/button";
 import { Upload, Download, Image as ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface PortariaCameraProps {
   onCapture: (imageSrc: string) => void;
 }
+
+// Define as dimensões da área de foco do OCR (baseado na proporção 30% a 75% da largura, 5% a 20% da altura)
+// Estas são as mesmas proporções usadas em use-ocr-processor.ts
+const OCR_FOCUS_AREA = {
+  left: 30, // 30%
+  top: 5,  // 5%
+  width: 45, // 75% - 30% = 45%
+  height: 15, // 20% - 5% = 15%
+};
 
 export function PortariaCamera({ onCapture }: PortariaCameraProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -54,12 +64,30 @@ export function PortariaCamera({ onCapture }: PortariaCameraProps) {
     event.target.value = '';
   };
 
+  // Componente de Overlay do Foco
+  const FocusOverlay = () => (
+    <div
+      className="absolute border-2 border-danger pointer-events-none"
+      style={{
+        left: `${OCR_FOCUS_AREA.left}%`,
+        top: `${OCR_FOCUS_AREA.top}%`,
+        width: `${OCR_FOCUS_AREA.width}%`,
+        height: `${OCR_FOCUS_AREA.height}%`,
+        // Adiciona um fundo semi-transparente fora da área de foco para destacar a ROI
+        boxShadow: `0 0 0 9999px rgba(0, 0, 0, 0.3)`,
+        borderRadius: '4px',
+      }}
+    />
+  );
+
   return (
     <Card className="w-full">
       <CardContent className="p-4 space-y-4">
         {imageSrc ? (
           <div className="relative">
             <img src={imageSrc} alt="Uploaded Container" className="w-full h-auto rounded-lg" />
+            <FocusOverlay /> {/* Adiciona o overlay na imagem carregada */}
+            
             <div className="flex justify-center gap-4 mt-4">
               <Button onClick={handleDownload} variant="secondary" className="gap-2 flex-1">
                 <Download className="h-4 w-4" /> Download
@@ -82,7 +110,10 @@ export function PortariaCamera({ onCapture }: PortariaCameraProps) {
             
             <ImageIcon className="h-12 w-12 text-muted-foreground opacity-50" />
             <p className="text-sm text-muted-foreground text-center">
-                Clique abaixo para carregar a foto do container e iniciar o OCR.
+                Clique abaixo para carregar a foto do container.
+            </p>
+            <p className="text-xs text-danger font-semibold text-center">
+                Certifique-se de que o número do container esteja na área superior central da foto para o OCR funcionar.
             </p>
 
             <Button 
