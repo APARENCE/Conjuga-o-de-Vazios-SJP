@@ -19,10 +19,11 @@ export function useOcrProcessor() {
     isProcessing: false,
   });
 
-  const runOcrAttempt = async (worker: Tesseract.Worker, imageSrc: string, rectangle: Tesseract.Rectangle, psm: number): Promise<string> => {
+  const runOcrAttempt = async (worker: Tesseract.Worker, imageSrc: string, rectangle: Tesseract.Rectangle | undefined, psm: number): Promise<string> => {
     await worker.setParameters({
       psm: psm,
     });
+    // Se rectangle for undefined, reconhece a imagem inteira
     const { data: { text: rawText } } = await worker.recognize(imageSrc, { rectangle });
     return rawText;
   };
@@ -39,9 +40,8 @@ export function useOcrProcessor() {
       const width = img.width;
       const height = img.height;
       
-      // ROI: Quadrante superior direito (50% direito, 20% superior)
-      // Aumentamos ligeiramente a altura para 20% para capturar o número completo, mas mantemos o foco no topo.
-      const rectangle = {
+      // ROI Focada: Quadrante superior direito (50% direito, 20% superior)
+      const focusedRectangle = {
         left: Math.floor(width * 0.5), 
         top: 0,
         width: Math.floor(width * 0.5), 
@@ -54,26 +54,44 @@ export function useOcrProcessor() {
         tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
       });
 
-      // --- Múltiplas Tentativas de OCR ---
-      const psms = [8, 6, 3]; // PSM 8 (Single word), 6 (Uniform block), 3 (Default)
       let recognizedContainer = "";
+      let recognizedPlate = "";
       
-      for (const psm of psms) {
-        const rawText = await runOcrAttempt(worker, imageSrc, rectangle, psm);
-        
-        // Limpa o texto: remove espaços, quebras de linha e caracteres especiais
+      // --- Tentativas Focadas (PSM 8 e 6) ---
+      const focusedPsms = [8, 6]; 
+      
+      for (const psm of focusedPsms) {
+        const rawText = await runOcrAttempt(worker, imageSrc, focusedRectangle, psm);
         const cleanedText = rawText.toUpperCase().replace(/[^A-Z0-9]/g, '');
         
-        console.log(`OCR Attempt PSM ${psm} - Cleaned Text:`, cleanedText);
+        console.log(`OCR Attempt FOCUSED PSM ${psm} - Cleaned Text:`, cleanedText);
 
-        // Extrair Containers
         const containersFound = cleanedText.match(CONTAINER_REGEX) || [];
-        const uniqueContainers = [...new Set(containersFound)];
+        if (containersFound.length > 0) {
+          recognizedContainer = containersFound[0];
+          console.log(`Container found with FOCUSED PSM ${psm}:`, recognizedContainer);
+          break; 
+        }
+      }
+      
+      // --- Tentativa de Fallback (Imagem Inteira, PSM 3) ---
+      if (!recognizedContainer) {
+        const rawTextFull = await runOcrAttempt(worker, imageSrc, undefined, 3); // undefined para ler a imagem inteira
+        const cleanedTextFull = rawTextFull.toUpperCase().replace(/[^A-Z0-9]/g, '');
         
-        if (uniqueContainers.length > 0) {
-          recognizedContainer = uniqueContainers[0];
-          console.log(`Container found with PSM ${psm}:`, recognizedContainer);
-          break; // Encontrou, pode parar
+        console.log("OCR Attempt FULL IMAGE PSM 3 - Cleaned Text:", cleanedTextFull);
+        
+        const containersFoundFull = cleanedTextFull.match(CONTAINER_REGEX) || [];
+        if (containersFoundFull.length > 0) {
+          recognizedContainer = containersFoundFull[0];
+          console.log("Container found with FULL IMAGE PSM 3:", recognizedContainer);
+        }
+        
+        // Tentativa de extrair placa da imagem inteira (se o container falhou)
+        const platesFoundFull = cleanedTextFull.match(PLATE_REGEX) || [];
+        if (platesFoundFull.length > 0) {
+            recognizedPlate = platesFoundFull[0];
+            console.log("Plate found with FULL IMAGE PSM 3:", recognizedPlate);
         }
       }
       
@@ -82,13 +100,13 @@ export function useOcrProcessor() {
       // --- Finalização ---
       setResult({
         container: recognizedContainer,
-        plate: "",
+        plate: recognizedPlate,
         isProcessing: false,
       });
       
       return {
         container: recognizedContainer,
-        plate: "",
+        plate: recognizedPlate,
       };
 
     } catch (error) {
