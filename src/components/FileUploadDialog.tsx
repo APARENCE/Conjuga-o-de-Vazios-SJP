@@ -29,6 +29,20 @@ interface FileUploadDialogProps {
   onFilesChange: (files: ContainerFile[]) => void;
 }
 
+// Função auxiliar para formatar data e hora
+const formatDateTimeToBR = (isoString: string) => {
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return isoString;
+    
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear());
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+};
+
 export function FileUploadDialog({ containerId, files, onFilesChange }: FileUploadDialogProps) {
   const [open, setOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState<ContainerFile | null>(null);
@@ -227,7 +241,7 @@ export function FileUploadDialog({ containerId, files, onFilesChange }: FileUplo
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{file.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {formatFileSize(file.size)} • {new Date(file.uploadedAt).toLocaleString('pt-BR')}
+                        {formatFileSize(file.size)} • {formatDateTimeToBR(file.uploadedAt)}
                       </p>
                     </div>
                     <div className="flex gap-1">
