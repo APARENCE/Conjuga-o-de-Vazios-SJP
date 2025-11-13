@@ -25,6 +25,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import React from "react";
 
 interface ContainerTableProps {
   containers: Container[];
@@ -61,6 +63,17 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
     return null;
   };
 
+  // Referência para o contêiner de rolagem
+  const parentRef = React.useRef<HTMLDivElement>(null);
+
+  // Inicializa o virtualizador
+  const rowVirtualizer = useVirtualizer({
+    count: containers.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 35, // Altura estimada de cada linha em pixels (ajustada para compact-table)
+    overscan: 10, // Renderiza 10 linhas extras acima e abaixo
+  });
+
   // Classes para colunas fixas (rolagem horizontal)
   const fixedCellClasses = "sticky bg-background z-20"; 
   
@@ -88,7 +101,11 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
   return (
     <Card className="border-0 shadow-sm">
       {/* Contêiner de rolagem com altura máxima */}
-      <div className="overflow-x-auto overflow-y-auto max-h-[75vh] lg:max-h-[85vh]">
+      <div 
+        ref={parentRef} 
+        className="overflow-x-auto overflow-y-auto max-h-[75vh] lg:max-h-[85vh]"
+        style={{ height: 'calc(75vh - 40px)' }} // Altura ajustada para o contêiner de rolagem
+      >
         <Table className="compact-table">
           {/* TableHeader: Fixo no topo (Z-index 30) */}
           <TableHeader className={fixedHeaderClasses}>
@@ -109,7 +126,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               {/* Colunas Ocultas (Visíveis apenas com rolagem horizontal ou em 2XL) */}
               <TableHead className={cn("font-semibold", colWidths.sm, hiddenColHeaderClass)}>OPERADOR1</TableHead>
               <TableHead className={cn("font-semibold", colWidths.xs, hiddenColHeaderClass)}>TARA</TableHead>
-              <TableHead className={cn("font-semibold", colWidths.xs, hiddenColHeaderClass)}>MGW</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.xs, hiddenColClass)}>MGW</TableHead>
               <TableHead className={cn("font-semibold", colWidths.xs, hiddenColHeaderClass)}>TIPO</TableHead>
               <TableHead className={cn("font-semibold", colWidths.xs, hiddenColHeaderClass)}>PADRÃO</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md, hiddenColHeaderClass)}>STATUS (V/C)</TableHead>
@@ -135,7 +152,12 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               <TableHead className="font-semibold text-center w-[45px] min-w-[45px]">Ações</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`, // Define a altura total para a barra de rolagem
+              position: 'relative',
+            }}
+          >
           {containers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={33} className="text-center py-8 text-muted-foreground">
@@ -143,111 +165,124 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                 </TableCell>
               </TableRow>
             ) : (
-              containers.map((container) => (
-                <TableRow 
-                  key={container.id} 
-                  className="hover:bg-muted/30 cursor-pointer"
-                  onClick={() => onContainerSelect(container)}
-                >
-                  {/* Colunas Fixas (CONTAINER e ARMADOR) */}
-                  <TableCell className={cn("font-bold z-[25]", containerLeft, fixedCellClasses, containerWidth)}>
-                    {container.container}
-                  </TableCell>
-                  <TableCell className={cn("font-bold z-20", armadorLeft, fixedCellClasses, armadorWidth)}>
-                    {container.armador}
-                  </TableCell>
-                  
-                  {/* Colunas Essenciais (Sempre visíveis) */}
-                  <TableCell className={cn("text-center", colWidths.md, getDiasRestantesColor(container.prazoDias))}>
-                    <div className="flex items-center justify-center gap-1">
-                        {getDiasRestantesIcon(container.prazoDias)}
-                        {container.prazoDias}
-                    </div>
-                  </TableCell>
-                  <TableCell className={colWidths.md}>{getStatusBadge(container.status)}</TableCell>
-                  <TableCell className={colWidths.md}>{container.dataEntrada}</TableCell>
-                  <TableCell className={cn(colWidths.md, "truncate")}>{container.clienteEntrada}</TableCell>
-                  <TableCell className={cn(colWidths.md, "truncate")}>{container.motoristaEntrada}</TableCell>
-                  <TableCell className={colWidths.sm}>{container.placa}</TableCell>
-                  <TableCell className={colWidths.md}>{container.dataSaidaSJP}</TableCell>
-                  
-                  {/* Colunas Ocultas (Visíveis apenas com rolagem horizontal ou em 2XL) */}
-                  <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.operador}</TableCell>
-                  <TableCell className={cn(colWidths.xs, "text-right", hiddenColClass)}>{container.tara || "-"}</TableCell>
-                  <TableCell className={cn(colWidths.xs, "text-right", hiddenColClass)}>{container.mgw || "-"}</TableCell>
-                  <TableCell className={cn(colWidths.xs, hiddenColClass)}>{container.tipo}</TableCell>
-                  <TableCell className={cn(colWidths.xs, hiddenColClass)}>{container.padrao}</TableCell>
-                  <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.statusVazioCheio}</TableCell>
-                  <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.dataPorto}</TableCell>
-                  <TableCell className={cn(colWidths.sm, "text-center", hiddenColClass)}>{container.freeTimeArmador || "-"}</TableCell>
-                  <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.demurrage}</TableCell>
-                  <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.transportadora}</TableCell>
-                  <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.estoque}</TableCell>
-                  <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.transportadoraSaida}</TableCell>
-                  <TableCell className={colWidths.md}>{container.statusEntregaMinuta}</TableCell>
-                  <TableCell className={colWidths.md}>{container.statusMinuta}</TableCell>
-                  <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.bookingAtrelado}</TableCell>
-                  <TableCell className={cn(colWidths.xs, hiddenColClass)}>{container.lacre}</TableCell>
-                  <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.clienteSaidaDestino}</TableCell>
-                  <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.atrelado}</TableCell>
-                  <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.operadorSaida}</TableCell>
-                  <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.dataEstufagem}</TableCell>
-                  <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.motoristaSaidaSJP}</TableCell>
-                  <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.placaSaida}</TableCell>
-                  
-                  {/* Colunas de Ação */}
-                  <TableCell className="text-center w-[45px] min-w-[45px]" onClick={(e) => e.stopPropagation()}>
-                    <FileUploadDialog
-                      containerId={container.id}
-                      files={container.files || []}
-                      onFilesChange={(files) => onContainerUpdate(container.id, files)}
-                      trigger={
-                        <Button variant="outline" size="icon" className="h-5 w-5 p-0">
-                          <span className="text-xs">{container.files?.length || 0}</span>
-                        </Button>
-                      }
-                    />
-                  </TableCell>
-                  <TableCell className="w-[45px] min-w-[45px]" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center gap-0.5 justify-center">
-                      <ContainerFormDialog
-                        container={container}
-                        onSave={(data) => onContainerEdit(container.id, data)}
+              rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const container = containers[virtualRow.index];
+                
+                return (
+                  <TableRow 
+                    key={container.id} 
+                    data-index={virtualRow.index}
+                    ref={rowVirtualizer.measureElement}
+                    className="hover:bg-muted/30 cursor-pointer"
+                    onClick={() => onContainerSelect(container)}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualRow.start}px)`, // Move a linha para a posição correta
+                    }}
+                  >
+                    {/* Colunas Fixas (CONTAINER e ARMADOR) */}
+                    <TableCell className={cn("font-bold z-[25]", containerLeft, fixedCellClasses, containerWidth)}>
+                      {container.container}
+                    </TableCell>
+                    <TableCell className={cn("font-bold z-20", armadorLeft, fixedCellClasses, armadorWidth)}>
+                      {container.armador}
+                    </TableCell>
+                    
+                    {/* Colunas Essenciais (Sempre visíveis) */}
+                    <TableCell className={cn("text-center", colWidths.md, getDiasRestantesColor(container.prazoDias))}>
+                      <div className="flex items-center justify-center gap-1">
+                          {getDiasRestantesIcon(container.prazoDias)}
+                          {container.prazoDias}
+                      </div>
+                    </TableCell>
+                    <TableCell className={colWidths.md}>{getStatusBadge(container.status)}</TableCell>
+                    <TableCell className={colWidths.md}>{container.dataEntrada}</TableCell>
+                    <TableCell className={cn(colWidths.md, "truncate")}>{container.clienteEntrada}</TableCell>
+                    <TableCell className={cn(colWidths.md, "truncate")}>{container.motoristaEntrada}</TableCell>
+                    <TableCell className={colWidths.sm}>{container.placa}</TableCell>
+                    <TableCell className={colWidths.md}>{container.dataSaidaSJP}</TableCell>
+                    
+                    {/* Colunas Ocultas (Visíveis apenas com rolagem horizontal ou em 2XL) */}
+                    <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.operador}</TableCell>
+                    <TableCell className={cn(colWidths.xs, "text-right", hiddenColClass)}>{container.tara || "-"}</TableCell>
+                    <TableCell className={cn(colWidths.xs, "text-right", hiddenColClass)}>{container.mgw || "-"}</TableCell>
+                    <TableCell className={cn(colWidths.xs, hiddenColClass)}>{container.tipo}</TableCell>
+                    <TableCell className={cn(colWidths.xs, hiddenColClass)}>{container.padrao}</TableCell>
+                    <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.statusVazioCheio}</TableCell>
+                    <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.dataPorto}</TableCell>
+                    <TableCell className={cn(colWidths.sm, "text-center", hiddenColClass)}>{container.freeTimeArmador || "-"}</TableCell>
+                    <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.demurrage}</TableCell>
+                    <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.transportadora}</TableCell>
+                    <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.estoque}</TableCell>
+                    <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.transportadoraSaida}</TableCell>
+                    <TableCell className={colWidths.md}>{container.statusEntregaMinuta}</TableCell>
+                    <TableCell className={colWidths.md}>{container.statusMinuta}</TableCell>
+                    <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.bookingAtrelado}</TableCell>
+                    <TableCell className={cn(colWidths.xs, hiddenColClass)}>{container.lacre}</TableCell>
+                    <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.clienteSaidaDestino}</TableCell>
+                    <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.atrelado}</TableCell>
+                    <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.operadorSaida}</TableCell>
+                    <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.dataEstufagem}</TableCell>
+                    <TableCell className={cn(colWidths.md, hiddenColClass)}>{container.motoristaSaidaSJP}</TableCell>
+                    <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.placaSaida}</TableCell>
+                    
+                    {/* Colunas de Ação */}
+                    <TableCell className="text-center w-[45px] min-w-[45px]" onClick={(e) => e.stopPropagation()}>
+                      <FileUploadDialog
+                        containerId={container.id}
+                        files={container.files || []}
+                        onFilesChange={(files) => onContainerUpdate(container.id, files)}
                         trigger={
-                          <Button variant="ghost" size="icon" title="Editar" className="h-5 w-5 p-0">
-                            <Pencil className="h-3 w-3" />
+                          <Button variant="outline" size="icon" className="h-5 w-5 p-0">
+                            <span className="text-xs">{container.files?.length || 0}</span>
                           </Button>
                         }
                       />
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" title="Excluir" className="h-5 w-5 p-0">
-                            <Trash2 className="h-3 w-3 text-destructive" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Tem certeza que deseja excluir o container {container.container}? 
-                              Esta ação não pode ser desfeita.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => onContainerDelete(container.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Excluir
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+                    </TableCell>
+                    <TableCell className="w-[45px] min-w-[45px]" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-0.5 justify-center">
+                        <ContainerFormDialog
+                          container={container}
+                          onSave={(data) => onContainerEdit(container.id, data)}
+                          trigger={
+                            <Button variant="ghost" size="icon" title="Editar" className="h-5 w-5 p-0">
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                          }
+                        />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" title="Excluir" className="h-5 w-5 p-0">
+                              <Trash2 className="h-3 w-3 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja excluir o container {container.container}? 
+                                Esta ação não pode ser desfeita.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => onContainerDelete(container.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Excluir
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
