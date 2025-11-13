@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Container, ContainerFile } from "@/types/container";
 import { ContainerTable } from "@/components/ContainerTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -89,6 +89,33 @@ export default function Containers({
       return matchesSearch && matchesStatus && matchesArmador;
     });
   }, [containers, searchTerm, statusFilter, armadorFilter]);
+
+  // NOVO EFEITO: Abrir sidebar se a pesquisa for exata e única
+  useEffect(() => {
+    const search = searchTerm.toLowerCase().trim();
+    
+    // Se houver um termo de pesquisa e o resultado for exatamente um container
+    if (search && filteredContainers.length === 1) {
+      const uniqueContainer = filteredContainers[0];
+      
+      // Verificação adicional: se o termo de pesquisa for o container exato
+      if (uniqueContainer.container.toLowerCase().trim() === search) {
+        setSelectedContainer(uniqueContainer);
+      } else if (selectedContainer?.id !== uniqueContainer.id) {
+        // Se for um filtro que resultou em 1, mas não é a pesquisa exata do container, 
+        // ainda podemos abrir, mas a verificação exata é mais segura para evitar aberturas acidentais.
+        // Vamos manter a abertura se for o único resultado.
+        setSelectedContainer(uniqueContainer);
+      }
+    } else if (search && filteredContainers.length !== 1) {
+      // Se o usuário está digitando e o resultado não é único, ou se limpou a pesquisa, feche a sidebar
+      setSelectedContainer(null);
+    } else if (!search && selectedContainer) {
+      // Se a pesquisa foi limpa, mas a sidebar está aberta, mantenha-a aberta (o usuário pode ter clicado nela)
+      // Apenas feche se o container selecionado não estiver mais na lista filtrada (o que não deve acontecer se a pesquisa for limpa)
+    }
+  }, [searchTerm, filteredContainers, selectedContainer]);
+
 
   // NOVO CÁLCULO DE STATS: Baseado em filteredContainers
   const stats = useMemo(() => {
