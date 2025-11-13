@@ -42,12 +42,11 @@ export function useOcrProcessor() {
       const height = img.height;
       
       // Definindo a ROI: Quadrante superior direito (50% direito, 15% superior)
-      // Reduzimos a altura para 15% para evitar ruídos de textos menores abaixo do número principal.
       const rectangle = {
         left: Math.floor(width * 0.5), 
         top: 0,
         width: Math.floor(width * 0.5), 
-        height: Math.floor(height * 0.15), // Reduzido de 25% para 15%
+        height: Math.floor(height * 0.15), // Focando nos 15% superiores
       };
 
       // 2. Executa o reconhecimento apenas na área definida
