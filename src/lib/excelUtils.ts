@@ -42,7 +42,7 @@ const excelDateToJSDate = (serial: any): string => {
   return String(serial);
 };
 
-// Ordem exata das chaves da interface Container, correspondendo à ordem da planilha (30 colunas).
+// Ordem exata das chaves da interface Container, correspondendo à ordem da planilha (31 colunas).
 const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
   'operador', // 1. OPERADOR1
   'motoristaEntrada', // 2. MOTORISTA ENTRADA
@@ -74,6 +74,7 @@ const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
   'dataSaidaSJP', // 28. DATA SAIDA SJP
   'motoristaSaidaSJP', // 29. MOTORISTA SAIDA SJP
   'placaSaida', // 30. PLACA (Saída)
+  'depotDevolucao', // 31. DEPOT DE DEVOLUÇÃO (Adicionado para análise)
 ];
 
 
@@ -115,7 +116,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
               demurrage: "", prazoDias: 0, clienteEntrada: "", transportadora: "", estoque: "",
               transportadoraSaida: "", statusEntregaMinuta: "", statusMinuta: "", bookingAtrelado: "",
               lacre: "", clienteSaidaDestino: "", atrelado: "", operadorSaida: "", dataEstufagem: "",
-              dataSaidaSJP: "", motoristaSaidaSJP: "", placaSaida: "",
+              dataSaidaSJP: "", motoristaSaidaSJP: "", placaSaida: "", depotDevolucao: "", // Novo default
               diasRestantes: 0, status: "",
             };
 
@@ -201,6 +202,7 @@ export const exportToExcel = (containers: Container[]) => {
       'DATA SAIDA SJP': c.dataSaidaSJP,
       'MOTORISTA SAIDA SJP': c.motoristaSaidaSJP,
       'PLACA SAIDA': c.placaSaida, // Saída
+      'DEPOT DE DEVOLUÇÃO': c.depotDevolucao, // Novo campo de exportação
       // Campos de compatibilidade que não estão na planilha original, mas podem ser úteis
       'STATUS GERAL': c.status,
       'DIAS RESTANTES (COMPAT)': c.diasRestantes,

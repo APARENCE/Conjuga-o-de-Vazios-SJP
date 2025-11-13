@@ -14,12 +14,22 @@ interface AnalisePageProps {
   containers: Container[];
 }
 
+// Função auxiliar para converter DD/MM/YYYY para objeto Date
+const parseDate = (dateString: string | undefined): Date | null => {
+  if (!dateString) return null;
+  const parts = dateString.split('/');
+  if (parts.length !== 3) return null;
+  // Cria a data no formato YYYY-MM-DD para evitar problemas de fuso horário
+  const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+  return isNaN(date.getTime()) ? null : date;
+};
+
 export default function Analise({ containers }: AnalisePageProps) {
   const [selectedChart, setSelectedChart] = useState<"all" | "armador" | "status" | "dias" | "depot">("all");
   const [timeRange, setTimeRange] = useState<"all" | "30" | "60" | "90">("all");
   const isMobile = useIsMobile();
 
-  // Filtrar containers por período
+  // Filtrar containers por período (baseado na data de entrada)
   const filteredContainers = useMemo(() => {
     if (timeRange === "all") return containers;
     
@@ -28,17 +38,12 @@ export default function Analise({ containers }: AnalisePageProps) {
     cutoffDate.setDate(cutoffDate.getDate() - daysAgo);
     
     return containers.filter(c => {
-      // Converte DD/MM/YYYY para Date
-      const dataOpParts = c.dataOperacao?.split('/');
-      if (!dataOpParts || dataOpParts.length !== 3) return false;
-      
-      // Cria a data no formato YYYY-MM-DD para evitar problemas de fuso horário
-      const dataOp = new Date(`${dataOpParts[2]}-${dataOpParts[1]}-${dataOpParts[0]}`);
-      
+      const dataOp = parseDate(c.dataEntrada); // Usando dataEntrada como referência principal
       return dataOp && dataOp >= cutoffDate;
     });
   }, [containers, timeRange]);
 
+  // Análise por Armador
   const armadorData = useMemo(() => {
     const grouped = filteredContainers.reduce((acc, container) => {
       const armador = container.armador || "Não especificado";
@@ -49,12 +54,16 @@ export default function Analise({ containers }: AnalisePageProps) {
     return Object.entries(grouped)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, isMobile ? 6 : 10); // Aumenta para 6 em mobile para melhor visualização
+      .slice(0, isMobile ? 6 : 10);
   }, [filteredContainers, isMobile]);
 
+  // Análise por Depot de Devolução
   const depotData = useMemo(() => {
     const grouped = filteredContainers.reduce((acc, container) => {
-      const depot = container.depotDevolucao || "Não especificado";
+      // Usando depotDevolucao, mas garantindo que o campo exista na interface Container
+      // Nota: O campo 'depotDevolucao' existe na interface Container, mas não é preenchido pelo ExcelUtils.
+      // Assumindo que ele será preenchido manualmente ou por outra fonte.
+      const depot = container.depotDevolucao || "Não especificado"; 
       if (depot && depot !== "-") {
         acc[depot] = (acc[depot] || 0) + 1;
       }
@@ -64,17 +73,18 @@ export default function Analise({ containers }: AnalisePageProps) {
     return Object.entries(grouped)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, isMobile ? 6 : 8); // Aumenta para 6 em mobile
+      .slice(0, isMobile ? 6 : 8);
   }, [filteredContainers, isMobile]);
 
+  // Análise por Status Geral
   const statusData = useMemo(() => {
     const devolvidos = filteredContainers.filter(c => {
       const status = String(c.status || '').toLowerCase();
-      return status.includes("ok") || status.includes("devolvido");
+      return status.includes("ok") || status.includes("devolvido") || c.dataSaidaSJP; // Considera Saída SJP como devolvido/concluído
     }).length;
     const pendentes = filteredContainers.filter(c => {
       const status = String(c.status || '').toLowerCase();
-      return status.includes("aguardando") || status.includes("verificar");
+      return status.includes("aguardando") || status.includes("verificar") || (!c.dataSaidaSJP && !status.includes("ok") && !status.includes("devolvido"));
     }).length;
     const outros = filteredContainers.length - devolvidos - pendentes;
 
@@ -85,6 +95,7 @@ export default function Analise({ containers }: AnalisePageProps) {
     ].filter(item => item.value > 0);
   }, [filteredContainers]);
 
+  // Análise por Dias Restantes (Prazo Dias)
   const diasRestantesData = useMemo(() => {
     const ranges = {
       "Vencido (0)": 0,
@@ -95,7 +106,8 @@ export default function Analise({ containers }: AnalisePageProps) {
     };
 
     filteredContainers.forEach(c => {
-      const dias = typeof c.diasRestantes === 'number' ? c.diasRestantes : 0;
+      // Usando prazoDias, que é o campo correto para o prazo
+      const dias = typeof c.prazoDias === 'number' ? c.prazoDias : 0; 
       if (dias === 0) ranges["Vencido (0)"]++;
       else if (dias <= 3) ranges["1-3 dias"]++;
       else if (dias <= 7) ranges["4-7 dias"]++;
@@ -106,25 +118,31 @@ export default function Analise({ containers }: AnalisePageProps) {
     return Object.entries(ranges).map(([name, value]) => ({ name, value }));
   }, [filteredContainers]);
 
-  // Timeline de operações (novidade)
+  // Timeline de operações (Entrada e Saída SJP)
   const timelineData = useMemo(() => {
     const grouped = filteredContainers.reduce((acc, container) => {
-      if (!container.dataOperacao) return acc;
       
-      // Converte DD/MM/YYYY para Date
-      const parts = container.dataOperacao.split('/');
-      if (parts.length !== 3) return acc;
-      
-      const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-      const monthKey = date.toISOString().substring(0, 7); // YYYY-MM
-      const monthLabel = date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
-      
-      if (!acc[monthKey]) {
-        acc[monthKey] = { month: monthLabel, entradas: 0, devolucoes: 0, key: monthKey };
+      // 1. Entrada (Data de Entrada)
+      const dataEntrada = parseDate(container.dataEntrada);
+      if (dataEntrada) {
+        const monthKey = dataEntrada.toISOString().substring(0, 7); // YYYY-MM
+        const monthLabel = dataEntrada.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+        
+        if (!acc[monthKey]) {
+          acc[monthKey] = { month: monthLabel, entradas: 0, devolucoes: 0, key: monthKey };
+        }
+        acc[monthKey].entradas++;
       }
       
-      acc[monthKey].entradas++;
-      if (String(container.status || '').toLowerCase().includes("devolvido")) {
+      // 2. Devolução/Saída (Data Saída SJP)
+      const dataSaida = parseDate(container.dataSaidaSJP);
+      if (dataSaida) {
+        const monthKey = dataSaida.toISOString().substring(0, 7); // YYYY-MM
+        const monthLabel = dataSaida.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+        
+        if (!acc[monthKey]) {
+          acc[monthKey] = { month: monthLabel, entradas: 0, devolucoes: 0, key: monthKey };
+        }
         acc[monthKey].devolucoes++;
       }
       
