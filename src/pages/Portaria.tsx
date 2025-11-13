@@ -42,7 +42,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
       setContainerNumber(ocrContainer);
       toast({
         title: "OCR Concluído",
-        description: `Container (${ocrContainer}) reconhecido.`,
+        description: `Container (${ocrContainer}) reconhecido e preenchido.`,
       });
     }
     if (!isProcessing && ocrPlate) {
@@ -50,7 +50,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
       if (!ocrContainer) { // Se só reconheceu a placa, avisa
         toast({
             title: "OCR Concluído",
-            description: `Placa (${ocrPlate}) reconhecida.`,
+            description: `Placa (${ocrPlate}) reconhecida e preenchida.`,
         });
       }
     }
@@ -66,9 +66,14 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
 
   const handleCapture = async (imageSrc: string) => {
     setCapturedImage(imageSrc);
+    
+    // Limpa os resultados anteriores para evitar confusão
+    setContainerNumber("");
+    setPlaca("");
+    
     toast({
       title: "Foto Capturada",
-      description: "Iniciando reconhecimento OCR...",
+      description: "Iniciando reconhecimento OCR na área cortada...",
     });
     
     // Inicia o processamento OCR
@@ -232,6 +237,9 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                   className={cn("pl-10 text-sm font-mono uppercase h-9", isProcessing && "opacity-50")}
                   disabled={isProcessing}
                 />
+                {isProcessing && (
+                    <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-primary" />
+                )}
               </div>
               
               {/* Placa e Motorista (Apenas para Entrada/Baixa) */}
@@ -318,9 +326,14 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                 {isProcessing ? 'Processando OCR...' : `Registrar ${actionType === 'entrada' ? 'Entrada' : 'Baixa'}`}
               </Button>
               
-              {capturedImage && !isProcessing && (
+              {capturedImage && !isProcessing && (ocrContainer || ocrPlate) && (
                 <div className="text-sm text-success flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4" /> Foto capturada e OCR concluído.
+                    <CheckCircle2 className="h-4 w-4" /> OCR concluído. Verifique os campos preenchidos.
+                </div>
+              )}
+              {capturedImage && !isProcessing && !ocrContainer && !ocrPlate && (
+                <div className="text-sm text-warning flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4" /> OCR concluído, mas não reconheceu container ou placa. Insira manualmente.
                 </div>
               )}
             </CardContent>
