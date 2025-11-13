@@ -1,9 +1,11 @@
 import { useState, useCallback } from "react";
 import { createWorker } from "tesseract.js";
-import { CONTAINER_PREFIXES } from "@/data/containerPrefixes"; // Importando prefixos
+import { CONTAINER_PREFIXES } from "@/data/containerPrefixes";
+import { validateAndCorrectContainer } from "@/lib/containerUtils"; // Importando utilitário de validação
 
-// Regex para Container: 4 letras + 7 dígitos.
-const CONTAINER_PATTERN = /([A-Z]{4}\d{7})/;
+// Regex para Container: 4 letras + 6 dígitos (o 7º dígito será corrigido/calculado).
+// Procuramos por sequências de 10 ou 11 caracteres alfanuméricos.
+const CONTAINER_SEARCH_PATTERN = /([A-Z]{4}\d{6,7})/;
 
 // Regex para Placa: 3 ou 4 letras seguidas por 3 a 4 caracteres alfanuméricos.
 const PLATE_REGEX = /[A-Z]{3,4}[0-9A-Z]{3,4}/g; 
@@ -44,28 +46,37 @@ export function useOcrProcessor() {
       const rawText = await runOcrAttempt(worker, imageSrc);
       
       // Limpa o texto: remove todos os caracteres que não são letras ou números
-      const cleanedText = rawText.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const continuousText = rawText.toUpperCase().replace(/[^A-Z0-9]/g, '');
       
-      // 1. Tenta encontrar o padrão de 11 caracteres (4 letras + 7 dígitos)
-      const match = cleanedText.match(CONTAINER_PATTERN);
+      // 1. Tenta encontrar o padrão de 10 ou 11 caracteres (4 letras + 6/7 dígitos)
+      const match = continuousText.match(CONTAINER_SEARCH_PATTERN);
+      let potentialContainer = match ? match[1] : null;
 
-      if (match && match[1]) {
-        recognizedContainer = match[1];
-      } else {
-        // 2. Abordagem de prefixo e validação (mais robusta)
+      if (potentialContainer) {
+        // Tenta validar e corrigir o número encontrado
+        const correctedContainer = validateAndCorrectContainer(potentialContainer);
+        if (correctedContainer) {
+          recognizedContainer = correctedContainer;
+        }
+      }
+      
+      // 2. Se a busca por regex falhar, tentamos a abordagem de prefixo e validação
+      if (!recognizedContainer) {
+        const prefixMatch = CONTAINER_PREFIXES.find(prefix => continuousText.includes(prefix));
         
-        // Itera sobre os prefixos conhecidos
-        for (const prefix of CONTAINER_PREFIXES) {
-            if (cleanedText.includes(prefix)) {
-                const startIndex = cleanedText.indexOf(prefix) + 4;
-                const potentialDigits = cleanedText.substring(startIndex);
+        if (prefixMatch) {
+            const startIndex = continuousText.indexOf(prefixMatch) + 4;
+            const potentialDigits = continuousText.substring(startIndex);
+            
+            // Tenta pegar 6 ou 7 dígitos após o prefixo
+            const digitsMatch = potentialDigits.match(/\d{6,7}/);
+            
+            if (digitsMatch && digitsMatch[0]) {
+                const fullPotential = prefixMatch + digitsMatch[0];
+                const correctedContainer = validateAndCorrectContainer(fullPotential);
                 
-                // Pega os primeiros 7 dígitos da sequência após o prefixo
-                const digitsMatch = potentialDigits.match(/\d{7}/);
-                
-                if (digitsMatch && digitsMatch[0]) {
-                    recognizedContainer = prefix + digitsMatch[0];
-                    break; // Encontrou, sai do loop
+                if (correctedContainer) {
+                    recognizedContainer = correctedContainer;
                 }
             }
         }
