@@ -3,8 +3,6 @@ import { createWorker } from "tesseract.js";
 
 // Regex para Container: 4 letras + 7 dígitos.
 const CONTAINER_REGEX = /[A-Z]{4}\d{7}/g;
-// Regex para Container de 10 caracteres (4 letras + 6 dígitos)
-const CONTAINER_PARTIAL_REGEX = /[A-Z]{4}\d{6}/g;
 // Regex para Placa: 3 ou 4 letras seguidas por 3 a 4 caracteres alfanuméricos.
 const PLATE_REGEX = /[A-Z]{3,4}[0-9A-Z]{3,4}/g; 
 
@@ -45,78 +43,65 @@ export function useOcrProcessor() {
       const width = img.width;
       const height = img.height;
       
-      // ROI Focada: Quadrante superior direito (50% direito, 20% superior)
+      // ROI Focada: Quadrante superior direito (50% direito, 30% superior)
+      // Aumentamos a altura para garantir que o número completo esteja na área de foco.
       const focusedRectangle = {
         left: Math.floor(width * 0.5), 
         top: 0,
         width: Math.floor(width * 0.5), 
-        height: Math.floor(height * 0.20), 
+        height: Math.floor(height * 0.30), // Aumentado para 30%
       };
       
-      // ROI Focada APENAS no dígito de verificação (últimos 10% da largura da ROI focada)
-      const checkDigitRectangle = {
-        left: focusedRectangle.left + Math.floor(focusedRectangle.width * 0.8), // 80% da ROI focada
-        top: focusedRectangle.top,
-        width: Math.floor(focusedRectangle.width * 0.2), // 20% da ROI focada
-        height: focusedRectangle.height,
-      };
-
+      // Inicializa o worker do Tesseract
       const worker = await createWorker("eng"); 
-      
+      await worker.setParameters({
+        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+      });
+
       let recognizedContainer = "";
       let recognizedPlate = "";
       
       // --- Etapa 1: Tentativas Otimizadas para o Container Completo (11 caracteres) ---
+      // Priorizamos PSM 7 (Single Text Line) e PSM 8 (Single Word) na ROI focada.
       const psms = [7, 8, 6, 3]; 
       
       for (const psm of psms) {
+        // Usamos a ROI focada para PSM 7 e 8, e a imagem inteira para PSM 6 e 3.
         const rectangle = (psm === 7 || psm === 8) ? focusedRectangle : undefined;
         
-        // Whitelist padrão para letras e números
-        const rawText = await runOcrAttempt(worker, imageSrc, rectangle, psm, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
+        const rawText = await runOcrAttempt(worker, imageSrc, rectangle, psm);
+        
+        // Limpa o texto: remove espaços, quebras de linha e caracteres especiais
         const cleanedText = rawText.toUpperCase().replace(/[^A-Z0-9]/g, '');
         
+        console.log(`OCR Attempt PSM ${psm} - Cleaned Text:`, cleanedText);
+
+        // Extrair Containers
         const containersFound = cleanedText.match(CONTAINER_REGEX) || [];
-        const validContainer = containersFound.find(c => c.length === 11);
+        const uniqueContainers = [...new Set(containersFound)];
         
-        if (validContainer) {
-          recognizedContainer = validContainer;
-          break; 
+        if (uniqueContainers.length > 0) {
+          // Filtra para garantir que estamos pegando o padrão de 11 caracteres
+          const validContainer = uniqueContainers.find(c => c.length === 11);
+          if (validContainer) {
+            recognizedContainer = validContainer;
+            console.log(`Container found with PSM ${psm}:`, recognizedContainer);
+            break; // Encontrou, pode parar
+          }
         }
         
-        // Se for a tentativa de imagem inteira (PSM 3), tentamos extrair a placa
+        // Tentativa de extrair placa (apenas na tentativa de imagem inteira PSM 3, se ainda não tivermos uma placa)
         if (psm === 3 && !recognizedPlate) {
             const platesFoundFull = cleanedText.match(PLATE_REGEX) || [];
             if (platesFoundFull.length > 0) {
                 recognizedPlate = platesFoundFull[0];
+                console.log("Plate found with FULL IMAGE PSM 3:", recognizedPlate);
             }
         }
       }
       
-      // --- Etapa 2: Fallback para Dígito de Verificação (Se o container principal falhou ou está incompleto) ---
-      if (!recognizedContainer) {
-        // Tenta encontrar o container de 10 caracteres
-        const rawTextPartial = await runOcrAttempt(worker, imageSrc, focusedRectangle, 7, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
-        const cleanedTextPartial = rawTextPartial.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        
-        const partialContainers = cleanedTextPartial.match(CONTAINER_PARTIAL_REGEX) || [];
-        const partialContainer = partialContainers.find(c => c.length === 10);
-
-        if (partialContainer) {
-            // Se encontrou 10 caracteres, tenta o OCR focado no dígito de verificação
-            
-            // Força o reconhecimento de APENAS dígitos (0-9) na área do dígito de verificação
-            const rawCheckDigit = await runOcrAttempt(worker, imageSrc, checkDigitRectangle, 10, '0123456789'); // PSM 10: Single Character
-            const cleanedCheckDigit = rawCheckDigit.trim().replace(/[^0-9]/g, '');
-            
-            if (cleanedCheckDigit.length === 1) {
-                recognizedContainer = partialContainer + cleanedCheckDigit;
-            } else {
-                // Se o OCR do dígito falhar, usamos o resultado de 10 caracteres (que provavelmente é o que está acontecendo)
-                recognizedContainer = partialContainer + '0'; // Assume 0 como fallback se não conseguir ler o 1
-            }
-        }
-      }
+      // --- Etapa 2: Fallback de 10+1 removido para focar na leitura direta de 11 dígitos ---
+      // Se o container não foi reconhecido com 11 dígitos, ele permanece vazio.
       
       await worker.terminate();
 
