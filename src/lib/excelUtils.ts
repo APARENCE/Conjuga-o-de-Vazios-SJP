@@ -55,15 +55,16 @@ const excelDateToJSDate = (serial: any): string => {
   let date: Date | null = null;
 
   if (typeof serial === "number") {
-    // Excel stores dates as numbers (days since 1900-01-01)
-    const utc_days = Math.floor(serial - 25569);
-    date = new Date(utc_days * 86400 * 1000);
+    // CORREÇÃO: Usamos a base de 1900 (25569 dias) e multiplicamos por milissegundos por dia.
+    // O erro de 1925 ocorre quando o fuso horário local é aplicado. 
+    // Vamos usar a função nativa do XLSX para maior precisão.
     
-    // Ajuste de fuso horário para garantir que a data seja correta
-    date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
-
-    if (isNaN(date.getTime())) {
-        date = null;
+    // Se o XLSX.read com cellDates: true retornou um número, é um serial.
+    // Usamos a função de conversão do XLSX para garantir a precisão.
+    const dateObj = XLSX.SSF.parse_date_code(serial);
+    if (dateObj) {
+        // Cria uma data UTC a partir dos componentes (ano, mês, dia)
+        date = new Date(Date.UTC(dateObj.y, dateObj.m - 1, dateObj.d));
     }
   } 
   
@@ -91,7 +92,6 @@ const excelDateToJSDate = (serial: any): string => {
 };
 
 // Ordem exata das chaves da interface Container, correspondendo à ordem da planilha (31 colunas).
-// Ajustado para a nova ordem fornecida pelo usuário.
 const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
   'operador', // 1. OPERADOR1
   'motoristaEntrada', // 2. MOTORISTA ENTRADA
