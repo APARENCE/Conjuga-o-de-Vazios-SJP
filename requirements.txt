@@ -1,0 +1,6 @@
+python-dotenv
+azure-ai-vision
+opencv-python
+numpy
+flask
+functions-framework==3.5.0

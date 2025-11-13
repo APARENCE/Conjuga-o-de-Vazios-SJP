@@ -1,73 +1,47 @@
-# Welcome to your Lovable project
+# AI in Logistics: Container Number Recognition
 
-## Project info
+[[`Project Writeup`](https://medium.com/@jonathanlawhh) [`My Website`](https://jonathanlawhh.com/)]
 
-**URL**: https://lovable.dev/projects/75aa23d7-2053-42aa-88e1-70fc2fd8be9e
+## Project Overview
+![AI in Logistics: Container Number Recognition header image](/assets/AI%20in%20Logistics%20Container%20Number%20Recognition%20Header.jpg)
+Traditional container tracking often relies on manual scans and tedious paperwork, creating inefficiencies and bottlenecks.
+This project leverages Optical Character Recognition (OCR) technology to automatically read container numbers directly from images, offering innovation in logistics management.
 
-## How can I edit this code?
+Companies using this AI solution can now enjoy real-time visibility into container movement within their premises.
 
-There are several ways of editing your application.
+## References
+- [Azure AI Vision](https://azure.microsoft.com/en-us/products/ai-services/ai-vision) by Microsoft Azure
+- [OpenCV](https://opencv.org/)
 
-**Use Lovable**
+## Setup and Usage
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/75aa23d7-2053-42aa-88e1-70fc2fd8be9e) and start prompting.
+### Software Requirements
+- Python >= 3.10
+- [Microsoft Azure Vision API](https://azure.microsoft.com/en-us/products/ai-services/ai-vision) API keys
 
-Changes made via Lovable will be committed automatically to this repo.
+### Installation
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+1. Clone this repository:
+```bash
+git clone https://github.com/jonathanlawhh/container-number-recognition-ai.git
+```
+2. Install required libraries:
+```bash
+pip install -R requirements.txt
 ```
 
-**Edit a file directly in GitHub**
+### Usage
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. Place your container images in the .\data\ folder.
+2. Rename `.env-sample` to `.env`
+3. Fill up both values in .env `VISION_ENDPOINT` and `VISION_KEY` from your Microsoft Azure Vision API project.
+4. Run the script.
+```bash
+python main.py
+```
 
-**Use GitHub Codespaces**
+## Closing thoughts
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/75aa23d7-2053-42aa-88e1-70fc2fd8be9e) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- Using a ready built service such as Azure Vision AI offloads most of the image processing task
+- Azure Vision API is more reliable than building using Tesseract OCR if the environment is dynamic, performance is more consistent compared to running on a local hardware
+- Can be integrated with in-house Transport Management Systems

@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { createWorker } from "tesseract.js";
+import { CONTAINER_PREFIXES } from "@/data/containerPrefixes"; // Importando a lista de prefixos
 
 // Regex para Container: 4 letras + 7 dígitos.
 const CONTAINER_REGEX = /[A-Z]{4}\d{7}/g;
@@ -80,12 +81,17 @@ export function useOcrProcessor() {
         const uniqueContainers = [...new Set(containersFound)];
         
         if (uniqueContainers.length > 0) {
-          // Filtra para garantir que estamos pegando o padrão de 11 caracteres
-          const validContainer = uniqueContainers.find(c => c.length === 11);
+          // Filtra para garantir que estamos pegando o padrão de 11 caracteres E que o prefixo é válido
+          const validContainer = uniqueContainers.find(c => {
+            if (c.length !== 11) return false;
+            const prefix = c.substring(0, 4);
+            return CONTAINER_PREFIXES.includes(prefix);
+          });
+          
           if (validContainer) {
             recognizedContainer = validContainer;
-            console.log(`Container found with PSM ${psm}:`, recognizedContainer);
-            break; // Encontrou, pode parar
+            console.log(`Container found and validated with PSM ${psm}:`, recognizedContainer);
+            break; // Encontrou e validou, pode parar
           }
         }
         
