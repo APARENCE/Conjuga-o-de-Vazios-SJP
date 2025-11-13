@@ -25,19 +25,22 @@ export const formatDateToBR = (dateValue: any): string => {
     date = dateValue;
   } else if (typeof dateValue === 'string') {
     // 1. Tenta parsear strings que já estão em DD/MM/YYYY
-    date = parseDateString(dateValue);
+    const brMatch = dateValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if (brMatch) {
+        // Se já está em DD/MM/YYYY, retorna a string original
+        return dateValue;
+    }
     
-    // 2. Se falhar, tenta parsear como string ISO ou outro formato
-    if (!date) {
-        const tempDate = new Date(dateValue);
-        // Verifica se a data é válida e se não é a data zero (1970)
-        if (!isNaN(tempDate.getTime()) && tempDate.getFullYear() > 1900) {
-            date = tempDate;
-        }
+    // 2. Tenta parsear como string ISO ou outro formato
+    const tempDate = new Date(dateValue);
+    // Verifica se a data é válida e se não é a data zero (1970)
+    if (!isNaN(tempDate.getTime()) && tempDate.getFullYear() > 1900) {
+        date = tempDate;
     }
   }
   
   if (date && !isNaN(date.getTime())) {
+    // Usa o método local para obter dia, mês e ano, garantindo o fuso horário local
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = String(date.getFullYear());
@@ -58,27 +61,16 @@ const excelDateToJSDate = (serial: any): string => {
     // Se XLSX já converteu para Date (cellDates: true)
     date = serial;
   } else if (typeof serial === "number") {
-    // Se for um número serial (fallback se cellDates: true falhar)
+    // Se for um número serial, usamos a função de parsing do XLSX
     const dateObj = XLSX.SSF.parse_date_code(serial);
     if (dateObj) {
-        // Cria uma data UTC a partir dos componentes (ano, mês, dia)
-        // Isso evita o problema de fuso horário local que causa o erro de 1925.
-        date = new Date(Date.UTC(dateObj.y, dateObj.m - 1, dateObj.d));
+        // Cria uma data local a partir dos componentes (ano, mês, dia)
+        // Isso é crucial para que o formatDateToBR use o dia correto.
+        date = new Date(dateObj.y, dateObj.m - 1, dateObj.d);
     }
   } else if (typeof serial === "string") {
-    // Tenta parsear strings (DD/MM/YYYY ou ISO)
-    const brMatch = serial.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-    if (brMatch) {
-        // DD/MM/YYYY
-        date = new Date(`${brMatch[3]}-${brMatch[2]}-${brMatch[1]}`);
-    } else {
-        // Tenta parsear como ISO ou outro formato
-        date = new Date(serial);
-    }
-
-    if (!date || isNaN(date.getTime())) {
-        return serial; // Retorna a string original se não for data
-    }
+    // Se for string, tentamos formatar diretamente
+    return formatDateToBR(serial);
   }
 
   if (date && !isNaN(date.getTime()) && date.getFullYear() > 1900) {
