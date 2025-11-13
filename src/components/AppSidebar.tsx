@@ -1,4 +1,4 @@
-import { Home, BarChart3, Upload, Download, PackageOpen, Plus, Truck, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, BarChart3, Upload, Download, PackageOpen, Plus, Truck, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -24,9 +24,11 @@ interface AppSidebarProps {
   onImport: () => void;
   onExport: () => void;
   onContainerAdd: (container: Partial<Container>) => void;
+  isImporting: boolean; // Novo
+  isExporting: boolean; // Novo
 }
 
-export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarProps) {
+export function AppSidebar({ onImport, onExport, onContainerAdd, isImporting, isExporting }: AppSidebarProps) {
   const { isOpen, setIsOpen } = useSidebar();
   const isMobile = useIsMobile();
   
@@ -101,6 +103,7 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
                   variant="default"
                   size="sm"
                   className="w-full justify-start bg-primary hover:bg-primary/90 text-primary-foreground h-7 px-1 text-xs"
+                  disabled={isImporting || isExporting} // Desabilita se estiver processando
                 >
                   <Plus className="h-3 w-3" /> 
                   Novo Container
@@ -112,18 +115,28 @@ export function AppSidebar({ onImport, onExport, onContainerAdd }: AppSidebarPro
               size="sm"
               className="w-full justify-start h-7 px-1 text-xs"
               onClick={onImport}
+              disabled={isImporting || isExporting}
             >
-              <Upload className="h-3 w-3 mr-1" />
-              Importar Excel
+              {isImporting ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Upload className="h-3 w-3 mr-1" />
+              )}
+              {isImporting ? 'Importando...' : 'Importar Excel'}
             </Button>
             <Button
               variant="outline"
               size="sm"
               className="w-full justify-start h-7 px-1 text-xs"
               onClick={onExport}
+              disabled={isImporting || isExporting}
             >
-              <Download className="h-3 w-3 mr-1" />
-              Exportar Excel
+              {isExporting ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Download className="h-3 w-3 mr-1" />
+              )}
+              {isExporting ? 'Exportando...' : 'Exportar Excel'}
             </Button>
           </SidebarGroupContent>
         </SidebarGroup>

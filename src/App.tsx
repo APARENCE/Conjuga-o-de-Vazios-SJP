@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Containers from "./pages/Containers";
 import Analise from "./pages/Analise";
@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu } from "lucide-react"; // Importando o ícone Menu
 import { Button } from "@/components/ui/button"; // Importando Button
+import { useFileOperation } from "@/hooks/use-file-operation"; // Importando o novo hook
 
 const queryClient = new QueryClient();
 
@@ -83,6 +84,37 @@ const App = () => {
   const [containers, setContainers] = useState<Container[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // --- Handlers de Importação/Exportação com Feedback Visual ---
+
+  const handleImportFile = async (file: File) => {
+    const data = await parseExcelFile(file);
+    setContainers(data);
+    // O toast de sucesso é disparado pelo useFileOperation
+  };
+
+  const { execute: executeImport, isLoading: isImporting } = useFileOperation(
+    async (file: File) => handleImportFile(file),
+    {
+      loadingMessage: "Importando planilha... Por favor, aguarde.",
+      successMessage: "Importação concluída com sucesso!",
+      errorMessage: "Erro na importação. Verifique o formato do arquivo.",
+    }
+  );
+
+  const { execute: executeExport, isLoading: isExporting } = useFileOperation(
+    async () => {
+      if (containers.length === 0) {
+        throw new Error("Nenhum dado para exportar.");
+      }
+      exportToExcel(containers);
+    },
+    {
+      loadingMessage: "Exportando dados para Excel...",
+      successMessage: "Exportação concluída! O arquivo foi baixado.",
+      errorMessage: "Erro na exportação. Tente novamente.",
+    }
+  );
+
   const handleImport = () => {
     if (fileInputRef.current) {
       // Limpa o valor anterior para garantir que o onChange seja disparado mesmo se o mesmo arquivo for selecionado
@@ -96,45 +128,29 @@ const App = () => {
     if (!file) return;
 
     try {
-      const data = await parseExcelFile(file);
-      setContainers(data);
-      toast({
-        title: "Importação concluída!",
-        description: `${data.length} containers foram importados com sucesso.`,
-      });
+      await executeImport(file);
     } catch (error) {
-      toast({
-        title: "Erro na importação",
-        description: "Não foi possível importar o arquivo. Verifique o formato.",
-        variant: "destructive",
-      });
+      // O erro já foi tratado e exibido pelo useFileOperation
     }
   };
 
-  const handleExport = () => {
-    if (containers.length === 0) {
-      toast({
-        title: "Nenhum dado para exportar",
-        description: "Importe uma planilha primeiro.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleExport = async () => {
     try {
-      exportToExcel(containers);
-      toast({
-        title: "Exportação concluída!",
-        description: "O arquivo Excel foi baixado com sucesso.",
-      });
+      await executeExport();
     } catch (error) {
-      toast({
-        title: "Erro na exportação",
-        description: "Não foi possível exportar o arquivo.",
-        variant: "destructive",
-      });
+      // Se o erro for "Nenhum dado para exportar", exibimos um toast diferente
+      if (error instanceof Error && error.message.includes("Nenhum dado")) {
+        toast({
+          title: "Nenhum dado para exportar",
+          description: "Importe uma planilha primeiro.",
+          variant: "destructive",
+        });
+      }
+      // Outros erros já são tratados pelo useFileOperation
     }
   };
+
+  // --- Handlers de Container (Mantidos) ---
 
   const handleContainerUpdate = (containerId: string, files: ContainerFile[]) => {
     setContainers((prev) =>
@@ -165,19 +181,36 @@ const App = () => {
       id: `container-${Date.now()}`,
       container: containerData.container || "",
       armador: containerData.armador || "",
-      dataOperacao: containerData.dataOperacao || "",
+      operador: containerData.operador || "",
+      motoristaEntrada: containerData.motoristaEntrada || "",
+      placa: containerData.placa || "",
+      dataEntrada: containerData.dataEntrada || "",
+      tara: containerData.tara || 0,
+      mgw: containerData.mgw || 0,
+      tipo: containerData.tipo || "",
+      padrao: containerData.padrao || "",
+      statusVazioCheio: containerData.statusVazioCheio || "",
       dataPorto: containerData.dataPorto || "",
+      freeTimeArmador: containerData.freeTimeArmador || 0,
       demurrage: containerData.demurrage || "",
-      freeTime: containerData.freeTime || 0,
-      diasRestantes: containerData.diasRestantes || 0,
-      placas: containerData.placas || "",
-      motorista: containerData.motorista || "",
-      origem: containerData.origem || "",
-      baixaPatio: containerData.baixaPatio || "",
-      containerTroca: containerData.containerTroca || "",
-      armadorTroca: containerData.armadorTroca || "",
+      prazoDias: containerData.prazoDias || 0,
+      clienteEntrada: containerData.clienteEntrada || "",
+      transportadora: containerData.transportadora || "",
+      estoque: containerData.estoque || "",
+      transportadoraSaida: containerData.transportadoraSaida || "",
+      statusEntregaMinuta: containerData.statusEntregaMinuta || "",
+      statusMinuta: containerData.statusMinuta || "",
+      bookingAtrelado: containerData.bookingAtrelado || "",
+      lacre: containerData.lacre || "",
+      clienteSaidaDestino: containerData.clienteSaidaDestino || "",
+      atrelado: containerData.atrelado || "",
+      operadorSaida: containerData.operadorSaida || "",
+      dataEstufagem: containerData.dataEstufagem || "",
+      dataSaidaSJP: containerData.dataSaidaSJP || "",
+      motoristaSaidaSJP: containerData.motoristaSaidaSJP || "",
+      placaSaida: containerData.placaSaida || "",
       depotDevolucao: containerData.depotDevolucao || "",
-      dataDevolucao: containerData.dataDevolucao || "",
+      diasRestantes: containerData.diasRestantes || 0,
       status: containerData.status || "",
       files: containerData.files || [], // Inclui arquivos se houver
     };
@@ -217,11 +250,13 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <SidebarProvider>
-            {/* Renderiza a Sidebar aqui, onde os handlers estão disponíveis */}
+            {/* Passando o estado de carregamento para desabilitar botões na sidebar */}
             <AppSidebar 
               onImport={handleImport} 
               onExport={handleExport}
               onContainerAdd={handleContainerAdd}
+              isImporting={isImporting}
+              isExporting={isExporting}
             />
             <AppLayout>
               <Routes>
