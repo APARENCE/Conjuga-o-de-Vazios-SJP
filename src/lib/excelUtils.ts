@@ -40,12 +40,7 @@ export const formatDateToBR = (dateValue: any): string => {
   }
   
   if (date && !isNaN(date.getTime())) {
-    // **CORREÇÃO:** Usamos getDate() para o dia e getMonth() + 1 para o mês.
-    // Se a data foi criada a partir de um serial do Excel (que é UTC-based), 
-    // precisamos usar os métodos UTC para garantir que o dia não seja deslocado pelo fuso horário local.
-    // No entanto, como o XLSX.SSF.parse_date_code já cria uma data local, 
-    // vamos confiar nos métodos locais (getDate, getMonth) e garantir que a criação da data seja robusta.
-    
+    // Garantindo que a formatação seja DD/MM/YYYY
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = String(date.getFullYear());
@@ -60,26 +55,25 @@ export const formatDateToBR = (dateValue: any): string => {
 const excelDateToJSDate = (serial: any): string => {
   if (!serial || serial === "-" || serial === "") return "";
   
-  let date: Date | null = null;
-
-  if (serial instanceof Date) {
-    // Se XLSX já converteu para Date (cellDates: true)
-    date = serial;
-  } else if (typeof serial === "number") {
+  if (typeof serial === "number") {
     // Se for um número serial, usamos a função de parsing do XLSX
     const dateObj = XLSX.SSF.parse_date_code(serial);
-    if (dateObj) {
-        // Cria uma data local a partir dos componentes (ano, mês, dia)
-        // Isso é crucial para que o formatDateToBR use o dia correto.
-        date = new Date(dateObj.y, dateObj.m - 1, dateObj.d);
+    
+    if (dateObj && dateObj.y > 1900) {
+        // Formata diretamente a partir dos componentes (dia, mês, ano)
+        const day = String(dateObj.d).padStart(2, '0');
+        const month = String(dateObj.m).padStart(2, '0'); // Mês já é 1-based aqui
+        const year = String(dateObj.y);
+        return `${day}/${month}/${year}`;
     }
   } else if (typeof serial === "string") {
     // Se for string, tentamos formatar diretamente
     return formatDateToBR(serial);
   }
 
-  if (date && !isNaN(date.getTime()) && date.getFullYear() > 1900) {
-    return formatDateToBR(date);
+  // Se for um objeto Date (quando cellDates: true é usado), usamos formatDateToBR
+  if (serial instanceof Date) {
+      return formatDateToBR(serial);
   }
   
   return String(serial);
