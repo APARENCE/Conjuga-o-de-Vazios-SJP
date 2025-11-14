@@ -13,7 +13,6 @@ import { Package, Search, Filter, Grid, List, Eye, Calendar, Truck, AlertTriangl
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { formatDateToBR } from "@/lib/excelUtils"; // Importando a função de formatação
 
 interface InventarioProps {
   containers: Container[];
@@ -163,7 +162,7 @@ export default function Inventario({ containers }: InventarioProps) {
             <div className="flex items-center gap-1 text-xs">
               <Calendar className="h-3 w-3 text-muted-foreground" />
               <span className="text-muted-foreground">Atualizado:</span>
-              <span className="text-xs">{formatDateToBR(item.lastUpdated)}</span> {/* Usando formatDateToBR */}
+              <span className="text-xs">{new Date(item.lastUpdated).toLocaleDateString('pt-BR')}</span>
             </div>
           </div>
           
@@ -390,7 +389,7 @@ export default function Inventario({ containers }: InventarioProps) {
                 <div className="flex items-center gap-2">
                   <Calendar className="h-3 w-3 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">Última Atualização:</span>
-                  <span className="text-sm">{formatDateToBR(selectedItem.lastUpdated)}</span> {/* Usando formatDateToBR */}
+                  <span className="text-sm">{new Date(selectedItem.lastUpdated).toLocaleString('pt-BR')}</span>
                 </div>
               </div>
             </div>

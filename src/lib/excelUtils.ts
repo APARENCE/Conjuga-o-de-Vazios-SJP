@@ -25,42 +25,19 @@ export const formatDateToBR = (dateValue: any): string => {
     date = dateValue;
   } else if (typeof dateValue === 'string') {
     // 1. Tenta parsear strings que já estão em DD/MM/YYYY
-    const brMatch = dateValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-    if (brMatch) {
-        // Se já está em DD/MM/YYYY, retorna a string original
-        return dateValue;
-    }
+    date = parseDateString(dateValue);
     
-    // 2. Tenta parsear como string ISO ou outro formato
-    let tempDate = new Date(dateValue);
-    
-    // 3. Lógica de Fallback: Se a data for inválida, tenta interpretar como MM/DD/YYYY
-    if (isNaN(tempDate.getTime())) {
-        const parts = dateValue.split(/[\/\-]/);
-        if (parts.length === 3) {
-            // Tenta reverter para MM/DD/YYYY (Mês, Dia, Ano)
-            const [p1, p2, p3] = parts.map(p => parseInt(p, 10));
-            // Assumindo que p1 é o mês e p2 é o dia (formato americano)
-            if (p1 > 12 && p2 <= 12) {
-                // Se o primeiro número é maior que 12, é provável que seja o dia (DD/MM/YYYY)
-                // Mas se o problema é a inversão, vamos tentar forçar a leitura americana se a leitura padrão falhar.
-                // A forma mais segura é tentar criar a data com a ordem americana (YYYY, MM-1, DD)
-                tempDate = new Date(p3, p1 - 1, p2);
-            } else if (p1 <= 12 && p2 <= 31) {
-                // Tenta a ordem americana (MM/DD/YYYY)
-                tempDate = new Date(p3, p1 - 1, p2);
-            }
+    // 2. Se falhar, tenta parsear como string ISO ou outro formato
+    if (!date) {
+        const tempDate = new Date(dateValue);
+        // Verifica se a data é válida e se não é a data zero (1970)
+        if (!isNaN(tempDate.getTime()) && tempDate.getFullYear() > 1900) {
+            date = tempDate;
         }
-    }
-
-    // Verifica se a data é válida e se não é a data zero (1970)
-    if (!isNaN(tempDate.getTime()) && tempDate.getFullYear() > 1900) {
-        date = tempDate;
     }
   }
   
   if (date && !isNaN(date.getTime())) {
-    // Garantindo que a formatação seja DD/MM/YYYY
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = String(date.getFullYear());
@@ -75,31 +52,46 @@ export const formatDateToBR = (dateValue: any): string => {
 const excelDateToJSDate = (serial: any): string => {
   if (!serial || serial === "-" || serial === "") return "";
   
+  let date: Date | null = null;
+
   if (typeof serial === "number") {
-    // Se for um número serial, usamos a função de parsing do XLSX
-    const dateObj = XLSX.SSF.parse_date_code(serial);
+    // Excel stores dates as numbers (days since 1900-01-01)
+    const utc_days = Math.floor(serial - 25569);
+    date = new Date(utc_days * 86400 * 1000);
     
-    if (dateObj && dateObj.y > 1900) {
-        // Formata diretamente a partir dos componentes (dia, mês, ano)
-        const day = String(dateObj.d).padStart(2, '0');
-        const month = String(dateObj.m).padStart(2, '0'); // Mês já é 1-based aqui
-        const year = String(dateObj.y);
-        return `${day}/${month}/${year}`;
+    // Ajuste de fuso horário para garantir que a data seja correta
+    date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+
+    if (isNaN(date.getTime())) {
+        date = null;
     }
-  } else if (typeof serial === "string") {
-    // Se for string, tentamos formatar diretamente
-    return formatDateToBR(serial);
+  } 
+  
+  if (typeof serial === "string") {
+    // Tenta parsear como DD/MM/YYYY
+    const brMatch = serial.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if (brMatch) {
+        // DD/MM/YYYY
+        date = new Date(`${brMatch[3]}-${brMatch[2]}-${brMatch[1]}`);
+    } else {
+        // Tenta parsear como ISO ou outro formato
+        date = new Date(serial);
+    }
+
+    if (!date || isNaN(date.getTime())) {
+        return serial; // Retorna a string original se não for data
+    }
   }
 
-  // Se for um objeto Date (quando cellDates: true é usado), usamos formatDateToBR
-  if (serial instanceof Date) {
-      return formatDateToBR(serial);
+  if (date && !isNaN(date.getTime())) {
+    return formatDateToBR(date);
   }
   
   return String(serial);
 };
 
 // Ordem exata das chaves da interface Container, correspondendo à ordem da planilha (31 colunas).
+// Ajustado para a nova ordem fornecida pelo usuário.
 const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
   'operador', // 1. OPERADOR1
   'motoristaEntrada', // 2. MOTORISTA ENTRADA
@@ -151,7 +143,6 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
       try {
         const data = e.target?.result;
         // Lendo como array de arrays (raw: false para manter formatação de data)
-        // Mantemos cellDates: true para que o XLSX tente converter para Date object
         const workbook = XLSX.read(data, { type: 'binary', cellDates: true, raw: false });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];

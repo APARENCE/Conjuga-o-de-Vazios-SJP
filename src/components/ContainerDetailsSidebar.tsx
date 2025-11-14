@@ -74,7 +74,6 @@ const FIELD_GROUPS = [
       { key: "dataSaidaSJP", label: "DATA SAIDA SJP", isDate: true },
       { key: "motoristaSaidaSJP", label: "MOTORISTA SAIDA SJP" },
       { key: "placaSaida", label: "PLACA (Saída)" },
-      { key: "depotDevolucao", label: "DEPOT DE DEVOLUÇÃO" }, // Adicionado
       { key: "status", label: "STATUS GERAL", highlight: true },
     ],
   },

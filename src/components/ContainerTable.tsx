@@ -38,15 +38,15 @@ interface ContainerTableProps {
 
 export function ContainerTable({ containers, onContainerUpdate, onContainerEdit, onContainerDelete, onContainerSelect }: ContainerTableProps) {
   const getStatusBadge = (status: string) => {
-    if (!status) return <Badge variant="secondary" className="text-xs">-</Badge>;
+    if (!status) return <Badge variant="secondary">-</Badge>;
     const statusLower = String(status).toLowerCase();
     if (statusLower.includes("ok") || statusLower.includes("devolvido")) {
-      return <Badge className="bg-success text-white text-xs">{status}</Badge>;
+      return <Badge className="bg-success text-white">{status}</Badge>;
     }
     if (statusLower.includes("aguardando") || statusLower.includes("verificar")) {
-      return <Badge className="bg-warning text-white text-xs">{status}</Badge>;
+      return <Badge className="bg-warning text-white">{status}</Badge>;
     }
-    return <Badge variant="secondary" className="text-xs">{status}</Badge>;
+    return <Badge variant="secondary">{status}</Badge>;
   };
 
   const getDiasRestantesColor = (dias: number | string) => {
@@ -81,13 +81,11 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
     sm: "w-[65px] min-w-[65px]", 
     md: "w-[80px] min-w-[80px]", 
     lg: "w-[100px] min-w-[100px]", 
-    xl: "w-[120px] min-w-[120px]",
   };
   
   // Classe para ocultar colunas não essenciais em telas menores que 2XL
-  // Usaremos 'table-cell' para garantir que o cabeçalho seja renderizado corretamente, mesmo que oculto.
-  const hiddenColClass = "hidden lg:table-cell"; // Oculta em telas menores que LG (1024px)
-  const hiddenColHeaderClass = "hidden lg:table-cell";
+  const hiddenColClass = "hidden 2xl:table-cell";
+  const hiddenColHeaderClass = "hidden 2xl:table-cell";
 
   return (
     <Card className="border-0 shadow-sm">
@@ -101,22 +99,22 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
           <TableHeader className={fixedHeaderClasses}>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
               {/* Colunas Fixas (CONTAINER e ARMADOR) */}
-              <TableHead className={cn("font-semibold z-[35]", containerLeft, fixedCellClasses, containerWidth)}>CONTAINER</TableHead>
-              <TableHead className={cn("font-semibold z-30", armadorLeft, fixedCellClasses, armadorWidth)}>ARMADOR</TableHead>
+              <TableHead className={cn("font-semibold z-[35]", containerLeft, containerWidth)}>CONTAINER</TableHead>
+              <TableHead className={cn("font-semibold z-30", armadorLeft, armadorWidth)}>ARMADOR</TableHead>
               
               {/* Colunas Essenciais (Sempre visíveis) */}
-              <TableHead className={cn("font-semibold text-center", colWidths.md)}>PRAZO(DIAS)</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md)}>PRAZO(DIAS)</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>STATUS GERAL</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>DATA ENTRADA</TableHead>
-              <TableHead className={cn("font-semibold", colWidths.lg)}>CLIENTE ENTRADA</TableHead>
-              <TableHead className={cn("font-semibold", colWidths.lg)}>MOTORISTA ENTRADA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md)}>CLIENTE ENTRADA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md)}>MOTORISTA ENTRADA</TableHead>
               <TableHead className={cn("font-semibold", colWidths.sm)}>PLACA1</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>DATA SAIDA SJP</TableHead>
               
-              {/* Colunas Ocultas (Visíveis apenas em telas maiores que LG) */}
+              {/* Colunas Ocultas (Visíveis apenas com rolagem horizontal ou em 2XL) */}
               <TableHead className={cn("font-semibold", colWidths.sm, hiddenColHeaderClass)}>OPERADOR1</TableHead>
-              <TableHead className={cn("font-semibold text-right", colWidths.xs, hiddenColHeaderClass)}>TARA</TableHead>
-              <TableHead className={cn("font-semibold text-right", colWidths.xs, hiddenColHeaderClass)}>MGW</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.xs, hiddenColHeaderClass)}>TARA</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.xs, hiddenColClass)}>MGW</TableHead>
               <TableHead className={cn("font-semibold", colWidths.xs, hiddenColHeaderClass)}>TIPO</TableHead>
               <TableHead className={cn("font-semibold", colWidths.xs, hiddenColHeaderClass)}>PADRÃO</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md, hiddenColHeaderClass)}>STATUS (V/C)</TableHead>
@@ -134,9 +132,8 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               <TableHead className={cn("font-semibold", colWidths.sm, hiddenColHeaderClass)}>ATRELADO</TableHead>
               <TableHead className={cn("font-semibold", colWidths.sm, hiddenColHeaderClass)}>OPERADOR (Saída)</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md, hiddenColHeaderClass)}>DATA ESTUFAGEM</TableHead>
-              <TableHead className={cn("font-semibold", colWidths.lg, hiddenColHeaderClass)}>MOTORISTA SAIDA SJP</TableHead>
+              <TableHead className={cn("font-semibold", colWidths.md, hiddenColHeaderClass)}>MOTORISTA SAIDA SJP</TableHead>
               <TableHead className={cn("font-semibold", colWidths.sm, hiddenColHeaderClass)}>PLACA (Saída)</TableHead>
-              <TableHead className={cn("font-semibold", colWidths.lg, hiddenColHeaderClass)}>DEPOT DE DEVOLUÇÃO</TableHead> {/* Novo Cabeçalho */}
               
               {/* Colunas de Ação */}
               <TableHead className="font-semibold text-center w-[45px] min-w-[45px]">Arquivos</TableHead>
@@ -146,7 +143,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
           <TableBody>
           {containers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={34} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={33} className="text-center py-8 text-muted-foreground">
                   Nenhum container encontrado. Importe uma planilha para começar.
                 </TableCell>
               </TableRow>
@@ -176,12 +173,12 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                     </TableCell>
                     <TableCell className={colWidths.md}>{getStatusBadge(container.status)}</TableCell>
                     <TableCell className={colWidths.md}>{formatDateToBR(container.dataEntrada)}</TableCell>
-                    <TableCell className={cn(colWidths.lg, "truncate")}>{container.clienteEntrada}</TableCell>
-                    <TableCell className={cn(colWidths.lg, "truncate")}>{container.motoristaEntrada}</TableCell>
+                    <TableCell className={cn(colWidths.md, "truncate")}>{container.clienteEntrada}</TableCell>
+                    <TableCell className={cn(colWidths.md, "truncate")}>{container.motoristaEntrada}</TableCell>
                     <TableCell className={colWidths.sm}>{container.placa}</TableCell>
                     <TableCell className={colWidths.md}>{formatDateToBR(container.dataSaidaSJP)}</TableCell>
                     
-                    {/* Colunas Ocultas (Visíveis apenas com rolagem horizontal ou em LG+) */}
+                    {/* Colunas Ocultas (Visíveis apenas com rolagem horizontal ou em 2XL) */}
                     <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.operador}</TableCell>
                     <TableCell className={cn(colWidths.xs, "text-right", hiddenColClass)}>{container.tara || "-"}</TableCell>
                     <TableCell className={cn(colWidths.xs, "text-right", hiddenColClass)}>{container.mgw || "-"}</TableCell>
@@ -202,9 +199,8 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                     <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.atrelado}</TableCell>
                     <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.operadorSaida}</TableCell>
                     <TableCell className={colWidths.md}>{formatDateToBR(container.dataEstufagem)}</TableCell>
-                    <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.motoristaSaidaSJP}</TableCell>
+                    <TableCell className={colWidths.md}>{formatDateToBR(container.motoristaSaidaSJP)}</TableCell>
                     <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.placaSaida}</TableCell>
-                    <TableCell className={cn(colWidths.lg, "truncate", hiddenColClass)}>{container.depotDevolucao}</TableCell> {/* Novo Campo */}
                     
                     {/* Colunas de Ação */}
                     <TableCell className="text-center w-[45px] min-w-[45px]" onClick={(e) => e.stopPropagation()}>

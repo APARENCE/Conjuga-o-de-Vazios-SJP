@@ -6,9 +6,6 @@
 All colors MUST be HSL.
 */
 
-/* Importação do CSS da biblioteca de corte de imagem */
-@import 'react-image-crop/dist/ReactCrop.css';
-
 @layer base {
   :root {
     --background: 210 20% 98%;

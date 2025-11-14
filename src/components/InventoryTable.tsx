@@ -11,7 +11,6 @@ import { Card } from "@/components/ui/card";
 import { Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import React from "react";
-import { formatDateToBR } from "@/lib/excelUtils"; // Importando a função de formatação
 
 interface InventoryTableProps {
   inventory: InventoryItem[];
@@ -74,7 +73,7 @@ export function InventoryTable({ inventory }: InventoryTableProps) {
                     <TableCell className="font-medium min-w-[70px]">{item.itemType}</TableCell>
                     <TableCell className="max-w-[400px] truncate text-sm text-muted-foreground min-w-[180px]">{item.details}</TableCell> {/* Ajustado min-w */}
                     <TableCell className="min-w-[80px]">{getStatusBadge(item.status)}</TableCell>
-                    <TableCell className="min-w-[90px]">{formatDateToBR(item.lastUpdated)}</TableCell> {/* Usando formatDateToBR */}
+                    <TableCell className="min-w-[90px]">{new Date(item.lastUpdated).toLocaleString('pt-BR')}</TableCell>
                   </TableRow>
                 );
               })
