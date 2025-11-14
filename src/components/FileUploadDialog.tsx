@@ -27,9 +27,10 @@ interface FileUploadDialogProps {
   containerId: string;
   files: ContainerFile[];
   onFilesChange: (files: ContainerFile[]) => void;
+  children: React.ReactNode; // Adicionando children como trigger
 }
 
-export function FileUploadDialog({ containerId, files, onFilesChange }: FileUploadDialogProps) {
+export function FileUploadDialog({ containerId, files, onFilesChange, children }: FileUploadDialogProps) {
   const [open, setOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState<ContainerFile | null>(null);
   const [deleteFile, setDeleteFile] = useState<ContainerFile | null>(null);
@@ -176,14 +177,7 @@ export function FileUploadDialog({ containerId, files, onFilesChange }: FileUplo
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2">
-            <Paperclip className="h-4 w-4" />
-            {files.length > 0 && (
-              <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
-                {files.length}
-              </span>
-            )}
-          </Button>
+          {children}
         </DialogTrigger>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>

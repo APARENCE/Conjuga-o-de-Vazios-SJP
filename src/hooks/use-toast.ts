@@ -5,7 +5,12 @@ import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
 const TOAST_LIMIT = 1;
 const TOAST_REMOVE_DELAY = 1000000;
 
-type ToasterToast = ToastProps & {
+// Estendendo ToastProps para incluir variantes customizadas
+type CustomToastProps = ToastProps & {
+  variant?: "default" | "destructive" | "success" | "warning";
+};
+
+type ToasterToast = CustomToastProps & {
   id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;

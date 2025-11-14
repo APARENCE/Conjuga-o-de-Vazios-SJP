@@ -43,6 +43,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
       toast({
         title: "OCR Concluído",
         description: `Container (${ocrContainer}) reconhecido e preenchido.`,
+        variant: "default", // Alterado de "success" para "default"
       });
     }
     if (!isProcessing && ocrPlate) {
@@ -51,6 +52,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
         toast({
             title: "OCR Concluído",
             description: `Placa (${ocrPlate}) reconhecida e preenchida.`,
+            variant: "default", // Usando default para aviso de placa
         });
       }
     }
@@ -58,7 +60,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
         toast({
             title: "OCR Concluído",
             description: "Nenhum container ou placa reconhecido. Por favor, insira manualmente.",
-            variant: "warning",
+            variant: "default", // Usando default para evitar erro de compilação
         });
     }
   }, [isProcessing, ocrContainer, ocrPlate, capturedImage, toast]);
@@ -186,7 +188,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
     setMotorista("");
     setCapturedImage(null);
     
-    toast({ title: "Sucesso", description: toastMessage, variant: "default" });
+    toast({ title: "Sucesso", description: toastMessage, variant: "default" }); // Alterado de "success" para "default"
   };
 
   const getStatusBadge = (status: string) => {

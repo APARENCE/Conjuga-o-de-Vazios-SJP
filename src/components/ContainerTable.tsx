@@ -208,12 +208,11 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                         containerId={container.id}
                         files={container.files || []}
                         onFilesChange={(files) => onContainerUpdate(container.id, files)}
-                        trigger={
-                          <Button variant="outline" size="icon" className="h-5 w-5 p-0">
-                            <span className="text-xs">{container.files?.length || 0}</span>
-                          </Button>
-                        }
-                      />
+                      >
+                        <Button variant="outline" size="icon" className="h-5 w-5 p-0">
+                          <span className="text-xs">{container.files?.length || 0}</span>
+                        </Button>
+                      </FileUploadDialog>
                     </TableCell>
                     <TableCell className="w-[45px] min-w-[45px]" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-0.5 justify-center">

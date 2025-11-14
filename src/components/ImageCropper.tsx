@@ -87,7 +87,8 @@ export function ImageCropper({ imageSrc, onCropComplete, onCancel }: ImageCroppe
     initialCrop.y = 10; 
     
     setCrop(initialCrop);
-    setCompletedCrop(initialCrop as PixelCrop);
+    // Usamos 'as any as PixelCrop' para forçar a tipagem, pois o ReactCrop garante que o objeto é válido para PixelCrop após a inicialização.
+    setCompletedCrop(initialCrop as any as PixelCrop); 
   }
 
   const handleCrop = async () => {

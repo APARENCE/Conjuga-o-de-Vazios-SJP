@@ -43,6 +43,7 @@ export interface Container {
   dataSaidaSJP: string;
   motoristaSaidaSJP: string;
   placaSaida: string;
+  depotDevolucao: string; // Adicionado para resolver erros de tipagem
 
   // Campos de compatibilidade/cálculo (mantidos)
   diasRestantes: number | string; // Mantido para compatibilidade com a lógica de alerta (será mapeado de prazoDias)

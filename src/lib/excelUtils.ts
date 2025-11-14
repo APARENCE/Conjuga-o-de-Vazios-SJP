@@ -180,17 +180,20 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
             // Mapeamento por índice
             CONTAINER_KEYS_ORDER.forEach((key, colIndex) => {
               let value = row[colIndex] ?? ""; 
+              
+              // Usamos 'key as keyof Container' para garantir que o TS saiba que a chave é válida
+              const containerKey = key as keyof Container;
 
               if (['tara', 'mgw', 'freeTimeArmador', 'prazoDias'].includes(key)) {
                 // Trata valores numéricos
                 const numericValue = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : Number(value);
-                partialContainer[key] = isNaN(numericValue) ? 0 : numericValue;
+                (partialContainer as any)[containerKey] = isNaN(numericValue) ? 0 : numericValue;
               } else if (DATE_KEYS.includes(key)) {
                 // Trata campos de data
-                partialContainer[key] = excelDateToJSDate(value);
+                (partialContainer as any)[containerKey] = excelDateToJSDate(value);
               } else {
                 // Trata todos os outros campos como string
-                partialContainer[key] = String(value).trim();
+                (partialContainer as any)[containerKey] = String(value).trim();
               }
             });
             

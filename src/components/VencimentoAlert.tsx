@@ -38,17 +38,25 @@ export function VencimentoAlert({ containers, onFilterChange, currentFilter }: V
   }
 
   const isCritical = vencidos > 0;
-  const variant = isCritical ? "destructive" : "warning";
+  
+  // Alert só suporta 'default' ou 'destructive'. Usamos 'destructive' para crítico e 'default' para aviso.
+  const alertVariant = isCritical ? "destructive" : "default"; 
+  
   const Icon = isCritical ? XCircle : AlertTriangle;
   const title = isCritical ? "ALERTA CRÍTICO: Containers Vencidos" : "AVISO: Containers Próximos do Vencimento";
   const description = isCritical 
     ? `Você tem ${vencidos} container(es) com Free Time expirado (0 dias restantes). Ação imediata é necessária.`
     : `Você tem ${proximos} container(es) com 1 a 3 dias restantes de Free Time. Planeje a devolução.`;
 
+  // Classes customizadas para o alerta de warning (amarelo)
+  const customClasses = !isCritical 
+    ? "border-warning text-warning-foreground bg-warning/10 [&>svg]:text-warning-foreground" 
+    : "";
+
   return (
-    <Alert variant={variant} className="p-3 mb-4 border-l-4">
+    <Alert variant={alertVariant} className={cn("p-3 mb-4 border-l-4", customClasses)}>
       <div className="flex items-start gap-3">
-        <Icon className={cn("h-5 w-5 mt-0.5 shrink-0", isCritical ? "text-destructive-foreground" : "text-warning-foreground")} />
+        <Icon className={cn("h-5 w-5 mt-0.5 shrink-0", isCritical ? "text-destructive-foreground" : "text-warning")} />
         <div className="flex-1">
           <AlertTitle className="text-sm font-bold">{title}</AlertTitle>
           <AlertDescription className="text-xs mt-1">

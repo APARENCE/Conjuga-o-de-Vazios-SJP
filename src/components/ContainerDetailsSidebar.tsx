@@ -7,7 +7,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { Package, Truck, Calendar, Clock, FileText } from "lucide-react";
+import { Package, Truck, Calendar, Clock, FileText, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileUploadDialog } from "./FileUploadDialog";
 import { ContainerFile } from "@/types/container";
@@ -123,7 +123,11 @@ export function ContainerDetailsSidebar({ container, onClose, onContainerUpdate 
                 containerId={container.id}
                 files={container.files || []}
                 onFilesChange={(files) => onContainerUpdate(container.id, files)}
-            />
+            >
+                <Button variant="outline" size="sm" className="w-full h-8 gap-2">
+                    <Upload className="h-4 w-4" /> Gerenciar Arquivos ({container.files?.length || 0})
+                </Button>
+            </FileUploadDialog>
           </div>
           
           <Separator />
