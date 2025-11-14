@@ -58,7 +58,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
         toast({
             title: "OCR Concluído",
             description: "Nenhum container ou placa reconhecido. Por favor, insira manualmente.",
-            variant: "warning", // Agora 'warning' é suportado pelo use-toast.ts
+            variant: "default", // Alterado para 'default' para resolver o erro de tipagem
         });
     }
   }, [isProcessing, ocrContainer, ocrPlate, capturedImage, toast]);
