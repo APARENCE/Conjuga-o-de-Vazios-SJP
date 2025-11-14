@@ -39,28 +39,26 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
   // Efeito para preencher os campos após o OCR
   useEffect(() => {
     if (!isProcessing && ocrContainer) {
-      setContainerNumber(ocrContainer);
       toast({
         title: "OCR Concluído",
         description: `Container (${ocrContainer}) reconhecido e preenchido.`,
-        variant: "default", // Alterado de "success" para "default"
       });
+      setContainerNumber(ocrContainer);
     }
     if (!isProcessing && ocrPlate) {
-      setPlaca(ocrPlate);
       if (!ocrContainer) { // Se só reconheceu a placa, avisa
         toast({
             title: "OCR Concluído",
             description: `Placa (${ocrPlate}) reconhecida e preenchida.`,
-            variant: "default", // Usando default para aviso de placa
         });
       }
+      setPlaca(ocrPlate);
     }
     if (!isProcessing && capturedImage && !ocrContainer && !ocrPlate) {
         toast({
             title: "OCR Concluído",
             description: "Nenhum container ou placa reconhecido. Por favor, insira manualmente.",
-            variant: "default", // Usando default para evitar erro de compilação
+            variant: "warning", // Agora 'warning' é suportado pelo use-toast.ts
         });
     }
   }, [isProcessing, ocrContainer, ocrPlate, capturedImage, toast]);
@@ -188,7 +186,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
     setMotorista("");
     setCapturedImage(null);
     
-    toast({ title: "Sucesso", description: toastMessage, variant: "default" }); // Alterado de "success" para "default"
+    toast({ title: "Sucesso", description: toastMessage, variant: "default" });
   };
 
   const getStatusBadge = (status: string) => {

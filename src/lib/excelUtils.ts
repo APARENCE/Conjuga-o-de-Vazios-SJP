@@ -187,12 +187,15 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
               if (['tara', 'mgw', 'freeTimeArmador', 'prazoDias'].includes(key)) {
                 // Trata valores numéricos
                 const numericValue = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : Number(value);
+                // Cast para o tipo esperado (number)
                 (partialContainer as any)[containerKey] = isNaN(numericValue) ? 0 : numericValue;
               } else if (DATE_KEYS.includes(key)) {
                 // Trata campos de data
+                // Cast para o tipo esperado (string)
                 (partialContainer as any)[containerKey] = excelDateToJSDate(value);
               } else {
                 // Trata todos os outros campos como string
+                // Cast para o tipo esperado (string)
                 (partialContainer as any)[containerKey] = String(value).trim();
               }
             });

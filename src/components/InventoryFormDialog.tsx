@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { InventoryItem } from "@/types/inventory";
+import { ManualInventoryItem } from "@/types/manualInventory";
 import {
   Dialog,
   DialogContent,
@@ -24,22 +24,32 @@ import {
 } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
+const STATUS_OPTIONS = ['Em Uso', 'Aguardando Devolução', 'Devolvido (RIC OK)', 'Outro'] as const;
+
 const InventorySchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   sku: z.string().min(1, "SKU é obrigatório"),
   quantity: z.number().min(0, "Quantidade não pode ser negativa"),
   location: z.string().min(1, "Localização é obrigatória"),
-  status: z.enum(['Em Estoque', 'Aguardando Devolução', 'RIC OK', 'Outro']),
-  associatedContainer: z.string().optional(), // Novo campo
+  status: z.enum(STATUS_OPTIONS), // Usando os status definidos
+  associatedContainer: z.string().optional(),
 });
 
 type InventoryFormData = z.infer<typeof InventorySchema>;
 
 interface InventoryFormDialogProps {
-  item?: InventoryItem;
+  item?: ManualInventoryItem; // Usando ManualInventoryItem
   onSave: (data: InventoryFormData) => void;
   trigger?: React.ReactNode;
 }
+
+// Função auxiliar para garantir que o status seja um dos valores válidos do enum
+const getValidStatus = (status: string | undefined): InventoryFormData['status'] => {
+    if (status && STATUS_OPTIONS.includes(status as any)) {
+        return status as InventoryFormData['status'];
+    }
+    return 'Em Uso';
+};
 
 export function InventoryFormDialog({ item, onSave, trigger }: InventoryFormDialogProps) {
   const [open, setOpen] = useState(false);
@@ -51,8 +61,8 @@ export function InventoryFormDialog({ item, onSave, trigger }: InventoryFormDial
       sku: item?.sku || "",
       quantity: item?.quantity || 0,
       location: item?.location || "",
-      status: (item?.status as InventoryFormData['status']) || "Em Estoque",
-      associatedContainer: item?.associatedContainer || "", // Novo default
+      status: getValidStatus(item?.status), // Usando função de validação
+      associatedContainer: item?.associatedContainer || "",
     },
   });
 
@@ -63,8 +73,8 @@ export function InventoryFormDialog({ item, onSave, trigger }: InventoryFormDial
         sku: item.sku,
         quantity: item.quantity,
         location: item.location,
-        status: (item.status as InventoryFormData['status']) || "Em Estoque",
-        associatedContainer: item.associatedContainer || "", // Novo reset
+        status: getValidStatus(item.status), // Usando função de validação
+        associatedContainer: item.associatedContainer || "",
       });
     } else {
       form.reset({
@@ -72,7 +82,7 @@ export function InventoryFormDialog({ item, onSave, trigger }: InventoryFormDial
         sku: "",
         quantity: 0,
         location: "",
-        status: "Em Estoque",
+        status: "Em Uso",
         associatedContainer: "",
       });
     }
@@ -171,9 +181,9 @@ export function InventoryFormDialog({ item, onSave, trigger }: InventoryFormDial
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Em Estoque">Em Estoque</SelectItem>
+                      <SelectItem value="Em Uso">Em Uso</SelectItem>
                       <SelectItem value="Aguardando Devolução">Aguardando Devolução</SelectItem>
-                      <SelectItem value="RIC OK">RIC OK (Devolvido)</SelectItem>
+                      <SelectItem value="Devolvido (RIC OK)">RIC OK (Devolvido)</SelectItem>
                       <SelectItem value="Outro">Outro</SelectItem>
                     </SelectContent>
                   </Select>

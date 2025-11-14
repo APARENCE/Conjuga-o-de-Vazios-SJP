@@ -19,6 +19,7 @@ interface InventoryFiltersProps {
   setStatusFilter: (status: InventoryItem['status'] | 'all') => void;
 }
 
+// Corrigido: itemType agora inclui 'Troca'
 const itemTypes: InventoryItem['itemType'][] = ['Troca', 'Baixa Pátio', 'Devolução'];
 const statuses: InventoryItem['status'][] = ['Em Uso', 'Aguardando Devolução', 'Devolvido (RIC OK)'];
 

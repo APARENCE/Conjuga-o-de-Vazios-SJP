@@ -7,11 +7,4 @@ export interface InventoryItem {
   status: 'Em Uso' | 'Aguardando Devolução' | 'Devolvido (RIC OK)' | string;
   details: string; // Detalhes do item (ex: Container Troca, Baixa Pátio)
   lastUpdated: string;
-  
-  // Campos adicionados para compatibilidade com InventoryFormDialog
-  name?: string;
-  sku?: string;
-  quantity?: number;
-  location?: string;
-  associatedContainer?: string;
 }
