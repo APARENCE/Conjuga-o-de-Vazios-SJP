@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactCrop, { Crop, centerCrop, makeAspectCrop, PixelCrop } from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
+import 'react-image-crop/dist/index.css'; // Caminho corrigido
 import { Button } from '@/components/ui/button';
 import { Crop as CropIcon, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
