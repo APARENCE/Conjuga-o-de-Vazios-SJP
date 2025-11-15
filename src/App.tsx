@@ -19,7 +19,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFileOperation } from "@/hooks/use-file-operation";
-import { useContainers } from "@/hooks/use-containers"; // Importando o hook
+import { useContainers } from "@/hooks/use-containers";
 
 const queryClient = new QueryClient();
 
@@ -28,15 +28,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { isOpen, setIsOpen } = useSidebar();
   const isMobile = useIsMobile();
   
-  // Largura da sidebar é 160px (w-40) = 10rem
-
-  // Definindo o SidebarTrigger localmente para controle total
   const CustomSidebarTrigger = () => {
-    // O botão de toggle dentro da sidebar (AppSidebar.tsx) lida com o estado aberto/fechado em desktop.
-    // Este trigger é para:
-    // 1. Mobile (sempre visível para abrir/fechar o menu lateral)
-    // 2. Desktop, quando a sidebar está oculta (para reabri-la)
-    
     if (isMobile || !isOpen) {
       return (
         <Button 
@@ -44,7 +36,6 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
           size="icon" 
           className={cn(
             "h-8 w-8",
-            // Em desktop, só mostramos se a sidebar estiver fechada
             !isMobile && isOpen && "hidden" 
           )}
           onClick={() => setIsOpen(!isOpen)}
@@ -57,21 +48,16 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    // O contêiner principal deve ser flexível para acomodar a sidebar fixa e o conteúdo
     <div className="min-h-screen flex w-full bg-background overflow-x-hidden">
-      {/* Conteúdo Principal (Header + Main) */}
       <div 
         className={cn(
           "flex-1 flex flex-col h-screen transition-all duration-300",
-          // Em desktop (md+), a margem esquerda é controlada por 'isOpen'.
           !isMobile && (isOpen ? `md:ml-40` : "md:ml-0"),
         )}
       >
         <header className="h-12 border-b border-border bg-card flex items-center px-3 shrink-0">
-          {/* Usando o trigger customizado */}
           <CustomSidebarTrigger />
         </header>
-        {/* A rolagem deve estar no main, que é flex-1 */}
         <main className="flex-1 py-2 px-0 overflow-y-auto">
           {children}
         </main>
@@ -87,31 +73,29 @@ const AppContent = () => {
     isLoading, 
     addContainer, 
     updateContainer, 
-    deleteContainer 
+    deleteContainer,
+    addMultipleContainers // Importando a nova função
   } = useContainers();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // --- Handlers de Importação/Exportação com Feedback Visual ---
+  // --- Handlers de Importação/Exportação com a nova lógica ---
 
-  // A importação agora usa o addContainer para inserir no DB
   const handleImportFile = async (file: File) => {
     const data = await parseExcelFile(file);
-    
-    // Inserir todos os containers no banco de dados
-    for (const containerData of data) {
-        // O ID gerado pelo ExcelUtils é ignorado, o DB gera um novo UUID
-        await addContainer(containerData); 
+    if (data && data.length > 0) {
+      await addMultipleContainers(data); // Usando a nova função de importação em massa
+    } else {
+      throw new Error("Nenhum dado de container válido foi encontrado no arquivo.");
     }
-    // O invalidateQueries no hook garante que a lista seja atualizada
   };
 
   const { execute: executeImport, isLoading: isImporting } = useFileOperation(
-    async (file: File) => handleImportFile(file),
+    handleImportFile,
     {
-      loadingMessage: "Importando planilha... Por favor, aguarde.",
+      loadingMessage: "Importando planilha... Isso pode levar alguns segundos.",
       successMessage: "Importação concluída com sucesso!",
-      errorMessage: "Erro na importação. Verifique o formato do arquivo.",
+      errorMessage: "Erro na importação. Verifique o formato do arquivo e os dados.",
     }
   );
 
@@ -139,12 +123,7 @@ const AppContent = () => {
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    try {
-      await executeImport(file);
-    } catch (error) {
-      // Erro já tratado
-    }
+    await executeImport(file);
   };
 
   const handleExport = async () => {
@@ -161,9 +140,8 @@ const AppContent = () => {
     }
   };
 
-  // --- Handlers de Container (Adaptados para Mutação) ---
+  // --- Handlers de Container (sem alterações) ---
 
-  // Handler para atualização de arquivos (usado na Sidebar)
   const handleContainerUpdateFiles = async (containerId: string, files: ContainerFile[]) => {
     await updateContainer({ id: containerId, data: { files } });
     toast({
@@ -172,30 +150,23 @@ const AppContent = () => {
     });
   };
   
-  // Handler unificado para edição/atualização de dados (usado pela Portaria e ContainerFormDialog)
   const handleContainerEdit = async (id: string, containerData: Partial<Container>) => {
     await updateContainer({ id, data: containerData });
-    // O toast de sucesso é disparado pelo componente chamador ou pelo hook, dependendo do contexto.
   };
 
   const handleContainerAdd = async (containerData: Partial<Container>) => {
-    // O hook useContainers já lida com a adição e o toast de sucesso
     await addContainer(containerData);
   };
 
   const handleContainerDelete = async (id: string) => {
-    // O hook useContainers já lida com a exclusão e o toast de sucesso
     await deleteContainer(id);
   };
   
-  // Handler para Portaria: Atualiza dados e adiciona o novo arquivo (foto)
   const handlePortariaUpdate = async (id: string, data: Partial<Container>) => {
-    // O Portaria.tsx já deve ter mesclado o novo arquivo no array 'files' dentro de 'data'
     await updateContainer({ id, data });
   };
 
   if (isLoading) {
-    // Adicionar um estado de carregamento inicial
     return (
         <div className="flex items-center justify-center min-h-screen">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />

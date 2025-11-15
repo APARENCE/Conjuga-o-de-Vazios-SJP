@@ -78,7 +78,7 @@ export function useContainers() {
     staleTime: 1000 * 60 * 5, // 5 minutos
   });
 
-  // 2. Mutation para adicionar um novo container
+  // 2. Mutation para adicionar um novo container (individual)
   const addContainerMutation = useMutation({
     mutationFn: async (containerData: Partial<Container>) => {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -88,13 +88,11 @@ export function useContainers() {
         throw new Error("Usuário não autenticado.");
       }
       
-      // Mapeia os dados para o formato do DB, garantindo que user_id e campos obrigatórios estejam presentes
       const dataToInsert = {
         ...containerData,
         user_id: userId,
         container: containerData.container || "N/A",
         armador: containerData.armador || "N/A",
-        // Garante que diasRestantes seja mapeado de prazoDias
         diasRestantes: containerData.prazoDias || 0, 
       };
 
@@ -135,7 +133,6 @@ export function useContainers() {
         throw new Error("Usuário não autenticado.");
       }
       
-      // Garante que diasRestantes seja mapeado de prazoDias
       const dataToUpdate = {
         ...data,
         diasRestantes: data.prazoDias || data.diasRestantes,
@@ -156,7 +153,6 @@ export function useContainers() {
     },
     onSuccess: (updatedContainer) => {
       queryClient.invalidateQueries({ queryKey: CONTAINER_QUERY_KEY });
-      // O toast de sucesso será gerenciado pelo componente chamador (Portaria ou Containers)
     },
     onError: (error) => {
       toast({
@@ -203,6 +199,51 @@ export function useContainers() {
     },
   });
 
+  // 5. NOVA Mutation para adicionar múltiplos containers (importação)
+  const addMultipleContainersMutation = useMutation({
+    mutationFn: async (containersData: Partial<Container>[]) => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user.id;
+
+      if (!userId) {
+        throw new Error("Usuário não autenticado.");
+      }
+
+      const validContainersData = containersData.filter(c => c.container && c.container.trim() !== "");
+
+      if (validContainersData.length === 0) {
+        throw new Error("Nenhum container válido encontrado no arquivo para importar.");
+      }
+
+      const dataToInsert = validContainersData.map(containerData => ({
+        ...containerData,
+        user_id: userId,
+        container: containerData.container || "N/A",
+        armador: containerData.armador || "N/A",
+        diasRestantes: containerData.prazoDias || 0,
+        id: undefined, // Garante que o Supabase gere o ID
+      }));
+
+      const { data, error } = await supabase
+        .from("containers")
+        .insert(dataToInsert)
+        .select();
+
+      if (error) {
+        console.error("Supabase insert error:", error);
+        throw new Error(`Falha ao inserir dados: ${error.message}. Verifique se as colunas do arquivo correspondem ao formato esperado.`);
+      }
+      return data.map(mapDbToContainer);
+    },
+    onSuccess: (newContainers) => {
+      queryClient.invalidateQueries({ queryKey: CONTAINER_QUERY_KEY });
+    },
+    onError: (error) => {
+      // O toast de erro já é tratado pelo hook useFileOperation
+      console.error("Erro na mutação de múltiplos containers:", error);
+    },
+  });
+
   return {
     containers: containersQuery.data || [],
     isLoading: containersQuery.isLoading,
@@ -211,5 +252,6 @@ export function useContainers() {
     addContainer: addContainerMutation.mutateAsync,
     updateContainer: updateContainerMutation.mutateAsync,
     deleteContainer: deleteContainerMutation.mutateAsync,
+    addMultipleContainers: addMultipleContainersMutation.mutateAsync, // Exportando a nova função
   };
 }
