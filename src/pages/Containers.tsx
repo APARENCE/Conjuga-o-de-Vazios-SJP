@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Container, ContainerFile } from "@/types/container";
 import { ContainerTable } from "@/components/ContainerTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, TrendingUp, AlertCircle, CheckCircle, Search, Filter, Grid, List, Download, Eye } from "lucide-react";
+import { Package, TrendingUp, AlertCircle, CheckCircle, Search, Filter, Grid, List, Download, Eye, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,13 +21,14 @@ import { cn } from "@/lib/utils";
 import { VencimentoAlert } from "@/components/VencimentoAlert";
 import { ContainerDetailsSidebar } from "@/components/ContainerDetailsSidebar";
 import { formatDateToBR } from "@/lib/excelUtils"; // Importando a função de formatação
+import { toast } from "@/hooks/use-toast"; // Importando toast
 
 interface ContainersPageProps {
   containers: Container[];
-  onContainerUpdate: (containerId: string, files: ContainerFile[]) => void;
-  onContainerAdd: (container: Partial<Container>) => void;
-  onContainerEdit: (id: string, container: Partial<Container>) => void;
-  onContainerDelete: (id: string) => void;
+  onContainerUpdate: (containerId: string, files: ContainerFile[]) => Promise<void>; // Agora é assíncrono
+  onContainerAdd: (container: Partial<Container>) => Promise<void>; // Agora é assíncrono
+  onContainerEdit: (id: string, container: Partial<Container>) => Promise<void>; // Agora é assíncrono
+  onContainerDelete: (id: string) => Promise<void>; // Agora é assíncrono
 }
 
 export default function Containers({ 
@@ -104,20 +105,18 @@ export default function Containers({
         setSelectedContainer(uniqueContainer);
         setSearchTerm(""); // Limpa o campo de pesquisa após abrir a sidebar
       } else if (selectedContainer?.id !== uniqueContainer.id) {
-        // Se for um filtro que resultou em 1, mas não é a pesquisa exata do container, 
-        // ainda podemos abrir, mas a verificação exata é mais segura para evitar aberturas acidentais.
-        // Vamos manter a abertura se for o único resultado.
         setSelectedContainer(uniqueContainer);
         setSearchTerm(""); // Limpa o campo de pesquisa após abrir a sidebar
       }
     } else if (search && filteredContainers.length !== 1) {
-      // Se o usuário está digitando e o resultado não é único, ou se limpou a pesquisa, feche a sidebar
       setSelectedContainer(null);
     } else if (!search && selectedContainer) {
-      // Se a pesquisa foi limpa, mas a sidebar está aberta, mantenha-a aberta (o usuário pode ter clicado nela)
-      // Apenas feche se o container selecionado não estiver mais na lista filtrada (o que não deve acontecer se a pesquisa for limpa)
+      // Se a pesquisa foi limpa, mas a sidebar está aberta, precisamos garantir que o container ainda exista
+      if (!containers.find(c => c.id === selectedContainer.id)) {
+          setSelectedContainer(null);
+      }
     }
-  }, [searchTerm, filteredContainers, selectedContainer]);
+  }, [searchTerm, filteredContainers, selectedContainer, containers]);
 
 
   // NOVO CÁLCULO DE STATS: Baseado em filteredContainers
@@ -166,6 +165,30 @@ export default function Containers({
     return "text-success";
   };
 
+  const handleEdit = async (id: string, data: Partial<Container>) => {
+    try {
+        await onContainerEdit(id, data);
+        toast({
+            title: "Container atualizado!",
+            description: "Os dados do container foram salvos com sucesso.",
+        });
+    } catch (e) {
+        // O erro já é tratado no hook, mas podemos adicionar um fallback aqui se necessário
+    }
+  };
+  
+  const handleDelete = async (id: string) => {
+    try {
+        await onContainerDelete(id);
+        // Se o container excluído era o selecionado, feche a sidebar
+        if (selectedContainer?.id === id) {
+            setSelectedContainer(null);
+        }
+    } catch (e) {
+        // Erro já tratado
+    }
+  };
+
   const ContainerCard = ({ container }: { container: Container }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -192,7 +215,7 @@ export default function Containers({
           <div className="grid grid-cols-2 gap-1 text-xs">
             <div>
               <span className="text-muted-foreground">Data Entrada:</span>
-              <p className="font-medium">{container.dataEntrada || "-"}</p>
+              <p className="font-medium">{formatDateToBR(container.dataEntrada) || "-"}</p>
             </div>
             <div>
               <span className="text-muted-foreground">Placa:</span>
@@ -218,7 +241,7 @@ export default function Containers({
             </Button>
             <ContainerFormDialog
               container={container}
-              onSave={(data) => onContainerEdit(container.id, data)}
+              onSave={(data) => handleEdit(container.id, data)}
               trigger={
                 <Button variant="outline" size="sm" className="h-6 px-1">
                   <Filter className="h-3 w-3" />
@@ -232,9 +255,9 @@ export default function Containers({
   );
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full px-4">
       {/* Cabeçalho Fixo (Título, Filtros, KPIs) */}
-      <div className="sticky top-0 z-40 bg-background pb-2 border-b border-border/50 shadow-sm">
+      <div className="sticky top-0 z-40 bg-background pb-2 border-b border-border/50 shadow-sm -mx-4 px-4">
         <div className="space-y-2">
           {/* Header */}
           <div className="flex flex-col gap-2">
@@ -260,11 +283,9 @@ export default function Containers({
               <Select 
                 value={statusFilter} 
                 onValueChange={(value) => {
-                    // Se o valor for um dos filtros de alerta, definimos o filtro de status
                     if (value === 'vencidos' || value === 'proximos') {
                         setStatusFilter(value);
                     } else {
-                        // Caso contrário, usamos o valor padrão do Select
                         setStatusFilter(value);
                     }
                 }}
@@ -440,8 +461,8 @@ export default function Containers({
               <ContainerTable 
                 containers={filteredContainers} 
                 onContainerUpdate={onContainerUpdate}
-                onContainerEdit={onContainerEdit}
-                onContainerDelete={onContainerDelete}
+                onContainerEdit={handleEdit}
+                onContainerDelete={handleDelete}
                 onContainerSelect={setSelectedContainer} // Adicionando o handler de seleção
               />
             </motion.div>
@@ -473,8 +494,8 @@ export default function Containers({
       <ContainerDetailsSidebar
         container={selectedContainer}
         onClose={() => setSelectedContainer(null)}
-        onContainerUpdate={(id, files) => {
-            onContainerUpdate(id, files);
+        onContainerUpdate={async (id, files) => {
+            await onContainerUpdate(id, files);
             // Atualiza o estado local para refletir os novos arquivos na sidebar
             if (selectedContainer && selectedContainer.id === id) {
                 setSelectedContainer(prev => prev ? { ...prev, files } : null);

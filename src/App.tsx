@@ -9,16 +9,17 @@ import { AppSidebar } from "@/components/AppSidebar";
 import Containers from "./pages/Containers";
 import Analise from "./pages/Analise";
 import Inventario from "./pages/Inventario";
-import Portaria from "./pages/Portaria"; // Importando a nova página
+import Portaria from "./pages/Portaria";
 import NotFound from "./pages/NotFound";
 import { Container, ContainerFile } from "@/types/container";
 import { parseExcelFile, exportToExcel } from "@/lib/excelUtils";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu } from "lucide-react"; // Importando o ícone Menu
-import { Button } from "@/components/ui/button"; // Importando Button
-import { useFileOperation } from "@/hooks/use-file-operation"; // Importando o novo hook
+import { Menu, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useFileOperation } from "@/hooks/use-file-operation";
+import { useContainers } from "@/hooks/use-containers"; // Importando o hook
 
 const queryClient = new QueryClient();
 
@@ -80,16 +81,29 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
 };
 
 
-const App = () => {
-  const [containers, setContainers] = useState<Container[]>([]);
+const AppContent = () => {
+  const { 
+    containers, 
+    isLoading, 
+    addContainer, 
+    updateContainer, 
+    deleteContainer 
+  } = useContainers();
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // --- Handlers de Importação/Exportação com Feedback Visual ---
 
+  // A importação agora usa o addContainer para inserir no DB
   const handleImportFile = async (file: File) => {
     const data = await parseExcelFile(file);
-    setContainers(data);
-    // O toast de sucesso é disparado pelo useFileOperation
+    
+    // Inserir todos os containers no banco de dados
+    for (const containerData of data) {
+        // O ID gerado pelo ExcelUtils é ignorado, o DB gera um novo UUID
+        await addContainer(containerData); 
+    }
+    // O invalidateQueries no hook garante que a lista seja atualizada
   };
 
   const { execute: executeImport, isLoading: isImporting } = useFileOperation(
@@ -117,7 +131,6 @@ const App = () => {
 
   const handleImport = () => {
     if (fileInputRef.current) {
-      // Limpa o valor anterior para garantir que o onChange seja disparado mesmo se o mesmo arquivo for selecionado
       fileInputRef.current.value = ''; 
       fileInputRef.current.click();
     }
@@ -130,7 +143,7 @@ const App = () => {
     try {
       await executeImport(file);
     } catch (error) {
-      // O erro já foi tratado e exibido pelo useFileOperation
+      // Erro já tratado
     }
   };
 
@@ -138,7 +151,6 @@ const App = () => {
     try {
       await executeExport();
     } catch (error) {
-      // Se o erro for "Nenhum dado para exportar", exibimos um toast diferente
       if (error instanceof Error && error.message.includes("Nenhum dado")) {
         toast({
           title: "Nenhum dado para exportar",
@@ -146,166 +158,120 @@ const App = () => {
           variant: "destructive",
         });
       }
-      // Outros erros já são tratados pelo useFileOperation
     }
   };
 
-  // --- Handlers de Container (Mantidos) ---
+  // --- Handlers de Container (Adaptados para Mutação) ---
 
-  const handleContainerUpdate = (containerId: string, files: ContainerFile[]) => {
-    setContainers((prev) =>
-      prev.map((container) =>
-        container.id === containerId ? { ...container, files } : container
-      )
-    );
+  // Handler para atualização de arquivos (usado na Sidebar)
+  const handleContainerUpdateFiles = async (containerId: string, files: ContainerFile[]) => {
+    await updateContainer({ id: containerId, data: { files } });
+    toast({
+        title: "Arquivos atualizados!",
+        description: "Os anexos do container foram salvos com sucesso.",
+    });
   };
   
   // Handler unificado para edição/atualização de dados (usado pela Portaria e ContainerFormDialog)
-  const handleContainerEdit = (id: string, containerData: Partial<Container>) => {
-    setContainers((prev) =>
-      prev.map((container) =>
-        container.id === id ? { ...container, ...containerData } : container
-      )
-    );
-    // A Portaria já exibe o toast, mas o ContainerFormDialog não.
-    if (!containerData.status) { // Se não for uma atualização da Portaria (que define status)
-        toast({
-            title: "Container atualizado!",
-            description: "Os dados do container foram salvos com sucesso.",
-        });
-    }
+  const handleContainerEdit = async (id: string, containerData: Partial<Container>) => {
+    await updateContainer({ id, data: containerData });
+    // O toast de sucesso é disparado pelo componente chamador ou pelo hook, dependendo do contexto.
   };
 
-  const handleContainerAdd = (containerData: Partial<Container>) => {
-    const newContainer: Container = {
-      id: `container-${Date.now()}`,
-      container: containerData.container || "",
-      armador: containerData.armador || "",
-      operador: containerData.operador || "",
-      motoristaEntrada: containerData.motoristaEntrada || "",
-      placa: containerData.placa || "",
-      dataEntrada: containerData.dataEntrada || "",
-      tara: containerData.tara || 0,
-      mgw: containerData.mgw || 0,
-      tipo: containerData.tipo || "",
-      padrao: containerData.padrao || "",
-      statusVazioCheio: containerData.statusVazioCheio || "",
-      dataPorto: containerData.dataPorto || "",
-      freeTimeArmador: containerData.freeTimeArmador || 0,
-      demurrage: containerData.demurrage || "",
-      prazoDias: containerData.prazoDias || 0,
-      clienteEntrada: containerData.clienteEntrada || "",
-      transportadora: containerData.transportadora || "",
-      estoque: containerData.estoque || "",
-      transportadoraSaida: containerData.transportadoraSaida || "",
-      statusEntregaMinuta: containerData.statusEntregaMinuta || "",
-      statusMinuta: containerData.statusMinuta || "",
-      bookingAtrelado: containerData.bookingAtrelado || "",
-      lacre: containerData.lacre || "",
-      clienteSaidaDestino: containerData.clienteSaidaDestino || "",
-      atrelado: containerData.atrelado || "",
-      operadorSaida: containerData.operadorSaida || "",
-      dataEstufagem: containerData.dataEstufagem || "",
-      dataSaidaSJP: containerData.dataSaidaSJP || "",
-      motoristaSaidaSJP: containerData.motoristaSaidaSJP || "",
-      placaSaida: containerData.placaSaida || "",
-      depotDevolucao: containerData.depotDevolucao || "",
-      diasRestantes: containerData.diasRestantes || 0,
-      status: containerData.status || "",
-      files: containerData.files || [], // Inclui arquivos se houver
-    };
-    setContainers((prev) => [...prev, newContainer]);
-    toast({
-      title: "Container adicionado!",
-      description: "O container foi adicionado com sucesso.",
-    });
+  const handleContainerAdd = async (containerData: Partial<Container>) => {
+    // O hook useContainers já lida com a adição e o toast de sucesso
+    await addContainer(containerData);
   };
 
-  const handleContainerDelete = (id: string) => {
-    setContainers((prev) => prev.filter((container) => container.id !== id));
-    toast({
-      title: "Container excluído!",
-      description: "O container foi excluído com sucesso.",
-    });
+  const handleContainerDelete = async (id: string) => {
+    // O hook useContainers já lida com a exclusão e o toast de sucesso
+    await deleteContainer(id);
   };
   
   // Handler para Portaria: Atualiza dados e adiciona o novo arquivo (foto)
-  const handlePortariaUpdate = (id: string, data: Partial<Container>) => {
-    setContainers((prev) =>
-      prev.map((container) => {
-        if (container.id === id) {
-          // Mescla os dados. Se 'files' estiver presente em 'data', ele deve ser o array COMPLETO
-          // (o componente Portaria.tsx já deve ter feito a mesclagem do novo arquivo).
-          return { ...container, ...data };
-        }
-        return container;
-      })
-    );
+  const handlePortariaUpdate = async (id: string, data: Partial<Container>) => {
+    // O Portaria.tsx já deve ter mesclado o novo arquivo no array 'files' dentro de 'data'
+    await updateContainer({ id, data });
   };
 
+  if (isLoading) {
+    // Adicionar um estado de carregamento inicial
+    return (
+        <div className="flex items-center justify-center min-h-screen">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="ml-2 text-lg text-primary">Carregando dados...</p>
+        </div>
+    );
+  }
+
   return (
+    <>
+      <AppSidebar 
+        onImport={handleImport} 
+        onExport={handleExport}
+        onContainerAdd={handleContainerAdd}
+        isImporting={isImporting}
+        isExporting={isExporting}
+      />
+      <AppLayout>
+        <Routes>
+          <Route 
+            path="/" 
+            element={
+              <Containers 
+                containers={containers} 
+                onContainerUpdate={handleContainerUpdateFiles}
+                onContainerAdd={handleContainerAdd}
+                onContainerEdit={handleContainerEdit}
+                onContainerDelete={handleContainerDelete}
+              />
+            } 
+          />
+          <Route path="/analise" element={<Analise containers={containers} />} />
+          <Route 
+            path="/inventario" 
+            element={
+              <Inventario 
+                containers={containers} 
+              />
+            } 
+          />
+          <Route 
+            path="/portaria" 
+            element={
+              <Portaria 
+                containers={containers} 
+                onContainerUpdate={handlePortariaUpdate}
+                onContainerAdd={handleContainerAdd}
+              />
+            } 
+          />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AppLayout>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".xlsx,.xls"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+    </>
+  );
+};
+
+const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
           <SidebarProvider>
-            {/* Passando o estado de carregamento para desabilitar botões na sidebar */}
-            <AppSidebar 
-              onImport={handleImport} 
-              onExport={handleExport}
-              onContainerAdd={handleContainerAdd}
-              isImporting={isImporting}
-              isExporting={isExporting}
-            />
-            <AppLayout>
-              <Routes>
-                <Route 
-                  path="/" 
-                  element={
-                    <Containers 
-                      containers={containers} 
-                      onContainerUpdate={handleContainerUpdate}
-                      onContainerAdd={handleContainerAdd}
-                      onContainerEdit={handleContainerEdit}
-                      onContainerDelete={handleContainerDelete}
-                    />
-                  } 
-                />
-                <Route path="/analise" element={<Analise containers={containers} />} />
-                <Route 
-                  path="/inventario" 
-                  element={
-                    <Inventario 
-                      containers={containers} 
-                    />
-                  } 
-                />
-                <Route 
-                  path="/portaria" 
-                  element={
-                    <Portaria 
-                      containers={containers} 
-                      onContainerUpdate={handlePortariaUpdate}
-                      onContainerAdd={handleContainerAdd} // Passando o handler de adição para novos containers
-                    />
-                  } 
-                />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </AppLayout>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".xlsx,.xls"
-              className="hidden"
-              onChange={handleFileChange}
-            />
+            <AppContent />
           </SidebarProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
-  );
-};
+);
 
 export default App;

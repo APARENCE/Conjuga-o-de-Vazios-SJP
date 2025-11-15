@@ -13,8 +13,8 @@ import { cn } from "@/lib/utils";
 
 interface PortariaPageProps {
   containers: Container[];
-  onContainerUpdate: (id: string, data: Partial<Container>) => void;
-  onContainerAdd: (data: Partial<Container>) => void; // Adicionando handler para novos containers
+  onContainerUpdate: (id: string, data: Partial<Container>) => Promise<void>; // Agora é assíncrono
+  onContainerAdd: (data: Partial<Container>) => Promise<void>; // Agora é assíncrono
 }
 
 export default function Portaria({ containers, onContainerUpdate, onContainerAdd }: PortariaPageProps) {
@@ -23,6 +23,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
   const [motorista, setMotorista] = useState("");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [actionType, setActionType] = useState<'entrada' | 'baixa'>('entrada');
+  const [isSubmitting, setIsSubmitting] = useState(false); // Novo estado de submissão
   const { toast } = useToast();
   
   // Inicializa o processador OCR
@@ -58,7 +59,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
         toast({
             title: "OCR Concluído",
             description: "Nenhum container ou placa reconhecido. Por favor, insira manualmente.",
-            variant: "default", // Alterado para 'default' para resolver o erro de tipagem
+            variant: "default",
         });
     }
   }, [isProcessing, ocrContainer, ocrPlate, capturedImage, toast]);
@@ -80,15 +81,11 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
     await processImage(imageSrc);
   };
 
-  const handleAction = () => {
+  const handleAction = async () => {
     if (!searchNumber) {
       toast({ title: "Erro", description: "Insira o número do container.", variant: "destructive" });
       return;
     }
-    
-    // Revertendo a validação estrita de 11 caracteres.
-    // A validação de 11 caracteres é mantida apenas como feedback visual no input,
-    // mas não bloqueia a ação se o usuário corrigir manualmente.
     
     if (!capturedImage) {
       toast({ title: "Erro", description: "Capture a foto do container. A foto é obrigatória.", variant: "destructive" });
@@ -99,94 +96,99 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
         toast({ title: "Erro", description: "Placa e Motorista são obrigatórios para a Entrada.", variant: "destructive" });
         return;
     }
-
-    // Formata a data atual como DD/MM/AAAA
-    const now = new Date();
-    const dateOnly = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
     
-    const newFile = {
-        id: `photo-${Date.now()}`,
-        name: `${actionType}_${searchNumber}_${dateOnly.replace(/\//g, '-')}.jpg`,
-        type: 'image/jpeg',
-        size: 0, 
-        dataUrl: capturedImage,
-        uploadedAt: new Date().toISOString(),
-    };
+    setIsSubmitting(true);
 
-    let updateData: Partial<Container> = {};
-    let toastMessage = "";
-
-    if (actionType === 'entrada') {
-      updateData = {
-        container: searchNumber,
-        dataEntrada: dateOnly,
-        placa: placa.toUpperCase().trim(),
-        motoristaEntrada: motorista.trim(),
-        status: "Em Operação (Entrada)",
+    try {
+        // Formata a data atual como DD/MM/AAAA
+        const now = new Date();
+        const dateOnly = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
         
-        // Limpa campos de saída se for uma re-entrada
-        dataSaidaSJP: "",
-        placaSaida: "",
-        motoristaSaidaSJP: "",
-      };
-      toastMessage = `Entrada registrada para o container ${searchNumber}.`;
-      
-      if (existingContainer) {
-        // Container existe: Atualiza dados e adiciona a foto
-        const updatedFiles = [...(existingContainer.files || []), newFile];
-        onContainerUpdate(existingContainer.id, { 
-            ...updateData, 
-            files: updatedFiles 
-        });
-      } else {
-        // Container novo: Adiciona um novo container
-        onContainerAdd({
-            ...updateData,
-            armador: "N/A", // Valor padrão para campos obrigatórios
-            // Definindo defaults para os novos campos obrigatórios
-            operador: "", tara: 0, mgw: 0, tipo: "", padrao: "", statusVazioCheio: "", dataPorto: "", freeTimeArmador: 0,
-            demurrage: "", prazoDias: 0, clienteEntrada: "", transportadora: "", estoque: "", transportadoraSaida: "", statusEntregaMinuta: "", statusMinuta: "", bookingAtrelado: "",
-            lacre: "", clienteSaidaDestino: "", atrelado: "", operadorSaida: "", dataEstufagem: "", depotDevolucao: "",
-            diasRestantes: 0, // Mapeado de prazoDias
-            files: [newFile],
-        });
-        toastMessage = `Novo container ${searchNumber} registrado com sucesso.`;
-      }
+        const newFile = {
+            id: `photo-${Date.now()}`,
+            name: `${actionType}_${searchNumber}_${dateOnly.replace(/\//g, '-')}.jpg`,
+            type: 'image/jpeg',
+            size: 0, 
+            dataUrl: capturedImage,
+            uploadedAt: new Date().toISOString(),
+        };
 
-    } else { // 'baixa' (Saída SJP)
-      if (!existingContainer) {
-        toast({ title: "Erro", description: `Container ${searchNumber} não encontrado para baixa.`, variant: "destructive" });
-        return;
-      }
-      
-      updateData = {
-        dataSaidaSJP: dateOnly,
-        placaSaida: placa.toUpperCase().trim(),
-        motoristaSaidaSJP: motorista.trim(),
-        status: "Baixa Pátio SJP",
+        let updateData: Partial<Container> = {};
+        let toastMessage = "";
+
+        if (actionType === 'entrada') {
+          updateData = {
+            container: searchNumber,
+            dataEntrada: dateOnly,
+            placa: placa.toUpperCase().trim(),
+            motoristaEntrada: motorista.trim(),
+            status: "Em Operação (Entrada)",
+            
+            // Limpa campos de saída se for uma re-entrada
+            dataSaidaSJP: "",
+            placaSaida: "",
+            motoristaSaidaSJP: "",
+          };
+          toastMessage = `Entrada registrada para o container ${searchNumber}.`;
+          
+          if (existingContainer) {
+            // Container existe: Atualiza dados e adiciona a foto
+            const updatedFiles = [...(existingContainer.files || []), newFile];
+            await onContainerUpdate(existingContainer.id, { 
+                ...updateData, 
+                files: updatedFiles 
+            });
+          } else {
+            // Container novo: Adiciona um novo container
+            await onContainerAdd({
+                ...updateData,
+                armador: "N/A", // Valor padrão para campos obrigatórios
+                // Definindo defaults para os novos campos obrigatórios
+                operador: "", tara: 0, mgw: 0, tipo: "", padrao: "", statusVazioCheio: "", dataPorto: "", freeTimeArmador: 0,
+                demurrage: "", prazoDias: 0, clienteEntrada: "", transportadora: "", estoque: "", transportadoraSaida: "", statusEntregaMinuta: "", statusMinuta: "", bookingAtrelado: "",
+                lacre: "", clienteSaidaDestino: "", atrelado: "", operadorSaida: "", dataEstufagem: "", depotDevolucao: "",
+                diasRestantes: 0, // Mapeado de prazoDias
+                files: [newFile],
+            });
+            toastMessage = `Novo container ${searchNumber} registrado com sucesso.`;
+          }
+
+        } else { // 'baixa' (Saída SJP)
+          if (!existingContainer) {
+            toast({ title: "Erro", description: `Container ${searchNumber} não encontrado para baixa.`, variant: "destructive" });
+            setIsSubmitting(false);
+            return;
+          }
+          
+          updateData = {
+            dataSaidaSJP: dateOnly,
+            placaSaida: placa.toUpperCase().trim(),
+            motoristaSaidaSJP: motorista.trim(),
+            status: "Baixa Pátio SJP",
+          };
+          toastMessage = `Baixa registrada para o container ${searchNumber}.`;
+          
+          // Container existe: Atualiza dados e adiciona a foto
+          const updatedFiles = [...(existingContainer.files || []), newFile];
+          await onContainerUpdate(existingContainer.id, { 
+              ...updateData, 
+              files: updatedFiles 
+          });
+        }
+
+        // Limpa o estado
+        setContainerNumber("");
+        setPlaca("");
+        setMotorista("");
+        setCapturedImage(null);
         
-        // Limpa campos de entrada se for uma baixa (embora não seja estritamente necessário, é bom para consistência)
-        // dataEntrada: existingContainer.dataEntrada, // Mantém a data de entrada original
-        // placa: existingContainer.placa,
-        // motoristaEntrada: existingContainer.motoristaEntrada,
-      };
-      toastMessage = `Baixa registrada para o container ${searchNumber}.`;
-      
-      // Container existe: Atualiza dados e adiciona a foto
-      const updatedFiles = [...(existingContainer.files || []), newFile];
-      onContainerUpdate(existingContainer.id, { 
-          ...updateData, 
-          files: updatedFiles 
-      });
+        toast({ title: "Sucesso", description: toastMessage, variant: "default" });
+    } catch (error) {
+        console.error("Erro ao registrar ação:", error);
+        toast({ title: "Erro de Servidor", description: "Falha ao salvar dados. Verifique a conexão.", variant: "destructive" });
+    } finally {
+        setIsSubmitting(false);
     }
-
-    // Limpa o estado
-    setContainerNumber("");
-    setPlaca("");
-    setMotorista("");
-    setCapturedImage(null);
-    
-    toast({ title: "Sucesso", description: toastMessage, variant: "default" });
   };
 
   const getStatusBadge = (status: string) => {
@@ -204,10 +206,14 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
   // 1. Não houver número de container (apenas verifica se está vazio)
   // 2. Não houver imagem capturada
   // 3. O OCR estiver processando
-  // 4. For uma baixa E o container não existir
-  const isContainerValid = searchNumber.length > 0; // Apenas verifica se não está vazio
+  // 4. Estiver submetendo
+  // 5. For uma baixa E o container não existir
+  // 6. For uma entrada E não tiver placa/motorista
+  const isContainerValid = searchNumber.length > 0;
   
-  const isActionDisabled = !isContainerValid || !capturedImage || isProcessing || (actionType === 'baixa' && !existingContainer);
+  const isActionDisabled = !isContainerValid || !capturedImage || isProcessing || isSubmitting || 
+                           (actionType === 'baixa' && !existingContainer) ||
+                           (actionType === 'entrada' && (!placa || !motorista));
 
   return (
     <div className="space-y-6 p-4">
@@ -252,7 +258,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                     // Mantendo o feedback visual de 11 caracteres, mas não bloqueando a ação
                     searchNumber.length > 0 && searchNumber.length !== 11 && "border-warning focus-visible:ring-warning" 
                   )}
-                  disabled={isProcessing}
+                  disabled={isProcessing || isSubmitting}
                 />
                 {isProcessing && (
                     <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-primary" />
@@ -271,7 +277,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                       value={placa}
                       onChange={(e) => setPlaca(e.target.value)}
                       className={cn("pl-10 text-sm uppercase h-9", isProcessing && "opacity-50")}
-                      disabled={isProcessing}
+                      disabled={isProcessing || isSubmitting}
                     />
                 </div>
                 <div className="relative">
@@ -281,7 +287,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                       value={motorista}
                       onChange={(e) => setMotorista(e.target.value)}
                       className={cn("pl-10 text-sm h-9", isProcessing && "opacity-50")}
-                      disabled={isProcessing}
+                      disabled={isProcessing || isSubmitting}
                     />
                 </div>
               </div>
@@ -316,7 +322,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                     variant={actionType === 'entrada' ? 'default' : 'outline'}
                     onClick={() => setActionType('entrada')}
                     className="flex-1 gap-2 h-9 text-sm"
-                    disabled={isProcessing}
+                    disabled={isProcessing || isSubmitting}
                   >
                     <LogIn className="h-4 w-4" /> Entrada
                   </Button>
@@ -324,7 +330,7 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                     variant={actionType === 'baixa' ? 'destructive' : 'outline'}
                     onClick={() => setActionType('baixa')}
                     className="flex-1 gap-2 h-9 text-sm"
-                    disabled={isProcessing}
+                    disabled={isProcessing || isSubmitting}
                   >
                     <LogOut className="h-4 w-4" /> Baixa (Saída SJP)
                   </Button>
@@ -336,14 +342,14 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
                 disabled={isActionDisabled}
                 className="w-full h-10 text-md gap-2"
               >
-                {isProcessing ? (
+                {isProcessing || isSubmitting ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                 ) : actionType === 'entrada' ? (
                     <LogIn className="h-5 w-5" />
                 ) : (
                     <LogOut className="h-5 w-5" />
                 )}
-                {isProcessing ? 'Processando OCR...' : `Registrar ${actionType === 'entrada' ? 'Entrada' : 'Baixa'}`}
+                {isProcessing ? 'Processando OCR...' : isSubmitting ? 'Registrando...' : `Registrar ${actionType === 'entrada' ? 'Entrada' : 'Baixa'}`}
               </Button>
               
               {capturedImage && !isProcessing && (
