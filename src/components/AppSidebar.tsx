@@ -1,4 +1,4 @@
-import { Home, BarChart3, Upload, Download, PackageOpen, Plus, Truck, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Home, BarChart3, Upload, Download, PackageOpen, Plus, Truck, ChevronLeft, ChevronRight, Loader2, LogOut } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -11,21 +11,22 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
-  useSidebar, // Importando useSidebar
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ContainerFormDialog } from "./ContainerFormDialog";
 import { Container } from "@/types/container";
-import { useIsMobile } from "@/hooks/use-mobile"; // Importando useIsMobile
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils"; // Importando cn
+import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AppSidebarProps {
   onImport: () => void;
   onExport: () => void;
   onContainerAdd: (container: Partial<Container>) => void;
-  isImporting: boolean; // Novo
-  isExporting: boolean; // Novo
+  isImporting: boolean;
+  isExporting: boolean;
 }
 
 export function AppSidebar({ onImport, onExport, onContainerAdd, isImporting, isExporting }: AppSidebarProps) {
@@ -34,13 +35,17 @@ export function AppSidebar({ onImport, onExport, onContainerAdd, isImporting, is
   
   const handleNavigationClick = () => {
     if (isMobile) {
-      setIsOpen(false); // Fecha a sidebar em mobile após a navegação
+      setIsOpen(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
 
   const menuItems = [
     { title: "Containers", url: "/", icon: Home },
-    { title: "Gate", url: "/portaria", icon: Truck }, // Renomeado para Gate
+    { title: "Gate", url: "/portaria", icon: Truck },
     { title: "Análise", url: "/analise", icon: BarChart3 },
     { title: "Inventário", url: "/inventario", icon: PackageOpen },
   ];
@@ -53,11 +58,8 @@ export function AppSidebar({ onImport, onExport, onContainerAdd, isImporting, is
     <Sidebar 
       className={cn(
         "border-r border-border w-40 transition-transform duration-300 ease-in-out",
-        // Em desktop (md+), a sidebar é fixa e ocupa a largura total da tela verticalmente.
         "md:fixed md:top-0 md:left-0 md:h-full md:z-50",
-        // Em desktop, se não estiver aberto, move para fora da tela (-10rem)
         !isMobile && !isOpen && "-translate-x-40",
-        // Em desktop, se estiver aberto, garante que esteja na posição 0
         !isMobile && isOpen && "translate-x-0"
       )}
     >
@@ -66,77 +68,94 @@ export function AppSidebar({ onImport, onExport, onContainerAdd, isImporting, is
         <p className="text-xs text-muted-foreground">TLOG</p>
       </SidebarHeader>
 
-      <SidebarContent className="p-1">
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs px-2">Navegação</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="h-7 px-2">
-                    <NavLink
-                      to={item.url}
-                      onClick={handleNavigationClick} // Adicionando o handler de clique
-                      className={({ isActive }) =>
-                        isActive
-                          ? "bg-primary/10 text-primary font-medium text-xs"
-                          : "hover:bg-muted/50 text-xs"
-                      }
-                    >
-                      <item.icon className="h-3 w-3" />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      <SidebarContent className="p-1 flex flex-col justify-between">
+        <div>
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-xs px-2">Navegação</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {menuItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild className="h-7 px-2">
+                      <NavLink
+                        to={item.url}
+                        onClick={handleNavigationClick}
+                        className={({ isActive }) =>
+                          isActive
+                            ? "bg-primary/10 text-primary font-medium text-xs"
+                            : "hover:bg-muted/50 text-xs"
+                        }
+                      >
+                        <item.icon className="h-3 w-3" />
+                        <span>{item.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
 
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-xs px-2">Ações</SidebarGroupLabel>
+            <SidebarGroupContent className="space-y-1 px-1">
+              <ContainerFormDialog 
+                onSave={onContainerAdd} 
+                trigger={
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="w-full justify-start bg-primary hover:bg-primary/90 text-primary-foreground h-7 px-1 text-xs"
+                    disabled={isImporting || isExporting}
+                  >
+                    <Plus className="h-3 w-3" /> 
+                    Novo Container
+                  </Button>
+                }
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start h-7 px-1 text-xs"
+                onClick={onImport}
+                disabled={isImporting || isExporting}
+              >
+                {isImporting ? (
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                ) : (
+                  <Upload className="h-3 w-3 mr-1" />
+                )}
+                {isImporting ? 'Importando...' : 'Importar Excel'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start h-7 px-1 text-xs"
+                onClick={onExport}
+                disabled={isImporting || isExporting}
+              >
+                {isExporting ? (
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                ) : (
+                  <Download className="h-3 w-3 mr-1" />
+                )}
+                {isExporting ? 'Exportando...' : 'Exportar Excel'}
+              </Button>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </div>
+        
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs px-2">Ações</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs px-2">Conta</SidebarGroupLabel>
           <SidebarGroupContent className="space-y-1 px-1">
-            <ContainerFormDialog 
-              onSave={onContainerAdd} 
-              trigger={
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="w-full justify-start bg-primary hover:bg-primary/90 text-primary-foreground h-7 px-1 text-xs"
-                  disabled={isImporting || isExporting} // Desabilita se estiver processando
-                >
-                  <Plus className="h-3 w-3" /> 
-                  Novo Container
-                </Button>
-              }
-            />
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="w-full justify-start h-7 px-1 text-xs"
-              onClick={onImport}
-              disabled={isImporting || isExporting}
+              className="w-full justify-start h-7 px-1 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={handleLogout}
             >
-              {isImporting ? (
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              ) : (
-                <Upload className="h-3 w-3 mr-1" />
-              )}
-              {isImporting ? 'Importando...' : 'Importar Excel'}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start h-7 px-1 text-xs"
-              onClick={onExport}
-              disabled={isImporting || isExporting}
-            >
-              {isExporting ? (
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              ) : (
-                <Download className="h-3 w-3 mr-1" />
-              )}
-              {isExporting ? 'Exportando...' : 'Exportar Excel'}
+              <LogOut className="h-3 w-3 mr-1" />
+              Sair
             </Button>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -145,7 +164,6 @@ export function AppSidebar({ onImport, onExport, onContainerAdd, isImporting, is
       <SidebarFooter className="border-t border-border p-1 flex justify-between items-center">
         <p className="text-xs text-muted-foreground">v1.0.0</p>
         
-        {/* Botão de Toggle (Visível apenas em desktop) */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button 

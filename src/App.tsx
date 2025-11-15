@@ -1,9 +1,9 @@
-import { useState, useRef } from "react";
+import { useRef } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Containers from "./pages/Containers";
@@ -11,6 +11,7 @@ import Analise from "./pages/Analise";
 import Inventario from "./pages/Inventario";
 import Portaria from "./pages/Portaria";
 import NotFound from "./pages/NotFound";
+import LoginPage from "./pages/Login";
 import { Container, ContainerFile } from "@/types/container";
 import { parseExcelFile, exportToExcel } from "@/lib/excelUtils";
 import { toast } from "@/hooks/use-toast";
@@ -20,10 +21,10 @@ import { Menu, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFileOperation } from "@/hooks/use-file-operation";
 import { useContainers } from "@/hooks/use-containers";
+import { SessionProvider, useSession } from "@/hooks/use-session";
 
 const queryClient = new QueryClient();
 
-// Componente Wrapper para aplicar o layout
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { isOpen, setIsOpen } = useSidebar();
   const isMobile = useIsMobile();
@@ -66,25 +67,22 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-
-const AppContent = () => {
+const MainApp = () => {
   const { 
     containers, 
     isLoading, 
     addContainer, 
     updateContainer, 
     deleteContainer,
-    addMultipleContainers // Importando a nova função
+    addMultipleContainers
   } = useContainers();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // --- Handlers de Importação/Exportação com a nova lógica ---
-
   const handleImportFile = async (file: File) => {
     const data = await parseExcelFile(file);
     if (data && data.length > 0) {
-      await addMultipleContainers(data); // Usando a nova função de importação em massa
+      await addMultipleContainers(data);
     } else {
       throw new Error("Nenhum dado de container válido foi encontrado no arquivo.");
     }
@@ -139,8 +137,6 @@ const AppContent = () => {
       }
     }
   };
-
-  // --- Handlers de Container (sem alterações) ---
 
   const handleContainerUpdateFiles = async (containerId: string, files: ContainerFile[]) => {
     await updateContainer({ id: containerId, data: { files } });
@@ -231,15 +227,39 @@ const AppContent = () => {
   );
 };
 
+const AppContent = () => {
+  const { session, isLoading } = useSession();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route 
+        path="/*" 
+        element={session ? <MainApp /> : <Navigate to="/login" replace />} 
+      />
+    </Routes>
+  );
+};
+
 const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <SidebarProvider>
-            <AppContent />
-          </SidebarProvider>
+          <SessionProvider>
+            <SidebarProvider>
+              <AppContent />
+            </SidebarProvider>
+          </SessionProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
