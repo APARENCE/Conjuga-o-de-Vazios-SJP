@@ -1,5 +1,0 @@
-python-dotenv
-opencv-python
-numpy
-flask
-functions-framework==3.5.0
