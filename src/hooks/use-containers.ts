@@ -10,37 +10,37 @@ const CONTAINER_QUERY_KEY = ["containers"];
 const mapDbToContainer = (dbData: any): Container => ({
     id: dbData.id,
     operador: dbData.operador || "",
-    motoristaEntrada: dbData.motoristaEntrada || "",
+    motoristaEntrada: dbData.motorista_entrada || "",
     placa: dbData.placa || "",
-    dataEntrada: dbData.dataEntrada || "",
+    dataEntrada: dbData.data_entrada || "",
     container: dbData.container || "",
     armador: dbData.armador || "",
     tara: Number(dbData.tara) || 0,
     mgw: Number(dbData.mgw) || 0,
     tipo: dbData.tipo || "",
     padrao: dbData.padrao || "",
-    statusVazioCheio: dbData.statusVazioCheio || "",
-    dataPorto: dbData.dataPorto || "",
-    freeTimeArmador: Number(dbData.freeTimeArmador) || 0,
+    statusVazioCheio: dbData.status_vazio_cheio || "",
+    dataPorto: dbData.data_porto || "",
+    freeTimeArmador: Number(dbData.free_time_armador) || 0,
     demurrage: dbData.demurrage || "",
-    prazoDias: Number(dbData.prazoDias) || 0,
-    clienteEntrada: dbData.clienteEntrada || "",
+    prazoDias: Number(dbData.prazo_dias) || 0,
+    clienteEntrada: dbData.cliente_entrada || "",
     transportadora: dbData.transportadora || "",
     estoque: dbData.estoque || "",
-    transportadoraSaida: dbData.transportadoraSaida || "",
-    statusEntregaMinuta: dbData.statusEntregaMinuta || "",
-    statusMinuta: dbData.statusMinuta || "",
-    bookingAtrelado: dbData.bookingAtrelado || "",
+    transportadoraSaida: dbData.transportadora_saida || "",
+    statusEntregaMinuta: dbData.status_entrega_minuta || "",
+    statusMinuta: dbData.status_minuta || "",
+    bookingAtrelado: dbData.booking_atrelado || "",
     lacre: dbData.lacre || "",
-    clienteSaidaDestino: dbData.clienteSaidaDestino || "",
+    clienteSaidaDestino: dbData.cliente_saida_destino || "",
     atrelado: dbData.atrelado || "",
-    operadorSaida: dbData.operadorSaida || "",
-    dataEstufagem: dbData.dataEstufagem || "",
-    dataSaidaSJP: dbData.dataSaidaSJP || "",
-    motoristaSaidaSJP: dbData.motoristaSaidaSJP || "",
-    placaSaida: dbData.placaSaida || "",
-    depotDevolucao: dbData.depotDevolucao || "",
-    diasRestantes: Number(dbData.diasRestantes) || 0,
+    operadorSaida: dbData.operador_saida || "",
+    dataEstufagem: dbData.data_estufagem || "",
+    dataSaidaSJP: dbData.data_saida_sjp || "",
+    motoristaSaidaSJP: dbData.motorista_saida_sjp || "",
+    placaSaida: dbData.placa_saida || "",
+    depotDevolucao: dbData.depot_devolucao || "",
+    diasRestantes: Number(dbData.dias_restantes) || 0,
     status: dbData.status || "",
     files: (dbData.files as ContainerFile[]) || [],
 });
@@ -93,7 +93,7 @@ export function useContainers() {
         user_id: userId,
         container: containerData.container || "N/A",
         armador: containerData.armador || "N/A",
-        diasRestantes: containerData.prazoDias || 0, 
+        dias_restantes: containerData.prazoDias || 0, 
       };
 
       const { data, error } = await supabase
@@ -135,7 +135,7 @@ export function useContainers() {
       
       const dataToUpdate = {
         ...data,
-        diasRestantes: data.prazoDias || data.diasRestantes,
+        dias_restantes: data.prazoDias || data.diasRestantes,
       };
 
       const { data: updatedData, error } = await supabase
@@ -220,7 +220,7 @@ export function useContainers() {
         user_id: userId,
         container: containerData.container || "N/A",
         armador: containerData.armador || "N/A",
-        diasRestantes: containerData.prazoDias || 0,
+        dias_restantes: containerData.prazoDias || 0,
         id: undefined, // Garante que o Supabase gere o ID
       }));
 
