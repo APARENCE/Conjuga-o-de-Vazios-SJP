@@ -91,138 +91,71 @@ const excelDateToJSDate = (serial: any): string => {
 };
 
 // Ordem exata das chaves da interface Container, correspondendo à ordem da planilha (31 colunas).
-// Ajustado para a nova ordem fornecida pelo usuário.
 const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
-  'operador', // 1. OPERADOR1
-  'motoristaEntrada', // 2. MOTORISTA ENTRADA
-  'placa', // 3. PLACA1 (Entrada)
-  'dataEntrada', // 4. DATA ENTRADA
-  'container', // 5. CONTAINER
-  'armador', // 6. ARMADOR
-  'tara', // 7. TARA
-  'mgw', // 8. MGW
-  'tipo', // 9. TIPO
-  'padrao', // 10. PADRÃO
-  'statusVazioCheio', // 11. STATUS (VAZIO/CHEIO)
-  'dataPorto', // 12. DATA PORTO
-  'freeTimeArmador', // 13. FREETimearmador
-  'demurrage', // 14. Demurrage
-  'prazoDias', // 15. Prazo(dias)
-  'clienteEntrada', // 16. CLIENTE DE ENTRADA
-  'transportadora', // 17. TRANSPORTADORA (Entrada)
-  'estoque', // 18. ESTOQUE
-  'transportadoraSaida', // 19. TRANSPORTADORA (Saída)
-  'statusEntregaMinuta', // 20. STATUS ENTREGA MINUTA
-  'statusMinuta', // 21. STATUS MINUTA
-  'bookingAtrelado', // 22. BOOKING ATRELADO
-  'lacre', // 23. LACRE
-  'clienteSaidaDestino', // 24. CLIENTE SAIDA / DESTINO
-  'atrelado', // 25. ATRELADO
-  'operadorSaida', // 26. OPERADOR (Saída)
-  'dataEstufagem', // 27. DATA DA ESTUFAGEM
-  'dataSaidaSJP', // 28. DATA SAIDA SJP
-  'motoristaSaidaSJP', // 29. MOTORISTA SAIDA SJP
-  'placaSaida', // 30. PLACA (Saída)
-  'depotDevolucao', // 31. DEPOT DE DEVOLUÇÃO
+  'operador', 'motoristaEntrada', 'placa', 'dataEntrada', 'container', 'armador',
+  'tara', 'mgw', 'tipo', 'padrao', 'statusVazioCheio', 'dataPorto', 'freeTimeArmador',
+  'demurrage', 'prazoDias', 'clienteEntrada', 'transportadora', 'estoque',
+  'transportadoraSaida', 'statusEntregaMinuta', 'statusMinuta', 'bookingAtrelado',
+  'lacre', 'clienteSaidaDestino', 'atrelado', 'operadorSaida', 'dataEstufagem',
+  'dataSaidaSJP', 'motoristaSaidaSJP', 'placaSaida', 'depotDevolucao',
 ];
 
 // Lista de chaves que representam campos de data no objeto Container
 const DATE_KEYS: (keyof Container)[] = [
-    'dataEntrada', 
-    'dataPorto', 
-    'dataEstufagem', 
-    'dataSaidaSJP'
+    'dataEntrada', 'dataPorto', 'dataEstufagem', 'dataSaidaSJP'
 ];
 
-
-export const parseExcelFile = (file: File): Promise<Container[]> => {
+export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
     reader.onload = (e) => {
       try {
         const data = e.target?.result;
-        // Lendo como array de arrays (raw: false para manter formatação de data)
-        // cellDates: true é crucial para ler datas corretamente
         const workbook = XLSX.read(data, { type: 'binary', cellDates: true, raw: false });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        
-        // Usamos header: 1 para obter o cabeçalho na primeira linha e os dados nas seguintes
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: "" }) as any[][];
         
         if (jsonData.length < 2) {
           return resolve([]);
         }
 
-        // A primeira linha é o cabeçalho, vamos usá-la para verificar o número de colunas
-        const headerRow = jsonData[0];
         const dataRows = jsonData.slice(1);
         
-        if (headerRow.length < CONTAINER_KEYS_ORDER.length) {
-             console.warn(`Aviso: A planilha tem ${headerRow.length} colunas, mas ${CONTAINER_KEYS_ORDER.length} são esperadas. Verifique se há colunas vazias no final.`);
-        }
-
-        const containers: Container[] = dataRows
+        const containers: Partial<Container>[] = dataRows
           .filter(row => row.some(cell => String(cell || '').trim() !== ''))
-          .map((row, index) => {
-            const partialContainer: Partial<Container> = {
-              files: [],
-              // Definindo defaults para todos os campos
-              operador: "", motoristaEntrada: "", placa: "", dataEntrada: "", container: "", armador: "",
-              tara: 0, mgw: 0, tipo: "", padrao: "", statusVazioCheio: "", dataPorto: "", freeTimeArmador: 0,
-              demurrage: "", prazoDias: 0, clienteEntrada: "", transportadora: "", estoque: "",
-              transportadoraSaida: "", statusEntregaMinuta: "", statusMinuta: "", bookingAtrelado: "",
-              lacre: "", clienteSaidaDestino: "", atrelado: "", operadorSaida: "", dataEstufagem: "",
-              dataSaidaSJP: "", motoristaSaidaSJP: "", placaSaida: "", depotDevolucao: "", 
-              diasRestantes: 0, status: "",
-            };
+          .map((row) => {
+            const partialContainer: Partial<Container> = {};
 
-            // Mapeamento por índice
             CONTAINER_KEYS_ORDER.forEach((key, colIndex) => {
               let value = row[colIndex] ?? ""; 
-              
-              // Usamos 'key as keyof Container' para garantir que o TS saiba que a chave é válida
               const containerKey = key as keyof Container;
 
-              if (['tara', 'mgw', 'freeTimeArmador', 'prazoDias'].includes(key)) {
-                // Trata valores numéricos
+              if (['tara', 'mgw'].includes(key)) {
                 const numericValue = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : Number(value);
-                // Cast para o tipo esperado (number)
                 (partialContainer as any)[containerKey] = isNaN(numericValue) ? 0 : numericValue;
+              } else if (['freeTimeArmador', 'prazoDias'].includes(key)) {
+                const intValue = typeof value === 'string' ? parseInt(value.replace(/\D/g, ''), 10) : Number(value);
+                (partialContainer as any)[containerKey] = isNaN(intValue) ? 0 : Math.round(intValue);
               } else if (DATE_KEYS.includes(key)) {
-                // Trata campos de data
-                // Cast para o tipo esperado (string)
                 (partialContainer as any)[containerKey] = excelDateToJSDate(value);
               } else {
-                // Trata todos os outros campos como string
-                // Cast para o tipo esperado (string)
                 (partialContainer as any)[containerKey] = String(value).trim();
               }
             });
             
-            // Mapeamento de compatibilidade: diasRestantes = prazoDias
             partialContainer.diasRestantes = partialContainer.prazoDias;
-            
-            // Mapeamento de compatibilidade: status (usando statusVazioCheio como fallback)
             partialContainer.status = partialContainer.status || partialContainer.statusVazioCheio || "";
+            partialContainer.files = [];
 
-
-            const containerValue = String(partialContainer.container || '').trim();
-            // Garante que o ID seja único, mesmo se o container estiver vazio (embora não deva)
-            const id = containerValue || `import-${Date.now()}-${index}`;
-
-            return {
-              ...partialContainer,
-              id: id,
-              container: containerValue,
-            } as Container;
+            return partialContainer;
           });
         
         resolve(containers);
       } catch (error) {
         console.error("Erro durante o parsing do Excel:", error);
-        reject(error);
+        reject(new Error("Falha ao ler o arquivo Excel. Verifique se o formato está correto."));
       }
     };
     
@@ -234,11 +167,10 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
 export const exportToExcel = (containers: Container[]) => {
   const worksheet = XLSX.utils.json_to_sheet(
     containers.map(c => ({
-      // Ordem exata da planilha (usando os nomes de cabeçalho fornecidos pelo usuário)
       'OPERADOR1': c.operador,
       'MOTORISTA ENTRADA': c.motoristaEntrada,
       'PLACA1': c.placa,
-      'DATA ENTRADA': formatDateToBR(c.dataEntrada), // Formatando data
+      'DATA ENTRADA': formatDateToBR(c.dataEntrada),
       'CONTAINER': c.container,
       'ARMADOR': c.armador,
       'TARA': c.tara,
@@ -246,27 +178,26 @@ export const exportToExcel = (containers: Container[]) => {
       'TIPO': c.tipo,
       'PADRÃO': c.padrao,
       'STATUS (VAZIO/CHEIO)': c.statusVazioCheio,
-      'DATA PORTO': formatDateToBR(c.dataPorto), // Formatando data
+      'DATA PORTO': formatDateToBR(c.dataPorto),
       'FREETimearmador': c.freeTimeArmador,
       'Demurrage': c.demurrage,
       'Prazo(dias)': c.prazoDias,
       'CLIENTE DE ENTRADA': c.clienteEntrada,
-      'TRANSPORTADORA': c.transportadora, // Entrada
+      'TRANSPORTADORA': c.transportadora,
       'ESTOQUE': c.estoque,
-      'TRANSPORTADORA SAIDA': c.transportadoraSaida, // Saída
+      'TRANSPORTADORA SAIDA': c.transportadoraSaida,
       'STATUS ENTREGA MINUTA': c.statusEntregaMinuta,
       'STATUS MINUTA': c.statusMinuta,
       'BOOKING ATRELADO': c.bookingAtrelado,
       'LACRE': c.lacre,
       'CLIENTE SAIDA / DESTINO': c.clienteSaidaDestino,
       'ATRELADO': c.atrelado,
-      'OPERADOR SAIDA': c.operadorSaida, // Saída
-      'DATA DA ESTUFAGEM': formatDateToBR(c.dataEstufagem), // Formatando data
-      'DATA SAIDA SJP': formatDateToBR(c.dataSaidaSJP), // Formatando data
+      'OPERADOR SAIDA': c.operadorSaida,
+      'DATA DA ESTUFAGEM': formatDateToBR(c.dataEstufagem),
+      'DATA SAIDA SJP': formatDateToBR(c.dataSaidaSJP),
       'MOTORISTA SAIDA SJP': c.motoristaSaidaSJP,
-      'PLACA SAIDA': c.placaSaida, // Saída
-      'DEPOT DE DEVOLUÇÃO': c.depotDevolucao, // Novo campo de exportação
-      // Campos de compatibilidade que não estão na planilha original, mas podem ser úteis
+      'PLACA SAIDA': c.placaSaida,
+      'DEPOT DE DEVOLUÇÃO': c.depotDevolucao,
       'STATUS GERAL': c.status,
       'DIAS RESTANTES (COMPAT)': c.diasRestantes,
     }))
