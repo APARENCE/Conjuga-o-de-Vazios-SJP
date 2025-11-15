@@ -123,7 +123,7 @@ const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
   'dataSaidaSJP', // 28. DATA SAIDA SJP
   'motoristaSaidaSJP', // 29. MOTORISTA SAIDA SJP
   'placaSaida', // 30. PLACA (Saída)
-  'depotDevolucao', // 31. DEPOT DE DEVOLUÇÃO (Mantido como último campo)
+  'depotDevolucao', // 31. DEPOT DE DEVOLUÇÃO
 ];
 
 // Lista de chaves que representam campos de data no objeto Container
@@ -143,6 +143,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
       try {
         const data = e.target?.result;
         // Lendo como array de arrays (raw: false para manter formatação de data)
+        // cellDates: true é crucial para ler datas corretamente
         const workbook = XLSX.read(data, { type: 'binary', cellDates: true, raw: false });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
@@ -173,7 +174,7 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
               demurrage: "", prazoDias: 0, clienteEntrada: "", transportadora: "", estoque: "",
               transportadoraSaida: "", statusEntregaMinuta: "", statusMinuta: "", bookingAtrelado: "",
               lacre: "", clienteSaidaDestino: "", atrelado: "", operadorSaida: "", dataEstufagem: "",
-              dataSaidaSJP: "", motoristaSaidaSJP: "", placaSaida: "", depotDevolucao: "", // Novo default
+              dataSaidaSJP: "", motoristaSaidaSJP: "", placaSaida: "", depotDevolucao: "", 
               diasRestantes: 0, status: "",
             };
 
@@ -204,7 +205,6 @@ export const parseExcelFile = (file: File): Promise<Container[]> => {
             partialContainer.diasRestantes = partialContainer.prazoDias;
             
             // Mapeamento de compatibilidade: status (usando statusVazioCheio como fallback)
-            // Se o status geral não for fornecido na planilha, usamos o status Vazio/Cheio
             partialContainer.status = partialContainer.status || partialContainer.statusVazioCheio || "";
 
 
