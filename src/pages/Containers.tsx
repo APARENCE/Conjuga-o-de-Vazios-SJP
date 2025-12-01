@@ -2,33 +2,23 @@ import { useState, useMemo, useEffect } from "react";
 import { Container, ContainerFile } from "@/types/container";
 import { ContainerTable } from "@/components/ContainerTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, TrendingUp, AlertCircle, CheckCircle, Search, Filter, Grid, List, Download, Eye, Loader2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Package, Eye, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ContainerFormDialog } from "@/components/ContainerFormDialog";
-import { FileUploadDialog } from "@/components/FileUploadDialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { VencimentoAlert } from "@/components/VencimentoAlert";
 import { ContainerDetailsSidebar } from "@/components/ContainerDetailsSidebar";
-import { formatDateToBR } from "@/lib/excelUtils"; // Importando a função de formatação
-import { toast } from "@/hooks/use-toast"; // Importando toast
+import { formatDateToBR } from "@/lib/excelUtils";
+import { toast } from "@/hooks/use-toast";
+import { ContainerHeader } from "@/components/ContainerHeader";
 
 interface ContainersPageProps {
   containers: Container[];
-  onContainerUpdate: (containerId: string, files: ContainerFile[]) => Promise<void>; // Agora é assíncrono
-  onContainerAdd: (container: Partial<Container>) => Promise<void>; // Agora é assíncrono
-  onContainerEdit: (id: string, container: Partial<Container>) => Promise<void>; // Agora é assíncrono
-  onContainerDelete: (id: string) => Promise<void>; // Agora é assíncrono
+  onContainerUpdate: (containerId: string, files: ContainerFile[]) => Promise<void>;
+  onContainerAdd: (container: Partial<Container>) => Promise<void>;
+  onContainerEdit: (id: string, container: Partial<Container>) => Promise<void>;
+  onContainerDelete: (id: string) => Promise<void>;
 }
 
 export default function Containers({ 
@@ -39,36 +29,30 @@ export default function Containers({
   onContainerDelete 
 }: ContainersPageProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  // Status filter agora pode ser 'vencidos' ou 'proximos'
   const [statusFilter, setStatusFilter] = useState<string>("all"); 
   const [armadorFilter, setArmadorFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
-  const isMobile = useIsMobile();
 
-  // Obter armadores únicos para o filtro (baseado em todos os containers)
   const allArmadores = useMemo(() => {
     const uniqueArmadores = [...new Set(containers.map(c => c.armador).filter(Boolean))];
     return uniqueArmadores.sort();
   }, [containers]);
 
-  // Função para calcular dias restantes como número (agora mapeado de prazoDias)
   const getDiasRestantes = (c: Container) => typeof c.prazoDias === 'number' ? c.prazoDias : 0;
 
-  // Filtrar containers
   const filteredContainers = useMemo(() => {
     return containers.filter(c => {
       const search = searchTerm.toLowerCase().trim();
       
-      // Atualizando a pesquisa para incluir os novos campos
       const matchesSearch = !search || 
         c.container.toLowerCase().includes(search) ||
         c.armador.toLowerCase().includes(search) ||
-        c.motoristaEntrada?.toLowerCase().includes(search) || // Novo campo
-        c.placa?.toLowerCase().includes(search) || // Novo campo
-        c.clienteEntrada?.toLowerCase().includes(search) || // Novo campo
-        c.clienteSaidaDestino?.toLowerCase().includes(search) || // Novo campo
-        c.bookingAtrelado?.toLowerCase().includes(search); // Novo campo
+        c.motoristaEntrada?.toLowerCase().includes(search) ||
+        c.placa?.toLowerCase().includes(search) ||
+        c.clienteEntrada?.toLowerCase().includes(search) ||
+        c.clienteSaidaDestino?.toLowerCase().includes(search) ||
+        c.bookingAtrelado?.toLowerCase().includes(search);
 
       let matchesStatus = true;
       const dias = getDiasRestantes(c);
@@ -82,8 +66,6 @@ export default function Containers({
         matchesStatus = dias === 0;
       } else if (statusFilter === "proximos") {
         matchesStatus = dias > 0 && dias <= 3;
-      } else if (statusFilter === "all") {
-        matchesStatus = true;
       }
 
       const matchesArmador = armadorFilter === "all" || c.armador === armadorFilter;
@@ -92,59 +74,60 @@ export default function Containers({
     });
   }, [containers, searchTerm, statusFilter, armadorFilter]);
 
-  // NOVO EFEITO: Abrir sidebar se a pesquisa for exata e única
   useEffect(() => {
     const search = searchTerm.toLowerCase().trim();
     
-    // Se houver um termo de pesquisa e o resultado for exatamente um container
     if (search && filteredContainers.length === 1) {
       const uniqueContainer = filteredContainers[0];
       
-      // Verificação adicional: se o termo de pesquisa for o container exato
       if (uniqueContainer.container.toLowerCase().trim() === search) {
         setSelectedContainer(uniqueContainer);
-        setSearchTerm(""); // Limpa o campo de pesquisa após abrir a sidebar
+        setSearchTerm("");
       } else if (selectedContainer?.id !== uniqueContainer.id) {
         setSelectedContainer(uniqueContainer);
-        setSearchTerm(""); // Limpa o campo de pesquisa após abrir a sidebar
+        setSearchTerm("");
       }
     } else if (search && filteredContainers.length !== 1) {
       setSelectedContainer(null);
     } else if (!search && selectedContainer) {
-      // Se a pesquisa foi limpa, mas a sidebar está aberta, precisamos garantir que o container ainda exista
       if (!containers.find(c => c.id === selectedContainer.id)) {
           setSelectedContainer(null);
       }
     }
   }, [searchTerm, filteredContainers, selectedContainer, containers]);
 
-
-  // NOVO CÁLCULO DE STATS: Baseado em filteredContainers
   const stats = useMemo(() => {
     const total = filteredContainers.length;
-    
-    const devolvidos = filteredContainers.filter(c => {
-      const status = String(c.status || '').toLowerCase();
-      return status.includes("ok") || status.includes("devolvido");
-    }).length;
-    
-    const pendentes = filteredContainers.filter(c => {
-      const status = String(c.status || '').toLowerCase();
-      return status.includes("aguardando") || status.includes("verificar");
-    }).length;
-    
+    const devolvidos = filteredContainers.filter(c => String(c.status || '').toLowerCase().includes("ok") || String(c.status || '').toLowerCase().includes("devolvido")).length;
+    const pendentes = filteredContainers.filter(c => String(c.status || '').toLowerCase().includes("aguardando") || String(c.status || '').toLowerCase().includes("verificar")).length;
     const vencidos = filteredContainers.filter(c => getDiasRestantes(c) === 0).length;
-    
     const armadoresFiltrados = [...new Set(filteredContainers.map(c => c.armador).filter(Boolean))].length;
 
-    return {
-      total,
-      devolvidos,
-      pendentes,
-      vencidos,
-      armadoresFiltrados,
-    };
+    return { total, devolvidos, pendentes, vencidos, armadoresFiltrados };
   }, [filteredContainers]);
+
+  const handleEdit = async (id: string, data: Partial<Container>) => {
+    try {
+        await onContainerEdit(id, data);
+        toast({
+            title: "Container atualizado!",
+            description: "Os dados do container foram salvos com sucesso.",
+        });
+    } catch (e) {
+        // Error is handled in the hook
+    }
+  };
+  
+  const handleDelete = async (id: string) => {
+    try {
+        await onContainerDelete(id);
+        if (selectedContainer?.id === id) {
+            setSelectedContainer(null);
+        }
+    } catch (e) {
+        // Error is handled in the hook
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     if (!status) return <Badge variant="secondary" className="text-xs">-</Badge>;
@@ -165,28 +148,11 @@ export default function Containers({
     return "text-success";
   };
 
-  const handleEdit = async (id: string, data: Partial<Container>) => {
-    try {
-        await onContainerEdit(id, data);
-        toast({
-            title: "Container atualizado!",
-            description: "Os dados do container foram salvos com sucesso.",
-        });
-    } catch (e) {
-        // O erro já é tratado no hook, mas podemos adicionar um fallback aqui se necessário
-    }
-  };
-  
-  const handleDelete = async (id: string) => {
-    try {
-        await onContainerDelete(id);
-        // Se o container excluído era o selecionado, feche a sidebar
-        if (selectedContainer?.id === id) {
-            setSelectedContainer(null);
-        }
-    } catch (e) {
-        // Erro já tratado
-    }
+  const getCardBorderColor = (dias: number | string) => {
+    if (typeof dias === "string") return "border-transparent";
+    if (dias === 0) return "border-danger";
+    if (dias <= 3) return "border-warning";
+    return "border-transparent";
   };
 
   const ContainerCard = ({ container }: { container: Container }) => (
@@ -196,14 +162,20 @@ export default function Containers({
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.2 }}
     >
-      <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedContainer(container)}>
+      <Card 
+        className={cn(
+          "hover:shadow-lg transition-shadow cursor-pointer border-l-4",
+          getCardBorderColor(container.prazoDias)
+        )} 
+        onClick={() => setSelectedContainer(container)}
+      >
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
             <div>
               <CardTitle className="text-sm font-bold text-primary">{container.container}</CardTitle>
               <p className="text-xs text-muted-foreground">{container.armador}</p>
             </div>
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 items-end">
               {getStatusBadge(container.status)}
               <span className={cn("text-xs font-semibold", getDiasRestantesColor(container.prazoDias))}>
                 {container.prazoDias} dias
@@ -233,8 +205,8 @@ export default function Containers({
           
           <div className="flex gap-1 pt-1">
             <Button variant="outline" size="sm" className="flex-1 h-6 text-xs gap-1" onClick={(e) => {
-                e.stopPropagation(); // Evita abrir a sidebar
-                setSelectedContainer(container); // Abre a sidebar de detalhes
+                e.stopPropagation();
+                setSelectedContainer(container);
             }}>
               <Eye className="h-3 w-3" />
               Detalhes
@@ -243,7 +215,7 @@ export default function Containers({
               container={container}
               onSave={(data) => handleEdit(container.id, data)}
               trigger={
-                <Button variant="outline" size="sm" className="h-6 px-1">
+                <Button variant="outline" size="sm" className="h-6 px-1" onClick={(e) => e.stopPropagation()}>
                   <Filter className="h-3 w-3" />
                 </Button>
               }
@@ -256,198 +228,23 @@ export default function Containers({
 
   return (
     <div className="flex flex-col h-full px-4">
-      {/* Cabeçalho Fixo (Título, Filtros, KPIs) */}
-      <div className="sticky top-0 z-40 bg-background pb-2 border-b border-border/50 shadow-sm -mx-4 px-4">
-        <div className="space-y-2">
-          {/* Header */}
-          <div className="flex flex-col gap-2">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Gestão de Containers</h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Controle de entrada e saída de containers
-              </p>
-            </div>
-            
-            {/* Barra de ações e filtros */}
-            <div className="flex flex-col sm:flex-row gap-1">
-              <div className="relative flex-1">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                <Input
-                  placeholder="Pesquisar container, armador, motorista, cliente..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-7 text-xs h-7"
-                />
-              </div>
-              
-              <Select 
-                value={statusFilter} 
-                onValueChange={(value) => {
-                    if (value === 'vencidos' || value === 'proximos') {
-                        setStatusFilter(value);
-                    } else {
-                        setStatusFilter(value);
-                    }
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-[140px] h-7 text-xs">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos Status</SelectItem>
-                  <SelectItem value="devolvidos">Devolvidos</SelectItem>
-                  <SelectItem value="pendentes">Pendentes</SelectItem>
-                  <SelectItem value="vencidos">Vencidos (0 dias)</SelectItem>
-                  <SelectItem value="proximos">Próximos (1-3 dias)</SelectItem>
-                </SelectContent>
-              </Select>
+      <ContainerHeader
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        armadorFilter={armadorFilter}
+        setArmadorFilter={setArmadorFilter}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        allArmadores={allArmadores}
+        containers={containers}
+        filteredContainersCount={filteredContainers.length}
+        totalContainersCount={containers.length}
+        stats={stats}
+        onContainerAdd={onContainerAdd}
+      />
 
-              <Select value={armadorFilter} onValueChange={setArmadorFilter}>
-                <SelectTrigger className="w-full sm:w-[140px] h-7 text-xs">
-                  <SelectValue placeholder="Armador" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos Armadores</SelectItem>
-                  {allArmadores.map(armador => (
-                    <SelectItem key={armador} value={armador}>{armador}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <div className="flex gap-1">
-                <Button
-                  variant={viewMode === "table" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("table")}
-                  className="h-7 px-2"
-                >
-                  <List className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant={viewMode === "cards" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("cards")}
-                  className="h-7 px-2"
-                >
-                  <Grid className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Alerta de Vencimento (Novo) */}
-          <VencimentoAlert 
-            containers={containers} 
-            onFilterChange={setStatusFilter} 
-            currentFilter={statusFilter}
-          />
-
-          {/* KPIs - Versão responsiva */}
-          <div className="grid gap-2 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
-            >
-              <Card className="border-l-4 border-l-primary hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Total
-                  </CardTitle>
-                  <Package className="h-3 w-3 text-primary" />
-                </CardHeader>
-                <CardContent className="p-1 pt-0">
-                  <div className="text-sm font-bold text-foreground">{stats.total}</div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {stats.armadoresFiltrados} armadores
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-            >
-              <Card className="border-l-4 border-l-success hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Devolvidos
-                  </CardTitle>
-                  <CheckCircle className="h-3 w-3 text-success" />
-                </CardHeader>
-                <CardContent className="p-1 pt-0">
-                  <div className="text-sm font-bold text-foreground">{stats.devolvidos}</div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {stats.total > 0 ? ((stats.devolvidos / stats.total) * 100).toFixed(1) : 0}%
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
-            >
-              <Card className="border-l-4 border-l-warning hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Pendentes
-                  </CardTitle>
-                  <TrendingUp className="h-3 w-3 text-warning" />
-                </CardHeader>
-                <CardContent className="p-1 pt-0">
-                  <div className="text-sm font-bold text-foreground">{stats.pendentes}</div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {stats.total > 0 ? ((stats.pendentes / stats.total) * 100).toFixed(1) : 0}%
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: 0.4 }}
-            >
-              <Card className="border-l-4 border-l-danger hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Vencidos
-                  </CardTitle>
-                  <AlertCircle className="h-3 w-3 text-danger" />
-                </CardHeader>
-                <CardContent className="p-1 pt-0">
-                  <div className="text-sm font-bold text-foreground">{stats.vencidos}</div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {stats.total > 0 ? ((stats.vencidos / stats.total) * 100).toFixed(1) : 0}%
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-
-          {/* Resultados da busca */}
-          <div className="flex justify-between items-center pt-1">
-            <p className="text-xs text-muted-foreground">
-              {filteredContainers.length} de {containers.length} containers
-            </p>
-            <ContainerFormDialog
-              onSave={onContainerAdd}
-              trigger={
-                <Button size="sm" className="gap-1 h-7 px-2 text-xs">
-                  <Package className="h-3 w-3" />
-                  Novo Container
-                </Button>
-              }
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Conteúdo principal - Tabela ou Cards (Roleable) */}
       <div className="flex-1 pt-2">
         <AnimatePresence mode="wait">
           {viewMode === "table" ? (
@@ -463,7 +260,7 @@ export default function Containers({
                 onContainerUpdate={onContainerUpdate}
                 onContainerEdit={handleEdit}
                 onContainerDelete={handleDelete}
-                onContainerSelect={setSelectedContainer} // Adicionando o handler de seleção
+                onContainerSelect={setSelectedContainer}
               />
             </motion.div>
           ) : (
@@ -490,13 +287,11 @@ export default function Containers({
         </AnimatePresence>
       </div>
 
-      {/* Sidebar de Detalhes (Substitui o modal mobile) */}
       <ContainerDetailsSidebar
         container={selectedContainer}
         onClose={() => setSelectedContainer(null)}
         onContainerUpdate={async (id, files) => {
             await onContainerUpdate(id, files);
-            // Atualiza o estado local para refletir os novos arquivos na sidebar
             if (selectedContainer && selectedContainer.id === id) {
                 setSelectedContainer(prev => prev ? { ...prev, files } : null);
             }

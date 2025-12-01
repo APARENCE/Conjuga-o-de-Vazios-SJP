@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { FileUploadDialog } from "@/components/FileUploadDialog";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, AlertTriangle, XCircle, Clock } from "lucide-react";
+import { Pencil, Trash2, AlertTriangle, XCircle } from "lucide-react";
 import { ContainerFormDialog } from "@/components/ContainerFormDialog";
 import {
   AlertDialog,
@@ -25,8 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import React from "react";
-import { formatDateToBR } from "@/lib/excelUtils"; // Importando a função de formatação
+import { formatDateToBR } from "@/lib/excelUtils";
 
 interface ContainerTableProps {
   containers: Container[];
@@ -63,19 +62,20 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
     return null;
   };
 
-  // Classes para colunas fixas (rolagem horizontal)
-  const fixedCellClasses = "sticky bg-background z-20"; 
-  
-  // Classes para o cabeçalho fixo (rolagem vertical)
-  const fixedHeaderClasses = "sticky top-0 z-30 bg-muted/50 shadow-sm"; 
+  const getRowClass = (dias: number | string) => {
+    if (typeof dias === "string") return "";
+    if (dias === 0) return "bg-danger/10 hover:bg-danger/20";
+    if (dias <= 3) return "bg-warning/10 hover:bg-warning/20";
+    return "hover:bg-muted/30";
+  };
 
-  // Larguras OTIMIZADAS para as colunas fixas
+  const fixedCellClasses = "sticky bg-background z-20"; 
+  const fixedHeaderClasses = "sticky top-0 z-30 bg-muted/50 shadow-sm"; 
   const containerWidth = "w-[100px] min-w-[100px]";
   const armadorWidth = "w-[80px] min-w-[80px]";
   const containerLeft = "left-0";
-  const armadorLeft = "left-[100px]"; // Começa após a coluna Container (100px)
+  const armadorLeft = "left-[100px]";
 
-  // Larguras mínimas para colunas variáveis (ajustadas para melhor visualização)
   const colWidths = {
     xs: "w-[50px] min-w-[50px]", 
     sm: "w-[65px] min-w-[65px]", 
@@ -83,26 +83,20 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
     lg: "w-[100px] min-w-[100px]", 
   };
   
-  // Classe para ocultar colunas não essenciais em telas menores que 2XL
   const hiddenColClass = "hidden 2xl:table-cell";
   const hiddenColHeaderClass = "hidden 2xl:table-cell";
 
   return (
     <Card className="border-0 shadow-sm">
-      {/* Contêiner de rolagem com altura máxima */}
       <div 
         className="overflow-x-auto overflow-y-auto max-h-[75vh] lg:max-h-[85vh]"
-        style={{ height: 'calc(75vh - 40px)' }} // Altura ajustada para o contêiner de rolagem
+        style={{ height: 'calc(75vh - 40px)' }}
       >
         <Table className="compact-table">
-          {/* TableHeader: Fixo no topo (Z-index 30) */}
           <TableHeader className={fixedHeaderClasses}>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
-              {/* Colunas Fixas (CONTAINER e ARMADOR) */}
               <TableHead className={cn("font-semibold z-[35]", containerLeft, containerWidth)}>CONTAINER</TableHead>
               <TableHead className={cn("font-semibold z-30", armadorLeft, armadorWidth)}>ARMADOR</TableHead>
-              
-              {/* Colunas Essenciais (Sempre visíveis) */}
               <TableHead className={cn("font-semibold", colWidths.md)}>PRAZO(DIAS)</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>STATUS GERAL</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>DATA ENTRADA</TableHead>
@@ -110,8 +104,6 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               <TableHead className={cn("font-semibold", colWidths.md)}>MOTORISTA ENTRADA</TableHead>
               <TableHead className={cn("font-semibold", colWidths.sm)}>PLACA1</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md)}>DATA SAIDA SJP</TableHead>
-              
-              {/* Colunas Ocultas (Visíveis apenas com rolagem horizontal ou em 2XL) */}
               <TableHead className={cn("font-semibold", colWidths.sm, hiddenColHeaderClass)}>OPERADOR1</TableHead>
               <TableHead className={cn("font-semibold", colWidths.xs, hiddenColHeaderClass)}>TARA</TableHead>
               <TableHead className={cn("font-semibold", colWidths.xs, hiddenColClass)}>MGW</TableHead>
@@ -134,8 +126,6 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               <TableHead className={cn("font-semibold", colWidths.md, hiddenColHeaderClass)}>DATA ESTUFAGEM</TableHead>
               <TableHead className={cn("font-semibold", colWidths.md, hiddenColHeaderClass)}>MOTORISTA SAIDA SJP</TableHead>
               <TableHead className={cn("font-semibold", colWidths.sm, hiddenColHeaderClass)}>PLACA (Saída)</TableHead>
-              
-              {/* Colunas de Ação */}
               <TableHead className="font-semibold text-center w-[45px] min-w-[45px]">Arquivos</TableHead>
               <TableHead className="font-semibold text-center w-[45px] min-w-[45px]">Ações</TableHead>
             </TableRow>
@@ -149,22 +139,18 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
               </TableRow>
             ) : (
               containers.map((container) => {
-                
                 return (
                   <TableRow 
                     key={container.id} 
-                    className="hover:bg-muted/30 cursor-pointer"
+                    className={cn("cursor-pointer", getRowClass(container.prazoDias))}
                     onClick={() => onContainerSelect(container)}
                   >
-                    {/* Colunas Fixas (CONTAINER e ARMADOR) */}
                     <TableCell className={cn("font-bold z-[25]", containerLeft, fixedCellClasses, containerWidth)}>
                       {container.container}
                     </TableCell>
                     <TableCell className={cn("font-bold z-20", armadorLeft, fixedCellClasses, armadorWidth)}>
                       {container.armador}
                     </TableCell>
-                    
-                    {/* Colunas Essenciais (Sempre visíveis) */}
                     <TableCell className={cn("text-center", colWidths.md, getDiasRestantesColor(container.prazoDias))}>
                       <div className="flex items-center justify-center gap-1">
                           {getDiasRestantesIcon(container.prazoDias)}
@@ -177,8 +163,6 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                     <TableCell className={cn(colWidths.md, "truncate")}>{container.motoristaEntrada}</TableCell>
                     <TableCell className={colWidths.sm}>{container.placa}</TableCell>
                     <TableCell className={colWidths.md}>{formatDateToBR(container.dataSaidaSJP)}</TableCell>
-                    
-                    {/* Colunas Ocultas (Visíveis apenas com rolagem horizontal ou em 2XL) */}
                     <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.operador}</TableCell>
                     <TableCell className={cn(colWidths.xs, "text-right", hiddenColClass)}>{container.tara || "-"}</TableCell>
                     <TableCell className={cn(colWidths.xs, "text-right", hiddenColClass)}>{container.mgw || "-"}</TableCell>
@@ -201,8 +185,6 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
                     <TableCell className={colWidths.md}>{formatDateToBR(container.dataEstufagem)}</TableCell>
                     <TableCell className={colWidths.md}>{formatDateToBR(container.motoristaSaidaSJP)}</TableCell>
                     <TableCell className={cn(colWidths.sm, hiddenColClass)}>{container.placaSaida}</TableCell>
-                    
-                    {/* Colunas de Ação */}
                     <TableCell className="text-center w-[45px] min-w-[45px]" onClick={(e) => e.stopPropagation()}>
                       <FileUploadDialog
                         containerId={container.id}
