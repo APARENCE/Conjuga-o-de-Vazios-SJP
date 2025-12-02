@@ -90,17 +90,46 @@ const excelDateToJSDate = (serial: any): string => {
   return String(serial);
 };
 
-// Ordem exata das chaves da interface Container, correspondendo à nova ordem da planilha (30 colunas).
-const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
-  'operador', 'motoristaEntrada', 'placa', 'dataEntrada', 'container', 'armador',
-  'tara', 'mgw', 'tipo', 'padrao', 'statusVazioCheio', 'dataPorto', 'freeTimeArmador',
-  'demurrage', 'prazoDias', 'clienteEntrada', 'transportadora', 'estoque',
-  'transportadoraSaida', 'statusEntregaMinuta', 'statusMinuta', 'bookingAtrelado',
-  'lacre', 'clienteSaidaDestino', 'atrelado', 'operadorSaida', 'dataEstufagem',
-  'dataSaidaSJP', 'motoristaSaidaSJP', 'placaSaida',
-];
+const normalizeHeader = (header: string): string => {
+  return (header || '')
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove accents
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, ''); // Remove spaces, parentheses, etc.
+};
 
-// Lista de chaves que representam campos de data no objeto Container
+const getHeaderMap = (): { [key: string]: keyof Container } => ({
+  'OPERADOR1': 'operador',
+  'MOTORISTAENTRADA': 'motoristaEntrada',
+  'PLACA1': 'placa',
+  'DATAENTRADA': 'dataEntrada',
+  'CONTAINER': 'container',
+  'ARMADOR': 'armador',
+  'TARA': 'tara',
+  'MGW': 'mgw',
+  'TIPO': 'tipo',
+  'PADRAO': 'padrao',
+  'STATUSVAZIOCHEIO': 'statusVazioCheio',
+  'DATAPORTO': 'dataPorto',
+  'FREETIMEARMADOR': 'freeTimeArmador',
+  'DEMURRAGE': 'demurrage',
+  'PRAZODIAS': 'prazoDias',
+  'CLIENTEDEENTRADA': 'clienteEntrada',
+  'TRANSPORTADORA': 'transportadora',
+  'ESTOQUE': 'estoque',
+  'TRANSPORTADORASAIDA': 'transportadoraSaida',
+  'STATUSENTREGAMINUTA': 'statusEntregaMinuta',
+  'STATUSMINUTA': 'statusMinuta',
+  'BOOKINGATRELADO': 'bookingAtrelado',
+  'LACRE': 'lacre',
+  'CLIENTESAIDADESTINO': 'clienteSaidaDestino',
+  'ATRELADO': 'atrelado',
+  'OPERADOR': 'operadorSaida',
+  'DATADAESTUFAGEM': 'dataEstufagem',
+  'DATASAIDASJP': 'dataSaidaSJP',
+  'MOTORISTASAIDASJP': 'motoristaSaidaSJP',
+  'PLACA': 'placaSaida',
+});
+
 const DATE_KEYS: (keyof Container)[] = [
     'dataEntrada', 'dataPorto', 'dataEstufagem', 'dataSaidaSJP'
 ];
@@ -115,47 +144,56 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
         const workbook = XLSX.read(data, { type: 'binary', cellDates: true, raw: false });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: "" }) as any[][];
         
-        if (jsonData.length < 2) {
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: "" }) as any[];
+        
+        if (jsonData.length === 0) {
           return resolve([]);
         }
 
-        const dataRows = jsonData.slice(1);
+        const headerMap = getHeaderMap();
         
-        const containers: Partial<Container>[] = dataRows
-          .filter(row => row.some(cell => String(cell || '').trim() !== ''))
+        const containers: Partial<Container>[] = jsonData
           .map((row) => {
             const partialContainer: Partial<Container> = {};
-
-            CONTAINER_KEYS_ORDER.forEach((key, colIndex) => {
-              let value = row[colIndex] ?? ""; 
-              const containerKey = key as keyof Container;
-
-              if (['tara', 'mgw'].includes(key)) {
-                const numericValue = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : Number(value);
-                (partialContainer as any)[containerKey] = isNaN(numericValue) ? 0 : numericValue;
-              } else if (['freeTimeArmador', 'prazoDias'].includes(key)) {
-                const intValue = typeof value === 'string' ? parseInt(value.replace(/\D/g, ''), 10) : Number(value);
-                (partialContainer as any)[containerKey] = isNaN(intValue) ? 0 : Math.round(intValue);
-              } else if (DATE_KEYS.includes(key)) {
-                (partialContainer as any)[containerKey] = excelDateToJSDate(value);
-              } else {
-                (partialContainer as any)[containerKey] = String(value).trim();
-              }
-            });
             
+            for (const header in row) {
+              const normalizedHeader = normalizeHeader(header);
+              const key = headerMap[normalizedHeader];
+              
+              if (key) {
+                let value = row[header] ?? "";
+                
+                if (['tara', 'mgw'].includes(key)) {
+                  const numericValue = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : Number(value);
+                  (partialContainer as any)[key] = isNaN(numericValue) ? 0 : numericValue;
+                } else if (['freeTimeArmador', 'prazoDias'].includes(key)) {
+                  const intValue = typeof value === 'string' ? parseInt(String(value).replace(/\D/g, ''), 10) : Number(value);
+                  (partialContainer as any)[key] = isNaN(intValue) ? 0 : Math.round(intValue);
+                } else if (DATE_KEYS.includes(key)) {
+                  (partialContainer as any)[key] = excelDateToJSDate(value);
+                } else {
+                  (partialContainer as any)[key] = String(value).trim();
+                }
+              }
+            }
+            
+            if (!partialContainer.container) {
+              return null;
+            }
+
             partialContainer.diasRestantes = partialContainer.prazoDias;
             partialContainer.status = partialContainer.status || partialContainer.statusVazioCheio || "";
             partialContainer.files = [];
 
             return partialContainer;
-          });
+          })
+          .filter((c): c is Partial<Container> => c !== null);
         
         resolve(containers);
       } catch (error) {
         console.error("Erro durante o parsing do Excel:", error);
-        reject(new Error("Falha ao ler o arquivo Excel. Verifique se o formato está correto."));
+        reject(new Error("Falha ao ler o arquivo Excel. Verifique se o formato está correto e os cabeçalhos correspondem ao esperado."));
       }
     };
     
