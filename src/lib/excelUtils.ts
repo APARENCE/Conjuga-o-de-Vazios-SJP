@@ -91,13 +91,16 @@ const excelDateToJSDate = (serial: any): string => {
 };
 
 // Ordem exata das chaves da interface Container, correspondendo à ordem das colunas na planilha.
+// Baseado na lista de 30 colunas fornecida pelo usuário, adicionando depotDevolucao no final para cobrir a interface.
 const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
   'operador', 'motoristaEntrada', 'placa', 'dataEntrada', 'container', 'armador',
   'tara', 'mgw', 'tipo', 'padrao', 'statusVazioCheio', 'dataPorto', 'freeTimeArmador',
   'demurrage', 'prazoDias', 'clienteEntrada', 'transportadora', 'estoque',
-  'transportadoraSaida', 'statusEntregaMinuta', 'statusMinuta', 'bookingAtrelado',
+  'transportadoraSaida', // Assumindo que a segunda 'TRANSPORTADORA' é a de Saída
+  'statusEntregaMinuta', 'statusMinuta', 'bookingAtrelado',
   'lacre', 'clienteSaidaDestino', 'atrelado', 'operadorSaida', 'dataEstufagem',
   'dataSaidaSJP', 'motoristaSaidaSJP', 'placaSaida',
+  'depotDevolucao', // Adicionado para cobrir a interface, será "" se a coluna não existir
 ];
 
 const DATE_KEYS: (keyof Container)[] = [
@@ -111,12 +114,12 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
     reader.onload = (e) => {
       try {
         const data = e.target?.result;
+        // Usamos raw: false para que o XLSX tente converter datas e números
         const workbook = XLSX.read(data, { type: 'array', cellDates: true, raw: false });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
-        // Usar header: 1 para obter um array de arrays, ignorando os nomes dos cabeçalhos.
-        // Isso é mais robusto contra variações nos nomes das colunas e duplicatas.
+        // Usar header: 1 para obter um array de arrays, ignorando os nomes dos cabeçalhos e lendo por índice.
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: "" }) as any[][];
         
         if (jsonData.length < 2) { // Deve ter cabeçalho + pelo menos uma linha de dados.
@@ -140,10 +143,14 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
               const containerKey = key as keyof Container;
 
               if (['tara', 'mgw'].includes(key)) {
-                const numericValue = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : Number(value);
+                // Conversão numérica robusta
+                const cleanedValue = String(value).trim().replace(',', '.');
+                const numericValue = parseFloat(cleanedValue);
                 (partialContainer as any)[containerKey] = isNaN(numericValue) ? 0 : numericValue;
               } else if (['freeTimeArmador', 'prazoDias'].includes(key)) {
-                const intValue = typeof value === 'string' ? parseInt(String(value).replace(/\D/g, ''), 10) : Number(value);
+                // Conversão inteira robusta
+                const cleanedValue = String(value).trim().replace(/\D/g, '');
+                const intValue = parseInt(cleanedValue, 10);
                 (partialContainer as any)[containerKey] = isNaN(intValue) ? 0 : Math.round(intValue);
               } else if (DATE_KEYS.includes(key)) {
                 (partialContainer as any)[containerKey] = excelDateToJSDate(value);
@@ -152,11 +159,22 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
               }
             });
             
-            // O número do contêiner está no índice 4 com base em CONTAINER_KEYS_ORDER.
-            if (!partialContainer.container || String(partialContainer.container).trim() === '') {
-              return null;
+            // Validação de campos obrigatórios (Container e Armador)
+            const containerNum = String(partialContainer.container || '').trim();
+            const armador = String(partialContainer.armador || '').trim();
+
+            if (!containerNum || containerNum === '') {
+              return null; // Linha sem número de container
+            }
+            
+            // Se o armador estiver vazio, definimos um padrão para evitar falhas de validação/DB
+            if (!armador || armador === '') {
+                partialContainer.armador = "N/A";
             }
 
+            // Garantir que todos os campos da interface existam, mesmo que vazios
+            if (!partialContainer.depotDevolucao) partialContainer.depotDevolucao = "";
+            
             partialContainer.diasRestantes = partialContainer.prazoDias;
             partialContainer.status = partialContainer.status || partialContainer.statusVazioCheio || "";
             partialContainer.files = [];
@@ -168,7 +186,7 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
         resolve(containers);
       } catch (error) {
         console.error("Erro durante o parsing do Excel:", error);
-        reject(new Error("Falha ao ler o arquivo Excel. Verifique se o formato está correto."));
+        reject(new Error("Falha ao ler o arquivo Excel. Verifique se o formato está correto e se a primeira aba contém os dados. Detalhe do erro: " + (error as Error).message));
       }
     };
     
