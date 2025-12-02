@@ -90,14 +90,14 @@ const excelDateToJSDate = (serial: any): string => {
   return String(serial);
 };
 
-// Ordem exata das chaves da interface Container, correspondendo à ordem da planilha (31 colunas).
+// Ordem exata das chaves da interface Container, correspondendo à nova ordem da planilha (30 colunas).
 const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
   'operador', 'motoristaEntrada', 'placa', 'dataEntrada', 'container', 'armador',
   'tara', 'mgw', 'tipo', 'padrao', 'statusVazioCheio', 'dataPorto', 'freeTimeArmador',
   'demurrage', 'prazoDias', 'clienteEntrada', 'transportadora', 'estoque',
   'transportadoraSaida', 'statusEntregaMinuta', 'statusMinuta', 'bookingAtrelado',
   'lacre', 'clienteSaidaDestino', 'atrelado', 'operadorSaida', 'dataEstufagem',
-  'dataSaidaSJP', 'motoristaSaidaSJP', 'placaSaida', 'depotDevolucao',
+  'dataSaidaSJP', 'motoristaSaidaSJP', 'placaSaida',
 ];
 
 // Lista de chaves que representam campos de data no objeto Container
@@ -192,14 +192,11 @@ export const exportToExcel = (containers: Container[]) => {
       'LACRE': c.lacre,
       'CLIENTE SAIDA / DESTINO': c.clienteSaidaDestino,
       'ATRELADO': c.atrelado,
-      'OPERADOR SAIDA': c.operadorSaida,
+      'OPERADOR': c.operadorSaida,
       'DATA DA ESTUFAGEM': formatDateToBR(c.dataEstufagem),
       'DATA SAIDA SJP': formatDateToBR(c.dataSaidaSJP),
       'MOTORISTA SAIDA SJP': c.motoristaSaidaSJP,
-      'PLACA SAIDA': c.placaSaida,
-      'DEPOT DE DEVOLUÇÃO': c.depotDevolucao,
-      'STATUS GERAL': c.status,
-      'DIAS RESTANTES (COMPAT)': c.diasRestantes,
+      'PLACA': c.placaSaida,
     }))
   );
   
