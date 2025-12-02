@@ -107,6 +107,7 @@ const getHeaderMap = (): { [normalizedHeader: string]: keyof Container } => {
     'DATA ENTRADA': 'dataEntrada',
     'DATAENTRADA': 'dataEntrada',
     'CONTAINER': 'container',
+    'CONTAINER.': 'container',
     'Nº CONTAINER': 'container',
     'NUMERO CONTAINER': 'container',
     'ARMADOR': 'armador',
