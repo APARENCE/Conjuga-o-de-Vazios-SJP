@@ -90,15 +90,82 @@ const excelDateToJSDate = (serial: any): string => {
   return String(serial);
 };
 
-// Ordem exata das chaves da interface Container, correspondendo à nova ordem da planilha (30 colunas).
-const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
-  'operador', 'motoristaEntrada', 'placa', 'dataEntrada', 'container', 'armador',
-  'tara', 'mgw', 'tipo', 'padrao', 'statusVazioCheio', 'dataPorto', 'freeTimeArmador',
-  'demurrage', 'prazoDias', 'clienteEntrada', 'transportadora', 'estoque',
-  'transportadoraSaida', 'statusEntregaMinuta', 'statusMinuta', 'bookingAtrelado',
-  'lacre', 'clienteSaidaDestino', 'atrelado', 'operadorSaida', 'dataEstufagem',
-  'dataSaidaSJP', 'motoristaSaidaSJP', 'placaSaida',
-];
+const normalizeHeader = (header: string): string => {
+  return (header || '').trim().toUpperCase();
+};
+
+const getHeaderMap = (): { [normalizedHeader: string]: keyof Container } => {
+  return {
+    'OPERADOR1': 'operador',
+    'OPERADOR 1': 'operador',
+    'OPERADOR (ENTRADA)': 'operador',
+    'MOTORISTA ENTRADA': 'motoristaEntrada',
+    'MOTORISTAENTRADA': 'motoristaEntrada',
+    'PLACA1': 'placa',
+    'PLACA 1': 'placa',
+    'PLACA (ENTRADA)': 'placa',
+    'DATA ENTRADA': 'dataEntrada',
+    'DATAENTRADA': 'dataEntrada',
+    'CONTAINER': 'container',
+    'Nº CONTAINER': 'container',
+    'NUMERO CONTAINER': 'container',
+    'ARMADOR': 'armador',
+    'TARA': 'tara',
+    'MGW': 'mgw',
+    'TIPO': 'tipo',
+    'PADRÃO': 'padrao',
+    'PADRAO': 'padrao',
+    'STATUS (VAZIO/CHEIO)': 'statusVazioCheio',
+    'STATUS (V/C)': 'statusVazioCheio',
+    'STATUS VAZIO/CHEIO': 'statusVazioCheio',
+    'STATUSVAZIOCHEIO': 'statusVazioCheio',
+    'DATA PORTO': 'dataPorto',
+    'DATAPORTO': 'dataPorto',
+    'FREETIMEARMADOR': 'freeTimeArmador',
+    'FREE TIME ARMADOR': 'freeTimeArmador',
+    'FREE TIME': 'freeTimeArmador',
+    'DEMURRAGE': 'demurrage',
+    'PRAZO(DIAS)': 'prazoDias',
+    'PRAZO (DIAS)': 'prazoDias',
+    'PRAZO DIAS': 'prazoDias',
+    'PRAZO': 'prazoDias',
+    'CLIENTE DE ENTRADA': 'clienteEntrada',
+    'CLIENTE ENTRADA': 'clienteEntrada',
+    'CLIENTEDEENTRADA': 'clienteEntrada',
+    'TRANSPORTADORA': 'transportadora',
+    'TRANSPORTADORA (ENTRADA)': 'transportadora',
+    'ESTOQUE': 'estoque',
+    'TRANSPORTADORA SAIDA': 'transportadoraSaida',
+    'TRANSPORTADORASAIDA': 'transportadoraSaida',
+    'TRANSPORTADORA (SAÍDA)': 'transportadoraSaida',
+    'TRANSPORTADORA (SAIDA)': 'transportadoraSaida',
+    'STATUS ENTREGA MINUTA': 'statusEntregaMinuta',
+    'STATUSENTREGAMINUTA': 'statusEntregaMinuta',
+    'STATUS MINUTA': 'statusMinuta',
+    'STATUSMINUTA': 'statusMinuta',
+    'BOOKING ATRELADO': 'bookingAtrelado',
+    'BOOKINGATRELADO': 'bookingAtrelado',
+    'LACRE': 'lacre',
+    'CLIENTE SAIDA / DESTINO': 'clienteSaidaDestino',
+    'CLIENTE SAIDA/DESTINO': 'clienteSaidaDestino',
+    'CLIENTE SAIDA': 'clienteSaidaDestino',
+    'CLIENTESAIDADESTINO': 'clienteSaidaDestino',
+    'ATRELADO': 'atrelado',
+    'OPERADOR': 'operadorSaida',
+    'OPERADOR (SAÍDA)': 'operadorSaida',
+    'OPERADOR (SAIDA)': 'operadorSaida',
+    'DATA DA ESTUFAGEM': 'dataEstufagem',
+    'DATA ESTUFAGEM': 'dataEstufagem',
+    'DATADAESTUFAGEM': 'dataEstufagem',
+    'DATA SAIDA SJP': 'dataSaidaSJP',
+    'DATASAIDASJP': 'dataSaidaSJP',
+    'MOTORISTA SAIDA SJP': 'motoristaSaidaSJP',
+    'MOTORISTASAIDASJP': 'motoristaSaidaSJP',
+    'PLACA': 'placaSaida',
+    'PLACA (SAÍDA)': 'placaSaida',
+    'PLACA (SAIDA)': 'placaSaida',
+  };
+};
 
 const DATE_KEYS: (keyof Container)[] = [
     'dataEntrada', 'dataPorto', 'dataEstufagem', 'dataSaidaSJP'
@@ -115,43 +182,39 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
-        // Use header: 1 para obter um array de arrays, ignorando os nomes dos cabeçalhos
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: "" }) as any[][];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: "" }) as any[];
         
-        if (jsonData.length < 2) { // Deve ter cabeçalho + pelo menos uma linha de dados
+        if (jsonData.length === 0) {
           return resolve([]);
         }
 
-        // Pula a linha de cabeçalho (jsonData[0]) e processa as linhas de dados
-        const dataRows = jsonData.slice(1);
+        const headerMap = getHeaderMap();
         
-        const containers: Partial<Container>[] = dataRows
+        const containers: Partial<Container>[] = jsonData
           .map((row) => {
-            // Ignora linhas completamente vazias
-            if (row.every(cell => String(cell || '').trim() === '')) {
-                return null;
-            }
-
             const partialContainer: Partial<Container> = {};
             
-            CONTAINER_KEYS_ORDER.forEach((key, colIndex) => {
-              let value = row[colIndex] ?? ""; 
-              const containerKey = key as keyof Container;
-
-              if (['tara', 'mgw'].includes(key)) {
-                const numericValue = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : Number(value);
-                (partialContainer as any)[containerKey] = isNaN(numericValue) ? 0 : numericValue;
-              } else if (['freeTimeArmador', 'prazoDias'].includes(key)) {
-                const intValue = typeof value === 'string' ? parseInt(String(value).replace(/\D/g, ''), 10) : Number(value);
-                (partialContainer as any)[containerKey] = isNaN(intValue) ? 0 : Math.round(intValue);
-              } else if (DATE_KEYS.includes(key)) {
-                (partialContainer as any)[containerKey] = excelDateToJSDate(value);
-              } else {
-                (partialContainer as any)[containerKey] = String(value).trim();
+            for (const rawHeader in row) {
+              const normalizedHeader = normalizeHeader(rawHeader);
+              const key = headerMap[normalizedHeader];
+              
+              if (key) {
+                let value = row[rawHeader] ?? "";
+                
+                if (['tara', 'mgw'].includes(key)) {
+                  const numericValue = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : Number(value);
+                  (partialContainer as any)[key] = isNaN(numericValue) ? 0 : numericValue;
+                } else if (['freeTimeArmador', 'prazoDias'].includes(key)) {
+                  const intValue = typeof value === 'string' ? parseInt(String(value).replace(/\D/g, ''), 10) : Number(value);
+                  (partialContainer as any)[key] = isNaN(intValue) ? 0 : Math.round(intValue);
+                } else if (DATE_KEYS.includes(key)) {
+                  (partialContainer as any)[key] = excelDateToJSDate(value);
+                } else {
+                  (partialContainer as any)[key] = String(value).trim();
+                }
               }
-            });
+            }
             
-            // O número do contêiner está no índice 4 com base em CONTAINER_KEYS_ORDER
             if (!partialContainer.container || String(partialContainer.container).trim() === '') {
               return null;
             }
