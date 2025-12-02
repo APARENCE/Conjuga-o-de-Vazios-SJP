@@ -111,7 +111,7 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
     reader.onload = (e) => {
       try {
         const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary', cellDates: true, raw: false });
+        const workbook = XLSX.read(data, { type: 'array', cellDates: true, raw: false });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
@@ -172,7 +172,7 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
     };
     
     reader.onerror = (error) => reject(error);
-    reader.readAsBinaryString(file);
+    reader.readAsArrayBuffer(file);
   });
 };
 
