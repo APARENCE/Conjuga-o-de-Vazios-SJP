@@ -11,9 +11,74 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Plus, Package, Calendar, Truck, Clock, AlertTriangle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  TIPO_OPTIONS,
+  PADRAO_OPTIONS,
+  STATUS_VAZIO_CHEIO_OPTIONS,
+  ESTOQUE_OPTIONS,
+  STATUS_ENTREGA_MINUTA_OPTIONS,
+  STATUS_MINUTA_OPTIONS,
+  STATUS_GERAL_OPTIONS,
+} from "@/data/formOptions";
+import { cn } from "@/lib/utils";
+
+// --- Esquema de Validação Zod ---
+const ContainerSchema = z.object({
+  // Seção 1: Entrada e Identificação
+  operador: z.string().optional(),
+  motoristaEntrada: z.string().optional(),
+  placa: z.string().optional(),
+  dataEntrada: z.string().optional(),
+  container: z.string().min(1, "Obrigatório"),
+  armador: z.string().min(1, "Obrigatório"),
+  tara: z.number().min(0).optional().default(0),
+  mgw: z.number().min(0).optional().default(0),
+  tipo: z.enum(TIPO_OPTIONS as [string, ...string[]]).optional(),
+  padrao: z.enum(PADRAO_OPTIONS as [string, ...string[]]).optional(),
+  statusVazioCheio: z.enum(STATUS_VAZIO_CHEIO_OPTIONS as [string, ...string[]]).optional(),
+  
+  // Seção 2: Prazos e Clientes
+  dataPorto: z.string().optional(),
+  freeTimeArmador: z.number().min(0).optional().default(0),
+  demurrage: z.string().optional(),
+  prazoDias: z.number().min(0).optional().default(0),
+  clienteEntrada: z.string().optional(),
+  transportadora: z.string().optional(),
+  
+  // Seção 3: Saída e Minuta
+  estoque: z.enum(ESTOQUE_OPTIONS as [string, ...string[]]).optional(),
+  transportadoraSaida: z.string().optional(),
+  statusEntregaMinuta: z.enum(STATUS_ENTREGA_MINUTA_OPTIONS as [string, ...string[]]).optional(),
+  statusMinuta: z.enum(STATUS_MINUTA_OPTIONS as [string, ...string[]]).optional(),
+  bookingAtrelado: z.string().optional(),
+  lacre: z.string().optional(),
+  clienteSaidaDestino: z.string().optional(),
+  atrelado: z.string().optional(),
+  operadorSaida: z.string().optional(),
+  dataEstufagem: z.string().optional(),
+  
+  // Seção 4: Baixa SJP e Status Geral
+  dataSaidaSJP: z.string().optional(),
+  motoristaSaidaSJP: z.string().optional(),
+  placaSaida: z.string().optional(),
+  depotDevolucao: z.string().optional(),
+  status: z.enum(STATUS_GERAL_OPTIONS as [string, ...string[]]).optional(),
+  
+  // Campos de cálculo/metadata (não editáveis diretamente no formulário)
+  diasRestantes: z.number().optional().default(0),
+  id: z.string().optional(),
+  files: z.any().optional(),
+});
+
+type ContainerFormData = z.infer<typeof ContainerSchema>;
 
 interface ContainerFormDialogProps {
   container?: Container;
@@ -21,70 +86,121 @@ interface ContainerFormDialogProps {
   trigger?: React.ReactNode;
 }
 
-// Estrutura de dados inicial (com todos os novos campos)
-const initialFormData: Partial<Container> = {
-  operador: "",
-  motoristaEntrada: "",
-  placa: "",
-  dataEntrada: "",
-  container: "",
-  armador: "",
-  tara: 0,
-  mgw: 0,
-  tipo: "",
-  padrao: "",
-  statusVazioCheio: "",
-  dataPorto: "",
-  freeTimeArmador: 0,
-  demurrage: "",
-  prazoDias: 0,
-  clienteEntrada: "",
-  transportadora: "",
-  estoque: "",
-  transportadoraSaida: "",
-  statusEntregaMinuta: "",
-  statusMinuta: "",
-  bookingAtrelado: "",
-  lacre: "",
-  clienteSaidaDestino: "",
-  atrelado: "",
-  operadorSaida: "",
-  dataEstufagem: "",
-  dataSaidaSJP: "",
-  motoristaSaidaSJP: "",
-  placaSaida: "",
-  diasRestantes: 0,
-  status: "",
+// Função auxiliar para garantir que o valor seja um dos valores válidos do enum ou vazio
+const getValidSelectValue = (value: string | number | undefined, options: readonly string[]): string => {
+    const strValue = String(value || '');
+    if (options.includes(strValue)) {
+        return strValue;
+    }
+    return ''; // Retorna string vazia se não for válido
 };
 
 export function ContainerFormDialog({ container, onSave, trigger }: ContainerFormDialogProps) {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState<Partial<Container>>(initialFormData);
+  
+  const defaultValues: ContainerFormData = {
+    operador: "", motoristaEntrada: "", placa: "", dataEntrada: "", container: "", armador: "",
+    tara: 0, mgw: 0, tipo: "", padrao: "", statusVazioCheio: "", dataPorto: "", freeTimeArmador: 0,
+    demurrage: "", prazoDias: 0, clienteEntrada: "", transportadora: "", estoque: "",
+    transportadoraSaida: "", statusEntregaMinuta: "", statusMinuta: "", bookingAtrelado: "",
+    lacre: "", clienteSaidaDestino: "", atrelado: "", operadorSaida: "", dataEstufagem: "",
+    dataSaidaSJP: "", motoristaSaidaSJP: "", placaSaida: "", depotDevolucao: "", diasRestantes: 0, status: "",
+  };
+
+  const form = useForm<ContainerFormData>({
+    resolver: zodResolver(ContainerSchema),
+    defaultValues: defaultValues,
+  });
 
   useEffect(() => {
     if (container) {
-      setFormData(container);
+      // Mapeamento de volta para o formulário, garantindo que Selects tenham valores válidos
+      form.reset({
+        ...container,
+        tara: Number(container.tara) || 0,
+        mgw: Number(container.mgw) || 0,
+        freeTimeArmador: Number(container.freeTimeArmador) || 0,
+        prazoDias: Number(container.prazoDias) || 0,
+        diasRestantes: Number(container.diasRestantes) || 0, // FIX: Garantir que diasRestantes seja number
+        tipo: getValidSelectValue(container.tipo, TIPO_OPTIONS),
+        padrao: getValidSelectValue(container.padrao, PADRAO_OPTIONS),
+        statusVazioCheio: getValidSelectValue(container.statusVazioCheio, STATUS_VAZIO_CHEIO_OPTIONS),
+        estoque: getValidSelectValue(container.estoque, ESTOQUE_OPTIONS),
+        statusEntregaMinuta: getValidSelectValue(container.statusEntregaMinuta, STATUS_ENTREGA_MINUTA_OPTIONS),
+        statusMinuta: getValidSelectValue(container.statusMinuta, STATUS_MINUTA_OPTIONS),
+        status: getValidSelectValue(container.status, STATUS_GERAL_OPTIONS),
+      });
     } else {
-      setFormData(initialFormData);
+      form.reset(defaultValues);
     }
-  }, [container, open]);
+  }, [container, open, form]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const onSubmit = (data: ContainerFormData) => {
     // Garante que diasRestantes seja atualizado com prazoDias
-    const dataToSave = {
-        ...formData,
-        diasRestantes: formData.prazoDias,
+    const dataToSave: Partial<Container> = {
+        ...data,
+        diasRestantes: data.prazoDias,
     };
     
     onSave(dataToSave);
     setOpen(false);
   };
-
-  const handleChange = (field: keyof Container, value: string | number) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  
+  // Componente auxiliar para renderizar campos de input
+  const InputField = ({ name, label, type = "text", placeholder, required = false }: { name: keyof ContainerFormData, label: string, type?: string, placeholder?: string, required?: boolean }) => (
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <FormItem className="space-y-1">
+          <FormLabel className={cn("text-xs", required && "font-bold")}>{label} {required && "*"}</FormLabel>
+          <FormControl>
+            <Input 
+              {...field} 
+              type={type}
+              placeholder={placeholder}
+              className="h-8 text-sm"
+              value={field.value === 0 && type === 'number' ? 0 : field.value || ''}
+              onChange={(e) => {
+                if (type === 'number') {
+                  field.onChange(parseFloat(e.target.value) || 0);
+                } else {
+                  field.onChange(e.target.value);
+                }
+              }}
+            />
+          </FormControl>
+          <FormMessage className="text-xs" />
+        </FormItem>
+      )}
+    />
+  );
+  
+  // Componente auxiliar para renderizar campos de Select
+  const SelectField = ({ name, label, options }: { name: keyof ContainerFormData, label: string, options: readonly string[] }) => (
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <FormItem className="space-y-1">
+          <FormLabel className="text-xs">{label}</FormLabel>
+          <Select onValueChange={field.onChange} value={field.value || ''}>
+            <FormControl>
+              <SelectTrigger className="h-8 text-sm">
+                <SelectValue placeholder={`Selecione o ${label.toLowerCase()}`} />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {options.map(option => (
+                <SelectItem key={option} value={option}>{option}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FormMessage className="text-xs" />
+        </FormItem>
+      )}
+    />
+  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -96,180 +212,121 @@ export function ContainerFormDialog({ container, onSave, trigger }: ContainerFor
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle>{container ? "Editar Container" : "Novo Container"}</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="max-w-5xl max-h-[95vh] p-0"> {/* Aumentando o tamanho máximo */}
+        <DialogHeader className="p-4 pb-0">
+          <DialogTitle className="text-xl">{container ? "Editar Container" : "Novo Container"}</DialogTitle>
+          <DialogDescription className="text-sm">
             {container ? "Edite os dados do container" : "Preencha os dados do novo container"}
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[70vh] pr-4">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            
-            {/* Seção 1: Entrada e Identificação (11 campos) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 border-b pb-4">
-              <h3 className="col-span-full text-sm font-semibold text-muted-foreground">1. Entrada e Identificação</h3>
-              
-              {/* Linha 1: OPERADOR1, MOTORISTA ENTRADA, PLACA1, DATA ENTRADA, CONTAINER, ARMADOR */}
-              <div className="space-y-2">
-                <Label htmlFor="operador">OPERADOR1</Label>
-                <Input id="operador" value={formData.operador} onChange={(e) => handleChange("operador", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="motoristaEntrada">MOTORISTA ENTRADA</Label>
-                <Input id="motoristaEntrada" value={formData.motoristaEntrada} onChange={(e) => handleChange("motoristaEntrada", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="placa">PLACA1</Label>
-                <Input id="placa" value={formData.placa} onChange={(e) => handleChange("placa", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="dataEntrada">DATA ENTRADA</Label>
-                <Input id="dataEntrada" value={formData.dataEntrada} onChange={(e) => handleChange("dataEntrada", e.target.value)} placeholder="DD/MM/AAAA" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="container">CONTAINER *</Label>
-                <Input id="container" value={formData.container} onChange={(e) => handleChange("container", e.target.value)} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="armador">ARMADOR *</Label>
-                <Input id="armador" value={formData.armador} onChange={(e) => handleChange("armador", e.target.value)} required />
-              </div>
-              
-              {/* Linha 2: TARA, MGW, TIPO, PADRÃO, STATUS (V/C) */}
-              <div className="space-y-2">
-                <Label htmlFor="tara">TARA (kg)</Label>
-                <Input id="tara" type="number" value={formData.tara} onChange={(e) => handleChange("tara", parseFloat(e.target.value) || 0)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="mgw">MGW (kg)</Label>
-                <Input id="mgw" type="number" value={formData.mgw} onChange={(e) => handleChange("mgw", parseFloat(e.target.value) || 0)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tipo">TIPO</Label>
-                <Input id="tipo" value={formData.tipo} onChange={(e) => handleChange("tipo", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="padrao">PADRÃO</Label>
-                <Input id="padrao" value={formData.padrao} onChange={(e) => handleChange("padrao", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="statusVazioCheio">STATUS (VAZIO/CHEIO)</Label>
-                <Input id="statusVazioCheio" value={formData.statusVazioCheio} onChange={(e) => handleChange("statusVazioCheio", e.target.value)} />
-              </div>
-            </div>
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+            <ScrollArea className="flex-1 max-h-[80vh] p-4 pt-2">
+              <div className="space-y-6">
+                
+                {/* Seção 1: Entrada e Identificação */}
+                <Card className="compact-card">
+                  <CardHeader className="p-3 pb-2 flex flex-row items-center gap-2">
+                    <Package className="h-4 w-4 text-primary" />
+                    <CardTitle className="text-sm font-semibold">1. Entrada e Identificação</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3 pt-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      
+                      <InputField name="container" label="CONTAINER" required />
+                      <InputField name="armador" label="ARMADOR" required />
+                      <InputField name="dataEntrada" label="DATA ENTRADA" placeholder="DD/MM/AAAA" />
+                      <InputField name="operador" label="OPERADOR1" />
+                      
+                      <InputField name="motoristaEntrada" label="MOTORISTA ENTRADA" />
+                      <InputField name="placa" label="PLACA1" />
+                      <InputField name="tara" label="TARA (kg)" type="number" />
+                      <InputField name="mgw" label="MGW (kg)" type="number" />
+                      
+                      <SelectField name="tipo" label="TIPO" options={TIPO_OPTIONS} />
+                      <SelectField name="padrao" label="PADRÃO" options={PADRAO_OPTIONS} />
+                      <SelectField name="statusVazioCheio" label="STATUS (VAZIO/CHEIO)" options={STATUS_VAZIO_CHEIO_OPTIONS} />
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Seção 2: Prazos e Clientes (6 campos) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 border-b pb-4">
-              <h3 className="col-span-full text-sm font-semibold text-muted-foreground">2. Prazos e Clientes</h3>
-              
-              {/* DATA PORTO, FREETimearmador, Demurrage, Prazo(dias), CLIENTE DE ENTRADA, TRANSPORTADORA (Entrada) */}
-              <div className="space-y-2">
-                <Label htmlFor="dataPorto">DATA PORTO</Label>
-                <Input id="dataPorto" value={formData.dataPorto} onChange={(e) => handleChange("dataPorto", e.target.value)} placeholder="DD/MM/AAAA" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="freeTimeArmador">FREE TIME ARMADOR (dias)</Label>
-                <Input id="freeTimeArmador" type="number" value={formData.freeTimeArmador} onChange={(e) => handleChange("freeTimeArmador", parseInt(e.target.value) || 0)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="demurrage">DEMURRAGE</Label>
-                <Input id="demurrage" value={formData.demurrage} onChange={(e) => handleChange("demurrage", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="prazoDias">PRAZO (DIAS)</Label>
-                <Input id="prazoDias" type="number" value={formData.prazoDias} onChange={(e) => handleChange("prazoDias", parseInt(e.target.value) || 0)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="clienteEntrada">CLIENTE DE ENTRADA</Label>
-                <Input id="clienteEntrada" value={formData.clienteEntrada} onChange={(e) => handleChange("clienteEntrada", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="transportadora">TRANSPORTADORA (Entrada)</Label>
-                <Input id="transportadora" value={formData.transportadora} onChange={(e) => handleChange("transportadora", e.target.value)} />
-              </div>
-            </div>
+                {/* Seção 2: Prazos e Clientes */}
+                <Card className="compact-card">
+                  <CardHeader className="p-3 pb-2 flex flex-row items-center gap-2">
+                    <Calendar className="h-4 w-4 text-primary" />
+                    <CardTitle className="text-sm font-semibold">2. Prazos e Clientes</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3 pt-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      
+                      <InputField name="dataPorto" label="DATA PORTO" placeholder="DD/MM/AAAA" />
+                      <InputField name="freeTimeArmador" label="FREE TIME ARMADOR (dias)" type="number" />
+                      <InputField name="prazoDias" label="PRAZO (DIAS)" type="number" />
+                      <InputField name="demurrage" label="DEMURRAGE" />
+                      
+                      <InputField name="clienteEntrada" label="CLIENTE DE ENTRADA" />
+                      <InputField name="transportadora" label="TRANSPORTADORA (Entrada)" />
+                      <SelectField name="estoque" label="ESTOQUE" options={ESTOQUE_OPTIONS} />
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Seção 3: Saída e Minuta (10 campos) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 border-b pb-4">
-              <h3 className="col-span-full text-sm font-semibold text-muted-foreground">3. Saída e Minuta</h3>
-              
-              {/* ESTOQUE, TRANSPORTADORA (Saída), STATUS ENTREGA MINUTA, STATUS MINUTA, BOOKING ATRELADO, LACRE */}
-              <div className="space-y-2">
-                <Label htmlFor="estoque">ESTOQUE</Label>
-                <Input id="estoque" value={formData.estoque} onChange={(e) => handleChange("estoque", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="transportadoraSaida">TRANSPORTADORA (Saída)</Label>
-                <Input id="transportadoraSaida" value={formData.transportadoraSaida} onChange={(e) => handleChange("transportadoraSaida", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="statusEntregaMinuta">STATUS ENTREGA MINUTA</Label>
-                <Input id="statusEntregaMinuta" value={formData.statusEntregaMinuta} onChange={(e) => handleChange("statusEntregaMinuta", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="statusMinuta">STATUS MINUTA</Label>
-                <Input id="statusMinuta" value={formData.statusMinuta} onChange={(e) => handleChange("statusMinuta", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="bookingAtrelado">BOOKING ATRELADO</Label>
-                <Input id="bookingAtrelado" value={formData.bookingAtrelado} onChange={(e) => handleChange("bookingAtrelado", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lacre">LACRE</Label>
-                <Input id="lacre" value={formData.lacre} onChange={(e) => handleChange("lacre", e.target.value)} />
-              </div>
-              
-              {/* CLIENTE SAIDA / DESTINO, ATRELADO, OPERADOR (Saída), DATA DA ESTUFAGEM */}
-              <div className="space-y-2">
-                <Label htmlFor="clienteSaidaDestino">CLIENTE SAIDA / DESTINO</Label>
-                <Input id="clienteSaidaDestino" value={formData.clienteSaidaDestino} onChange={(e) => handleChange("clienteSaidaDestino", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="atrelado">ATRELADO</Label>
-                <Input id="atrelado" value={formData.atrelado} onChange={(e) => handleChange("atrelado", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="operadorSaida">OPERADOR (Saída)</Label>
-                <Input id="operadorSaida" value={formData.operadorSaida} onChange={(e) => handleChange("operadorSaida", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="dataEstufagem">DATA DA ESTUFAGEM</Label>
-                <Input id="dataEstufagem" value={formData.dataEstufagem} onChange={(e) => handleChange("dataEstufagem", e.target.value)} placeholder="DD/MM/AAAA" />
-              </div>
-            </div>
+                {/* Seção 3: Saída e Minuta */}
+                <Card className="compact-card">
+                  <CardHeader className="p-3 pb-2 flex flex-row items-center gap-2">
+                    <Truck className="h-4 w-4 text-primary" />
+                    <CardTitle className="text-sm font-semibold">3. Saída e Minuta</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3 pt-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      
+                      <InputField name="transportadoraSaida" label="TRANSPORTADORA (Saída)" />
+                      <SelectField name="statusEntregaMinuta" label="STATUS ENTREGA MINUTA" options={STATUS_ENTREGA_MINUTA_OPTIONS} />
+                      <SelectField name="statusMinuta" label="STATUS MINUTA" options={STATUS_MINUTA_OPTIONS} />
+                      <InputField name="bookingAtrelado" label="BOOKING ATRELADO" />
+                      
+                      <InputField name="lacre" label="LACRE" />
+                      <InputField name="clienteSaidaDestino" label="CLIENTE SAIDA / DESTINO" />
+                      <InputField name="atrelado" label="ATRELADO" />
+                      <InputField name="operadorSaida" label="OPERADOR (Saída)" />
+                      
+                      <InputField name="dataEstufagem" label="DATA DA ESTUFAGEM" placeholder="DD/MM/AAAA" />
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Seção 4: Saída SJP e Status Geral (4 campos) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              <h3 className="col-span-full text-sm font-semibold text-muted-foreground">4. Saída SJP e Status Geral</h3>
-              
-              {/* DATA SAIDA SJP, MOTORISTA SAIDA SJP, PLACA SAIDA, STATUS GERAL */}
-              <div className="space-y-2">
-                <Label htmlFor="dataSaidaSJP">DATA SAIDA SJP</Label>
-                <Input id="dataSaidaSJP" value={formData.dataSaidaSJP} onChange={(e) => handleChange("dataSaidaSJP", e.target.value)} placeholder="DD/MM/AAAA" />
+                {/* Seção 4: Baixa SJP e Status Geral */}
+                <Card className="compact-card">
+                  <CardHeader className="p-3 pb-2 flex flex-row items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-primary" />
+                    <CardTitle className="text-sm font-semibold">4. Baixa SJP e Status Geral</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3 pt-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      
+                      <InputField name="dataSaidaSJP" label="DATA SAIDA SJP" placeholder="DD/MM/AAAA" />
+                      <InputField name="motoristaSaidaSJP" label="MOTORISTA SAIDA SJP" />
+                      <InputField name="placaSaida" label="PLACA (Saída)" />
+                      <InputField name="depotDevolucao" label="DEPOT DE DEVOLUÇÃO" />
+                      
+                      <SelectField name="status" label="STATUS GERAL" options={STATUS_GERAL_OPTIONS} />
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="motoristaSaidaSJP">MOTORISTA SAIDA SJP</Label>
-                <Input id="motoristaSaidaSJP" value={formData.motoristaSaidaSJP} onChange={(e) => handleChange("motoristaSaidaSJP", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="placaSaida">PLACA (Saída)</Label>
-                <Input id="placaSaida" value={formData.placaSaida} onChange={(e) => handleChange("placaSaida", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">STATUS GERAL</Label>
-                <Input id="status" value={formData.status} onChange={(e) => handleChange("status", e.target.value)} />
-              </div>
-            </div>
+            </ScrollArea>
 
-            <DialogFooter>
+            <DialogFooter className="p-4 pt-2 border-t">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit">Salvar</Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                Salvar
+              </Button>
             </DialogFooter>
           </form>
-        </ScrollArea>
+        </Form>
       </DialogContent>
     </Dialog>
   );
