@@ -56,6 +56,7 @@ const excelDateToJSDate = (serial: any): string => {
 
   if (typeof serial === "number") {
     // Excel stores dates as numbers (days since 1900-01-01)
+    // 25569 é o número de dias entre 1900-01-01 e 1970-01-01
     const utc_days = Math.floor(serial - 25569);
     date = new Date(utc_days * 86400 * 1000);
     
@@ -72,7 +73,8 @@ const excelDateToJSDate = (serial: any): string => {
     const brMatch = serial.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
     if (brMatch) {
         // DD/MM/YYYY
-        date = new Date(`${brMatch[3]}-${brMatch[2]}-${brMatch[1]}`);
+        // Nota: O construtor Date(YYYY, MM-1, DD) é mais confiável
+        date = new Date(parseInt(brMatch[3]), parseInt(brMatch[2]) - 1, parseInt(brMatch[1]));
     } else {
         // Tenta parsear como ISO ou outro formato
         date = new Date(serial);
@@ -114,11 +116,13 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
       try {
         const data = e.target?.result;
         // Usamos raw: false para que o XLSX tente converter datas e números
+        // cellDates: true é importante para que o XLSX retorne objetos Date para datas reconhecidas
         const workbook = XLSX.read(data, { type: 'array', cellDates: true, raw: false });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
         // Usar header: 1 para obter um array de arrays, ignorando os nomes dos cabeçalhos e lendo por índice.
+        // raw: false garante que datas sejam retornadas como objetos Date se cellDates: true for usado.
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: "" }) as any[][];
         
         if (jsonData.length < 2) { // Deve ter cabeçalho + pelo menos uma linha de dados.
@@ -151,11 +155,17 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
                 (partialContainer as any)[containerKey] = isNaN(numericValue) ? 0 : numericValue;
               } else if (['freeTimeArmador', 'prazoDias'].includes(key)) {
                 // Conversão inteira robusta
-                const cleanedValue = String(value).trim().replace(/\D/g, '');
-                const intValue = parseInt(cleanedValue, 10);
-                (partialContainer as any)[containerKey] = isNaN(intValue) ? 0 : Math.round(intValue);
+                // Se o valor for um número (serial do Excel), ele será tratado como tal.
+                const intValue = typeof value === 'number' ? Math.round(value) : parseInt(String(value).trim().replace(/\D/g, ''), 10);
+                (partialContainer as any)[containerKey] = isNaN(intValue) ? 0 : intValue;
               } else if (DATE_KEYS.includes(key)) {
-                (partialContainer as any)[containerKey] = excelDateToJSDate(value);
+                // Se o XLSX retornou um objeto Date (devido a cellDates: true), formatamos.
+                if (value instanceof Date) {
+                    (partialContainer as any)[containerKey] = formatDateToBR(value);
+                } else {
+                    // Caso contrário, tentamos a conversão de serial/string
+                    (partialContainer as any)[containerKey] = excelDateToJSDate(value);
+                }
               } else {
                 (partialContainer as any)[containerKey] = String(value).trim();
               }
