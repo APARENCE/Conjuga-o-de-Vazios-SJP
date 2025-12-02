@@ -90,17 +90,16 @@ const excelDateToJSDate = (serial: any): string => {
   return String(serial);
 };
 
-// Ordem exata das chaves da interface Container, correspondendo à ordem das colunas na planilha.
-// Baseado na lista de 30 colunas fornecida pelo usuário, adicionando depotDevolucao no final para cobrir a interface.
+// Ordem exata das chaves da interface Container, correspondendo à ordem das 30 colunas na planilha.
 const CONTAINER_KEYS_ORDER: (keyof Container)[] = [
   'operador', 'motoristaEntrada', 'placa', 'dataEntrada', 'container', 'armador',
   'tara', 'mgw', 'tipo', 'padrao', 'statusVazioCheio', 'dataPorto', 'freeTimeArmador',
   'demurrage', 'prazoDias', 'clienteEntrada', 'transportadora', 'estoque',
-  'transportadoraSaida', // Assumindo que a segunda 'TRANSPORTADORA' é a de Saída
+  'transportadoraSaida', // Coluna 19: TRANSPORTADORA (Saída)
   'statusEntregaMinuta', 'statusMinuta', 'bookingAtrelado',
-  'lacre', 'clienteSaidaDestino', 'atrelado', 'operadorSaida', 'dataEstufagem',
-  'dataSaidaSJP', 'motoristaSaidaSJP', 'placaSaida',
-  'depotDevolucao', // Adicionado para cobrir a interface, será "" se a coluna não existir
+  'lacre', 'clienteSaidaDestino', 'atrelado', 'operadorSaida', // Coluna 26: OPERADOR (Saída)
+  'dataEstufagem',
+  'dataSaidaSJP', 'motoristaSaidaSJP', 'placaSaida', // Coluna 30: PLACA (Saída)
 ];
 
 const DATE_KEYS: (keyof Container)[] = [
@@ -139,6 +138,9 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
             const partialContainer: Partial<Container> = {};
             
             CONTAINER_KEYS_ORDER.forEach((key, colIndex) => {
+              // Limita a leitura ao número de colunas esperadas (30)
+              if (colIndex >= CONTAINER_KEYS_ORDER.length) return;
+              
               let value = row[colIndex] ?? ""; 
               const containerKey = key as keyof Container;
 
@@ -173,7 +175,8 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
             }
 
             // Garantir que todos os campos da interface existam, mesmo que vazios
-            if (!partialContainer.depotDevolucao) partialContainer.depotDevolucao = "";
+            // depotDevolucao não está no arquivo, então definimos como vazio
+            partialContainer.depotDevolucao = partialContainer.depotDevolucao || "";
             
             partialContainer.diasRestantes = partialContainer.prazoDias;
             partialContainer.status = partialContainer.status || partialContainer.statusVazioCheio || "";
