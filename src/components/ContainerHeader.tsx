@@ -119,7 +119,7 @@ export function ContainerHeader({
   };
 
   return (
-    <div className="sticky top-0 z-40 bg-background pb-2 border-b border-border/50 shadow-sm -mx-4 px-4">
+    <div className="sticky top-0 z-50 bg-background pb-2 border-b border-border/50 shadow-sm -mx-4 px-4">
       <div className="space-y-2">
         {/* Header */}
         <div className="flex flex-col gap-2">
