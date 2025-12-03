@@ -5,6 +5,7 @@ import { toast } from "@/hooks/use-toast";
 
 // Chave de cache para containers cheios
 const FULL_CONTAINER_QUERY_KEY = ["fullContainers"];
+const TABLE_NAME = "containers_cheios"; // Nome da tabela padronizado
 
 // Função de mapeamento para garantir que os dados do DB correspondam à interface Container (snake_case -> camelCase)
 const mapDbToContainer = (dbData: any): Container => ({
@@ -97,7 +98,7 @@ const fetchFullContainers = async (): Promise<Container[]> => {
   }
 
   const { data, error } = await supabase
-    .from("containers_cheios") // Mudança aqui
+    .from(TABLE_NAME) // Usando TABLE_NAME
     .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
@@ -130,7 +131,7 @@ export function useFullContainers() {
       });
       dataToInsert.user_id = userId;
 
-      const { data, error } = await supabase.from("containers_cheios").insert([dataToInsert]).select().single(); // Mudança aqui
+      const { data, error } = await supabase.from(TABLE_NAME).insert([dataToInsert]).select().single(); // Usando TABLE_NAME
       if (error) throw new Error(error.message);
       return mapDbToContainer(data);
     },
@@ -161,7 +162,7 @@ export function useFullContainers() {
         diasRestantes: data.prazoDias !== undefined ? data.prazoDias : data.diasRestantes,
       });
 
-      const { data: updatedData, error } = await supabase.from("containers_cheios").update(dataToUpdate).eq("id", id).eq("user_id", userId).select().single(); // Mudança aqui
+      const { data: updatedData, error } = await supabase.from(TABLE_NAME).update(dataToUpdate).eq("id", id).eq("user_id", userId).select().single(); // Usando TABLE_NAME
       if (error) throw new Error(error.message);
       return mapDbToContainer(updatedData);
     },
@@ -183,7 +184,7 @@ export function useFullContainers() {
       const userId = sessionData.session?.user.id;
       if (!userId) throw new Error("Usuário não autenticado.");
 
-      const { error } = await supabase.from("containers_cheios").delete().eq("id", id).eq("user_id", userId); // Mudança aqui
+      const { error } = await supabase.from(TABLE_NAME).delete().eq("id", id).eq("user_id", userId); // Usando TABLE_NAME
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
@@ -222,7 +223,7 @@ export function useFullContainers() {
         return mappedData;
       });
 
-      const { data, error } = await supabase.from("containers_cheios").insert(dataToInsert).select(); // Mudança aqui
+      const { data, error } = await supabase.from(TABLE_NAME).insert(dataToInsert).select(); // Usando TABLE_NAME
       if (error) {
         console.error("Supabase insert error:", error);
         throw new Error(`Falha ao inserir dados: ${error.message}. Verifique se as colunas do arquivo correspondem ao formato esperado.`);

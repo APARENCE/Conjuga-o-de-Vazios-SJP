@@ -5,6 +5,7 @@ import { toast } from "@/hooks/use-toast";
 
 // Chave de cache para containers
 const CONTAINER_QUERY_KEY = ["containers"];
+const TABLE_NAME = "containers_vazios"; // Nome da tabela atualizado
 
 // Função de mapeamento para garantir que os dados do DB correspondam à interface Container (snake_case -> camelCase)
 const mapDbToContainer = (dbData: any): Container => ({
@@ -99,7 +100,7 @@ const fetchContainers = async (): Promise<Container[]> => {
   }
 
   const { data, error } = await supabase
-    .from("containers")
+    .from(TABLE_NAME)
     .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
@@ -132,7 +133,7 @@ export function useContainers() {
       });
       dataToInsert.user_id = userId;
 
-      const { data, error } = await supabase.from("containers").insert([dataToInsert]).select().single();
+      const { data, error } = await supabase.from(TABLE_NAME).insert([dataToInsert]).select().single();
       if (error) throw new Error(error.message);
       return mapDbToContainer(data);
     },
@@ -163,7 +164,7 @@ export function useContainers() {
         diasRestantes: data.prazoDias !== undefined ? data.prazoDias : data.diasRestantes,
       });
 
-      const { data: updatedData, error } = await supabase.from("containers").update(dataToUpdate).eq("id", id).eq("user_id", userId).select().single();
+      const { data: updatedData, error } = await supabase.from(TABLE_NAME).update(dataToUpdate).eq("id", id).eq("user_id", userId).select().single();
       if (error) throw new Error(error.message);
       return mapDbToContainer(updatedData);
     },
@@ -185,7 +186,7 @@ export function useContainers() {
       const userId = sessionData.session?.user.id;
       if (!userId) throw new Error("Usuário não autenticado.");
 
-      const { error } = await supabase.from("containers").delete().eq("id", id).eq("user_id", userId);
+      const { error } = await supabase.from(TABLE_NAME).delete().eq("id", id).eq("user_id", userId);
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
@@ -224,7 +225,7 @@ export function useContainers() {
         return mappedData;
       });
 
-      const { data, error } = await supabase.from("containers").insert(dataToInsert).select();
+      const { data, error } = await supabase.from(TABLE_NAME).insert(dataToInsert).select();
       if (error) {
         console.error("Supabase insert error:", error);
         throw new Error(`Falha ao inserir dados: ${error.message}. Verifique se as colunas do arquivo correspondem ao formato esperado.`);
