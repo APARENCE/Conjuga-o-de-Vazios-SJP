@@ -119,14 +119,19 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
         // cellDates: true é importante para que o XLSX retorne objetos Date para datas reconhecidas
         const workbook = XLSX.read(data, { type: 'array', cellDates: true, raw: false });
         
-        // Se o usuário anexou o arquivo, ele deve ser lido.
-        // Se a aba for 'ESTOQUE VAZIO', precisamos garantir que ela seja a aba lida.
-        // Por padrão, XLSX.read lê a primeira aba (índice 0).
-        const sheetName = workbook.SheetNames[0]; 
+        // 1. Tenta encontrar a aba 'ESTOQUE VAZIO'
+        let sheetName = workbook.SheetNames.find(name => name.toUpperCase().includes('ESTOQUE VAZIO'));
+        
+        // 2. Se não encontrar, usa a primeira aba
+        if (!sheetName) {
+            sheetName = workbook.SheetNames[0];
+        }
+        
         const worksheet = workbook.Sheets[sheetName];
         
         // Usar header: 1 para obter um array de arrays, ignorando os nomes dos cabeçalhos e lendo por índice.
         // raw: false garante que datas sejam retornadas como objetos Date se cellDates: true for usado.
+        // defval: "" garante que células vazias sejam lidas como strings vazias.
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: "" }) as any[][];
         
         if (jsonData.length < 2) { // Deve ter cabeçalho + pelo menos uma linha de dados.
@@ -204,7 +209,7 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
         resolve(containers);
       } catch (error) {
         console.error("Erro durante o parsing do Excel:", error);
-        reject(new Error("Falha ao ler o arquivo Excel. Verifique se o formato está correto e se a primeira aba contém os dados. Detalhe do erro: " + (error as Error).message));
+        reject(new Error("Falha ao ler o arquivo Excel. Verifique se o formato está correto e se a aba 'ESTOQUE VAZIO' existe. Detalhe do erro: " + (error as Error).message));
       }
     };
     
