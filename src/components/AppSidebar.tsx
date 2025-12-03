@@ -106,13 +106,13 @@ export function AppSidebar({ onImport, onExport, onContainerAdd, isImporting, is
                 onSave={(data) => onContainerAdd(data, 'vazio')} 
                 trigger={
                   <Button
-                    variant="default"
+                    variant="ghost" // Alterado para ghost
                     size="sm"
-                    className="w-full justify-start bg-primary hover:bg-primary/90 text-primary-foreground h-7 px-1 text-xs"
+                    className="w-full justify-start hover:bg-primary/10 hover:text-primary text-foreground h-7 px-1 text-xs" // Estilo ajustado para ser 'luminoso' no hover
                     disabled={isImporting || isExporting}
                   >
                     <Plus className="h-3 w-3" /> 
-                    Novo Container (Vazio)
+                    Novo Container
                   </Button>
                 }
               />
