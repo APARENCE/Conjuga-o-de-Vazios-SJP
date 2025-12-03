@@ -4,6 +4,7 @@ import { AlertTriangle, Clock, Package, XCircle } from "lucide-react";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { isContainerDevolvido } from "@/lib/containerUtils"; // Importando a função de verificação
 
 interface VencimentoAlertProps {
   containers: Container[];
@@ -17,6 +18,11 @@ export function VencimentoAlert({ containers, onFilterChange, currentFilter }: V
     let proximos = 0; // 1 a 3 dias restantes
 
     containers.forEach(c => {
+      // Ignora containers que já foram devolvidos
+      if (isContainerDevolvido(c)) {
+        return;
+      }
+      
       const dias = typeof c.diasRestantes === 'number' ? c.diasRestantes : 0;
       
       if (dias === 0) {
