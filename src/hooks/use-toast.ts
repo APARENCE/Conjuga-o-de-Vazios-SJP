@@ -185,6 +185,23 @@ function useToast() {
     ...state,
     toast,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
+    // Adicionando métodos utilitários para consistência
+    update: (toastId: string, props: Partial<ToasterToast>) => dispatch({ type: "UPDATE_TOAST", toast: { ...props, id: toastId } as ToasterToast }),
+    loading: (title: string) => {
+        const id = genId();
+        dispatch({
+            type: "ADD_TOAST",
+            toast: {
+                id,
+                title,
+                duration: 999999,
+                open: true,
+                variant: "default",
+                // Removendo action para evitar erro de tipagem, confiando no title e duration
+            } as ToasterToast,
+        });
+        return id;
+    }
   };
 }
 

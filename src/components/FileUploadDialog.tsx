@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ContainerFile } from "@/types/container";
-import { Upload, Eye, Trash2, FileText, Image as ImageIcon, Paperclip } from "lucide-react";
+import { Upload, Eye, Trash2, FileText, Image as ImageIcon, Paperclip, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -22,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { uploadContainerFile, deleteContainerFile, getSignedUrl } from "@/integrations/supabase/storage";
 
 interface FileUploadDialogProps {
   containerId: string;
@@ -33,77 +34,133 @@ interface FileUploadDialogProps {
 export function FileUploadDialog({ containerId, files, onFilesChange, children }: FileUploadDialogProps) {
   const [open, setOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState<ContainerFile | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [deleteFile, setDeleteFile] = useState<ContainerFile | null>(null);
-  const { toast } = useToast();
+  const [isUploading, setIsUploading] = useState(false);
+  const localToast = useToast(); // Usando o hook para acessar métodos de gerenciamento
+
+  // Função para iniciar a visualização (obtém URL assinada)
+  const handlePreview = async (file: ContainerFile) => {
+    setPreviewFile(file);
+    setPreviewUrl(null);
+    
+    try {
+      const url = await getSignedUrl(file.storagePath);
+      setPreviewUrl(url);
+    } catch (error) {
+      localToast.toast({
+        title: "Erro de Visualização",
+        description: "Não foi possível carregar o arquivo. Verifique as permissões.",
+        variant: "destructive",
+      });
+      setPreviewFile(null);
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFiles = e.target.files;
     if (!uploadedFiles || uploadedFiles.length === 0) return;
 
+    setIsUploading(true);
     const newFiles: ContainerFile[] = [];
+    const uploadToastId = localToast.toast({
+        title: "Iniciando Upload...",
+        description: `0 de ${uploadedFiles.length} arquivos enviados.`,
+        variant: "default",
+        duration: 999999,
+    }).id; // Capturando o ID do toast
 
-    for (let i = 0; i < uploadedFiles.length; i++) {
-      const file = uploadedFiles[i];
-      
-      // Validar tipo de arquivo
-      if (!file.type.includes("pdf") && !file.type.includes("png") && !file.type.includes("jpeg") && !file.type.includes("jpg")) {
-        toast({
-          title: "Tipo de arquivo inválido",
-          description: `${file.name} não é um arquivo PDF ou PNG válido.`,
-          variant: "destructive",
-        });
-        continue;
-      }
-
-      // Validar tamanho (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        toast({
-          title: "Arquivo muito grande",
-          description: `${file.name} excede o tamanho máximo de 10MB.`,
-          variant: "destructive",
-        });
-        continue;
-      }
-
-      const reader = new FileReader();
-      await new Promise<void>((resolve) => {
-        reader.onload = (event) => {
-          const dataUrl = event.target?.result as string;
-          newFiles.push({
-            id: `${Date.now()}-${i}`,
-            name: file.name,
-            type: file.type,
-            size: file.size,
-            dataUrl,
-            uploadedAt: new Date().toISOString(),
+    try {
+      for (let i = 0; i < uploadedFiles.length; i++) {
+        const file = uploadedFiles[i];
+        
+        // 1. Validação
+        if (!file.type.includes("pdf") && !file.type.includes("png") && !file.type.includes("jpeg") && !file.type.includes("jpg")) {
+          localToast.toast({
+            title: "Tipo de arquivo inválido",
+            description: `${file.name} não é um arquivo PDF ou imagem válido.`,
+            variant: "destructive",
           });
-          resolve();
-        };
-        reader.readAsDataURL(file);
-      });
-    }
+          continue;
+        }
 
-    if (newFiles.length > 0) {
-      onFilesChange([...files, ...newFiles]);
-      toast({
-        title: "Arquivos enviados",
-        description: `${newFiles.length} arquivo(s) adicionado(s) com sucesso.`,
-      });
-    }
+        if (file.size > 10 * 1024 * 1024) {
+          localToast.toast({
+            title: "Arquivo muito grande",
+            description: `${file.name} excede o tamanho máximo de 10MB.`,
+            variant: "destructive",
+          });
+          continue;
+        }
 
-    // Reset input
-    e.target.value = "";
+        // 2. Upload para o Storage
+        const storagePath = await uploadContainerFile(file, containerId);
+
+        newFiles.push({
+          id: `${Date.now()}-${i}`,
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          storagePath: storagePath, // Salvamos o caminho do storage
+          uploadedAt: new Date().toISOString(),
+        });
+        
+        localToast.update(uploadToastId, {
+            description: `${i + 1} de ${uploadedFiles.length} arquivos enviados.`,
+        });
+      }
+
+      if (newFiles.length > 0) {
+        onFilesChange([...files, ...newFiles]);
+        localToast.update(uploadToastId, {
+            title: "Upload Concluído",
+            description: `${newFiles.length} arquivo(s) adicionado(s) com sucesso.`,
+            variant: "success",
+            duration: 3000,
+        });
+      } else {
+        localToast.dismiss(uploadToastId);
+      }
+
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      localToast.update(uploadToastId, {
+        title: "Erro Crítico no Upload",
+        description: (error as Error).message,
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
+    }
   };
 
-  const handleDelete = (file: ContainerFile) => {
-    onFilesChange(files.filter((f) => f.id !== file.id));
-    setDeleteFile(null);
-    toast({
-      title: "Arquivo excluído",
-      description: "O arquivo foi removido com sucesso.",
-    });
+  const handleDelete = async (file: ContainerFile) => {
+    try {
+        // 1. Deleta do Storage
+        await deleteContainerFile(file.storagePath);
+        
+        // 2. Deleta do estado local/DB
+        onFilesChange(files.filter((f) => f.id !== file.id));
+        setDeleteFile(null);
+        
+        localToast.toast({
+          title: "Arquivo excluído",
+          description: "O arquivo foi removido do storage e do registro.",
+          variant: "success",
+        });
+    } catch (error) {
+        localToast.toast({
+            title: "Erro ao excluir arquivo",
+            description: (error as Error).message,
+            variant: "destructive",
+        });
+    }
   };
 
+  // A função de edição (substituição) é complexa e pode ser simplificada para exclusão + novo upload,
+  // mas para manter a funcionalidade de substituição, vamos refatorá-la para usar o Storage.
   const handleEdit = async (file: ContainerFile) => {
     const input = document.createElement("input");
     input.type = "file";
@@ -113,29 +170,27 @@ export function FileUploadDialog({ containerId, files, onFilesChange, children }
       const newFile = target.files?.[0];
       if (!newFile) return;
 
-      // Validar tipo
+      // 1. Validação (simplificada)
       if (!newFile.type.includes("pdf") && !newFile.type.includes("png") && !newFile.type.includes("jpeg") && !newFile.type.includes("jpg")) {
-        toast({
-          title: "Tipo de arquivo inválido",
-          description: "Apenas arquivos PDF e PNG são permitidos.",
-          variant: "destructive",
-        });
+        localToast.toast({ title: "Tipo de arquivo inválido", description: "Apenas PDF e imagens são permitidos.", variant: "destructive" });
         return;
       }
-
-      // Validar tamanho
       if (newFile.size > 10 * 1024 * 1024) {
-        toast({
-          title: "Arquivo muito grande",
-          description: "O arquivo excede o tamanho máximo de 10MB.",
-          variant: "destructive",
-        });
+        localToast.toast({ title: "Arquivo muito grande", description: "O arquivo excede 10MB.", variant: "destructive" });
         return;
       }
+      
+      setIsUploading(true);
+      const updateToastId = localToast.loading("Substituindo arquivo...");
 
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const dataUrl = event.target?.result as string;
+      try {
+        // 2. Deleta o arquivo antigo do Storage
+        await deleteContainerFile(file.storagePath);
+        
+        // 3. Faz upload do novo arquivo
+        const newStoragePath = await uploadContainerFile(newFile, containerId);
+
+        // 4. Atualiza o registro no DB
         const updatedFiles = files.map((f) =>
           f.id === file.id
             ? {
@@ -143,18 +198,29 @@ export function FileUploadDialog({ containerId, files, onFilesChange, children }
                 name: newFile.name,
                 type: newFile.type,
                 size: newFile.size,
-                dataUrl,
+                storagePath: newStoragePath,
                 uploadedAt: new Date().toISOString(),
               }
             : f
         );
         onFilesChange(updatedFiles);
-        toast({
-          title: "Arquivo atualizado",
-          description: "O arquivo foi substituído com sucesso.",
+        
+        localToast.update(updateToastId, {
+            title: "Arquivo atualizado",
+            description: "O arquivo foi substituído com sucesso.",
+            variant: "success",
+            duration: 3000,
         });
-      };
-      reader.readAsDataURL(newFile);
+      } catch (error) {
+        localToast.update(updateToastId, {
+            title: "Erro ao substituir",
+            description: (error as Error).message,
+            variant: "destructive",
+            duration: 5000,
+        });
+      } finally {
+        setIsUploading(false);
+      }
     };
     input.click();
   };
@@ -183,7 +249,7 @@ export function FileUploadDialog({ containerId, files, onFilesChange, children }
           <DialogHeader>
             <DialogTitle>Gerenciar Arquivos</DialogTitle>
             <DialogDescription>
-              Adicione arquivos PDF ou PNG. Tamanho máximo: 10MB por arquivo.
+              Adicione arquivos PDF ou PNG/JPG. Tamanho máximo: 10MB por arquivo.
             </DialogDescription>
           </DialogHeader>
 
@@ -196,12 +262,23 @@ export function FileUploadDialog({ containerId, files, onFilesChange, children }
                 multiple
                 onChange={handleFileUpload}
                 className="flex-1"
+                disabled={isUploading}
               />
-              <Button type="button" size="icon" variant="secondary" onClick={() => {
-                const input = document.getElementById('file-upload') as HTMLInputElement;
-                input?.click();
-              }}>
-                <Upload className="h-4 w-4" />
+              <Button 
+                type="button" 
+                size="icon" 
+                variant="secondary" 
+                onClick={() => {
+                  const input = document.getElementById('file-upload') as HTMLInputElement;
+                  input?.click();
+                }}
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                    <Upload className="h-4 w-4" />
+                )}
               </Button>
             </div>
 
@@ -228,8 +305,9 @@ export function FileUploadDialog({ containerId, files, onFilesChange, children }
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => setPreviewFile(file)}
+                        onClick={() => handlePreview(file)}
                         title="Visualizar"
+                        disabled={isUploading}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -238,6 +316,7 @@ export function FileUploadDialog({ containerId, files, onFilesChange, children }
                         size="icon"
                         onClick={() => handleEdit(file)}
                         title="Editar (Substituir)"
+                        disabled={isUploading}
                       >
                         <Upload className="h-4 w-4" />
                       </Button>
@@ -246,8 +325,9 @@ export function FileUploadDialog({ containerId, files, onFilesChange, children }
                         size="icon"
                         onClick={() => setDeleteFile(file)}
                         title="Excluir"
+                        disabled={isUploading}
                       >
-                        <Trash2 className="h-4 w-4 text-danger" />
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   </div>
@@ -259,23 +339,28 @@ export function FileUploadDialog({ containerId, files, onFilesChange, children }
       </Dialog>
 
       {/* Preview Dialog */}
-      <Dialog open={!!previewFile} onOpenChange={() => setPreviewFile(null)}>
+      <Dialog open={!!previewFile} onOpenChange={() => { setPreviewFile(null); setPreviewUrl(null); }}>
         <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>{previewFile?.name}</DialogTitle>
           </DialogHeader>
-          <div className="overflow-auto max-h-[70vh]">
-            {previewFile?.type.includes("pdf") ? (
+          <div className="overflow-auto max-h-[70vh] flex items-center justify-center">
+            {!previewUrl ? (
+                <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+                    <Loader2 className="h-8 w-8 animate-spin mb-2" />
+                    Gerando link seguro...
+                </div>
+            ) : previewFile?.type.includes("pdf") ? (
               <iframe
-                src={previewFile.dataUrl}
+                src={previewUrl}
                 className="w-full h-[70vh]"
                 title={previewFile.name}
               />
             ) : (
               <img
-                src={previewFile?.dataUrl}
+                src={previewUrl}
                 alt={previewFile?.name}
-                className="w-full h-auto"
+                className="w-full h-auto max-h-[70vh] object-contain"
               />
             )}
           </div>
@@ -288,12 +373,15 @@ export function FileUploadDialog({ containerId, files, onFilesChange, children }
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir "{deleteFile?.name}"? Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir "{deleteFile?.name}"? Esta ação removerá o arquivo permanentemente do armazenamento.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteFile && handleDelete(deleteFile)}>
+            <AlertDialogAction 
+                onClick={() => deleteFile && handleDelete(deleteFile)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>

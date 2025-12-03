@@ -3,7 +3,7 @@ export interface ContainerFile {
   name: string;
   type: string;
   size: number;
-  dataUrl: string;
+  storagePath: string; // Caminho no Supabase Storage (Ex: user_id/container_id/filename.pdf)
   uploadedAt: string;
 }
 

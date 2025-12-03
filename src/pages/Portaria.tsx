@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useOcrProcessor } from "@/hooks/use-ocr-processor";
 import { cn } from "@/lib/utils";
+import { uploadContainerFile, deleteContainerFile } from "@/integrations/supabase/storage"; // Importando deleteContainerFile
 
 interface PortariaPageProps {
   containers: Container[];
@@ -80,6 +81,20 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
     // Inicia o processamento OCR
     await processImage(imageSrc);
   };
+  
+  // Função auxiliar para converter dataUrl para File
+  const dataURLtoFile = (dataurl: string, filename: string): File => {
+    const arr = dataurl.split(',');
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while(n--){
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, {type:mime});
+  }
 
   const handleAction = async () => {
     if (!searchNumber) {
@@ -98,18 +113,25 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
     }
     
     setIsSubmitting(true);
+    let uploadPath: string | null = null;
 
     try {
-        // Formata a data atual como DD/MM/AAAA
+        // 1. Prepara o arquivo para upload
+        const fileToUpload = dataURLtoFile(capturedImage, `${actionType}_${searchNumber}_${Date.now()}.jpg`);
+        
+        // 2. Faz o upload para o Supabase Storage
+        uploadPath = await uploadContainerFile(fileToUpload, existingContainer?.id || 'new'); // Usa 'new' se for um novo container
+        
+        // 3. Cria o objeto ContainerFile (metadados)
         const now = new Date();
         const dateOnly = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
         
         const newFile = {
             id: `photo-${Date.now()}`,
             name: `${actionType}_${searchNumber}_${dateOnly.replace(/\//g, '-')}.jpg`,
-            type: 'image/jpeg',
-            size: 0, 
-            dataUrl: capturedImage,
+            type: fileToUpload.type,
+            size: fileToUpload.size,
+            storagePath: uploadPath, // Usamos o caminho do storage
             uploadedAt: new Date().toISOString(),
         };
 
@@ -185,13 +207,24 @@ export default function Portaria({ containers, onContainerUpdate, onContainerAdd
         toast({ title: "Sucesso", description: toastMessage, variant: "default" });
     } catch (error) {
         console.error("Erro ao registrar ação:", error);
-        toast({ title: "Erro de Servidor", description: "Falha ao salvar dados. Verifique a conexão.", variant: "destructive" });
+        
+        // Se o upload falhou, tentamos limpar o arquivo do storage (se o caminho foi gerado)
+        if (uploadPath) {
+            try {
+                await deleteContainerFile(uploadPath);
+            } catch (cleanupError) {
+                console.error("Falha ao limpar arquivo após erro de DB:", cleanupError);
+            }
+        }
+        
+        toast({ title: "Erro de Servidor", description: "Falha ao salvar dados ou fazer upload do arquivo.", variant: "destructive" });
     } finally {
         setIsSubmitting(false);
     }
   };
 
   const getStatusBadge = (status: string) => {
+    if (!status) return <Badge variant="secondary">-</Badge>;
     const statusLower = String(status).toLowerCase();
     if (statusLower.includes("ok") || statusLower.includes("devolvido")) {
       return <Badge className="bg-success text-white">Devolvido</Badge>;
