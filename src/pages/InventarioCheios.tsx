@@ -1,8 +1,6 @@
 import { Container } from "@/types/container";
 import { InventoryItem } from "@/types/inventory";
 import { InventoryTable } from "@/components/InventoryTable";
-import { AnaliseInventario } from "@/components/AnaliseInventario";
-import { generateInventoryFromContainers } from "@/lib/inventoryGenerator";
 import { useMemo, useState } from "react";
 import { InventoryFilters } from "@/components/InventoryFilters";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,29 +11,85 @@ import { Package, Search, Filter, Grid, List, Eye, Calendar, Truck, AlertTriangl
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { isContainerDevolvido } from "@/lib/containerUtils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface InventarioCheiosProps {
   containers: Container[];
 }
 
+// Definindo um tipo de item de inventário simplificado para esta visualização
+interface SimplifiedInventoryItem {
+    id: string;
+    container: string;
+    armador: string;
+    itemType: 'Prazo' | 'Devolução' | 'Estoque';
+    status: 'Vencido' | 'Próximo' | 'Em Estoque' | 'Devolvido';
+    details: string;
+    lastUpdated: string;
+}
+
 export default function InventarioCheios({ containers }: InventarioCheiosProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [itemTypeFilter, setItemTypeFilter] = useState<InventoryItem['itemType'] | 'all'>("all");
-  const [statusFilter, setStatusFilter] = useState<InventoryItem['status'] | 'all'>("all");
+  // Usaremos statusFilter para filtrar por status de prazo/devolução
+  const [statusFilter, setStatusFilter] = useState<'all' | 'devolvidos' | 'vencidos' | 'proximos'>("all");
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
-  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<SimplifiedInventoryItem | null>(null);
   const isMobile = useIsMobile();
   
-  // 1. Gera o inventário dinamicamente a partir dos containers
-  const inventory: InventoryItem[] = useMemo(() => {
-    return generateInventoryFromContainers(containers);
+  const getDiasRestantes = (c: Container) => typeof c.prazoDias === 'number' ? c.prazoDias : 0;
+
+  // 1. Geração de Inventário Simplificado (Mapeamento para a visualização)
+  const simplifiedInventory: SimplifiedInventoryItem[] = useMemo(() => {
+    return containers.map(c => {
+        const isDevolvido = isContainerDevolvido(c);
+        const dias = getDiasRestantes(c);
+        
+        let status: SimplifiedInventoryItem['status'];
+        let details: string;
+        let itemType: SimplifiedInventoryItem['itemType'];
+
+        if (isDevolvido) {
+            status = 'Devolvido';
+            details = `Container devolvido (RIC OK ou Saída SJP preenchida).`;
+            itemType = 'Devolução';
+        } else if (dias === 0) {
+            status = 'Vencido';
+            details = `Free Time expirado. Demurrage: ${c.demurrage || 'N/A'}.`;
+            itemType = 'Prazo';
+        } else if (dias > 0 && dias <= 3) {
+            status = 'Próximo';
+            details = `Faltam ${dias} dias para o Free Time expirar.`;
+            itemType = 'Prazo';
+        } else {
+            status = 'Em Estoque';
+            details = `Em pátio. Prazo restante: ${dias} dias.`;
+            itemType = 'Estoque';
+        }
+
+        return {
+            id: c.id,
+            container: c.container,
+            armador: c.armador,
+            itemType,
+            status,
+            details,
+            lastUpdated: c.dataEntrada || new Date().toISOString(), // Usando data de entrada como referência
+        };
+    });
   }, [containers]);
 
   // 2. Aplica a filtragem
   const filteredInventory = useMemo(() => {
     const searchLower = searchTerm.toLowerCase();
     
-    return inventory.filter(item => {
+    return simplifiedInventory.filter(item => {
       // Filtro de Pesquisa de Texto Livre
       const matchesSearch = 
         item.container.toLowerCase().includes(searchLower) ||
@@ -44,64 +98,52 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
 
       if (!matchesSearch) return false;
 
-      // Filtro por Tipo de Item
-      if (itemTypeFilter !== 'all' && item.itemType !== itemTypeFilter) return false;
-
-      // Filtro por Status
-      if (statusFilter !== 'all') {
-        const itemStatusLower = String(item.status || '').toLowerCase();
-        const filterStatusLower = String(statusFilter).toLowerCase();
-        
-        if (!itemStatusLower.includes(filterStatusLower)) return false;
+      // Filtro por Status de Prazo/Devolução
+      if (statusFilter === 'devolvidos') {
+        return item.status === 'Devolvido';
       }
-
+      if (statusFilter === 'vencidos') {
+        return item.status === 'Vencido';
+      }
+      if (statusFilter === 'proximos') {
+        return item.status === 'Próximo';
+      }
+      
       return true;
     });
-  }, [inventory, searchTerm, itemTypeFilter, statusFilter]);
+  }, [simplifiedInventory, searchTerm, statusFilter]);
 
   // Estatísticas do inventário (Contando containers únicos)
   const inventoryStats = useMemo(() => {
-    const totalItems = filteredInventory.length;
+    const totalItems = containers.length; // Total de containers (não filtrados)
     
-    const uniqueContainersByStatus = (statusKeyword: string) => {
-        const containerIds = new Set<string>();
-        filteredInventory.forEach(item => {
-            if (String(item.status || '').toLowerCase().includes(statusKeyword)) {
-                containerIds.add(item.containerId);
-            }
-        });
-        return containerIds.size;
-    };
-
-    // Contagem de containers únicos
-    const emEstoque = uniqueContainersByStatus("em estoque");
-    const aguardandoDevolucao = uniqueContainersByStatus("aguardando devolução");
-    const devolvidos = uniqueContainersByStatus("ric ok"); // Usamos 'ric ok' para capturar o status final
-
-    // Contagem de itens (não únicos)
-    const totalTrocas = filteredInventory.filter(item => item.itemType === 'Troca').length;
-    const totalBaixas = filteredInventory.filter(item => item.itemType === 'Baixa Pátio').length;
-    const totalDevolucoes = filteredInventory.filter(item => item.itemType === 'Devolução').length;
+    const devolvidos = containers.filter(isContainerDevolvido).length;
+    const vencidos = containers.filter(c => getDiasRestantes(c) === 0 && !isContainerDevolvido(c)).length;
+    const proximos = containers.filter(c => getDiasRestantes(c) > 0 && getDiasRestantes(c) <= 3 && !isContainerDevolvido(c)).length;
+    
+    // Em Estoque (Físico) = Total - Devolvidos
+    const emEstoque = totalItems - devolvidos;
     
     return {
-      totalItems, // Total de linhas de rastreio
-      emEstoque, // Total de containers únicos em estoque físico
-      aguardandoDevolucao, // Total de containers únicos aguardando devolução
-      devolvidos, // Total de containers únicos devolvidos
-      totalTrocas,
-      totalBaixas,
-      totalDevolucoes,
+      totalItems,
+      emEstoque,
+      vencidos,
+      proximos,
+      devolvidos,
     };
-  }, [filteredInventory]);
+  }, [containers]);
 
-  const getStatusBadge = (status: string | undefined) => {
-    const statusLower = String(status || '').toLowerCase();
+  const getStatusBadge = (status: SimplifiedInventoryItem['status'] | string) => {
+    const statusLower = String(status).toLowerCase();
     
-    if (statusLower.includes("ric ok") || statusLower.includes("devolvido")) {
-      return <Badge className="bg-success text-white hover:bg-success/80 text-xs">Devolvido (RIC OK)</Badge>;
+    if (statusLower.includes("devolvido")) {
+      return <Badge className="bg-success text-white hover:bg-success/80 text-xs">Devolvido</Badge>;
     }
-    if (statusLower.includes("aguardando devolução")) {
-      return <Badge className="bg-warning text-white hover:bg-warning/80 text-xs">Aguardando Devolução</Badge>;
+    if (statusLower.includes("vencido")) {
+      return <Badge className="bg-danger text-white hover:bg-danger/80 text-xs">Vencido (0 dias)</Badge>;
+    }
+    if (statusLower.includes("próximo")) {
+      return <Badge className="bg-warning text-white hover:bg-warning/80 text-xs">Próximo (1-3 dias)</Badge>;
     }
     if (statusLower.includes("em estoque")) {
       return <Badge className="bg-primary text-white hover:bg-primary/90 text-xs">Em Estoque</Badge>;
@@ -109,24 +151,24 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
     return <Badge variant="outline" className="text-xs">{status || 'Outro'}</Badge>;
   };
 
-  const getItemTypeIcon = (itemType: InventoryItem['itemType']) => {
+  const getItemTypeIcon = (itemType: SimplifiedInventoryItem['itemType']) => {
     switch (itemType) {
-      case 'Troca':
-        return <Truck className="h-3 w-3 text-primary" />;
-      case 'Baixa Pátio':
-        return <AlertTriangle className="h-3 w-3 text-warning" />;
+      case 'Prazo':
+        return <Clock className="h-3 w-3 text-warning" />;
       case 'Devolução':
         return <CheckCircle2 className="h-3 w-3 text-success" />;
+      case 'Estoque':
+        return <Package className="h-3 w-3 text-primary" />;
       default:
         return <Package className="h-3 w-3" />;
     }
   };
 
-  const getItemTypeBadge = (itemType: InventoryItem['itemType']) => {
+  const getItemTypeBadge = (itemType: SimplifiedInventoryItem['itemType']) => {
     const variants = {
-      'Troca': 'bg-primary/10 text-primary border-primary/20',
-      'Baixa Pátio': 'bg-warning/10 text-warning border-warning/20',
+      'Prazo': 'bg-warning/10 text-warning border-warning/20',
       'Devolução': 'bg-success/10 text-success border-success/20',
+      'Estoque': 'bg-primary/10 text-primary border-primary/20',
     };
     
     return (
@@ -137,7 +179,7 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
     );
   };
 
-  const InventoryCard = ({ item }: { item: InventoryItem }) => (
+  const InventoryCard = ({ item }: { item: SimplifiedInventoryItem }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -206,15 +248,15 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
   );
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full px-4">
       {/* Cabeçalho Fixo (Título, Filtros, KPIs) */}
-      <div className="sticky top-0 z-40 bg-background pb-2 border-b border-border/50 shadow-sm">
+      <div className="sticky top-0 z-40 bg-background pb-2 border-b border-border/50 shadow-sm -mx-4 px-4">
         <div className="space-y-2">
           {/* Título */}
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Inventário Derivado de Containers-Cheios</h1>
+            <h1 className="text-2xl font-bold text-foreground">Inventário de Containers Cheios (Prazo/Devolução)</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Rastreamento automático de itens de troca, baixa e devolução associados aos containers cheios.
+              Visão consolidada do status de prazo e devolução dos containers cheios.
             </p>
           </div>
           
@@ -252,47 +294,58 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
               </div>
             </div>
 
-            {/* Linha 2: Filtros Avançados */}
-            <InventoryFilters
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              itemTypeFilter={itemTypeFilter}
-              setItemTypeFilter={setItemTypeFilter}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
-            />
+            {/* Linha 2: Filtros Avançados (Simplificados) */}
+            <div className="flex flex-col sm:flex-row gap-1 flex-wrap">
+                <Select
+                    value={statusFilter}
+                    onValueChange={(value: any) => setStatusFilter(value)}
+                >
+                    <SelectTrigger className="w-full sm:w-[140px] h-7 text-xs">
+                        <Filter className="h-3 w-3 mr-1 text-muted-foreground" />
+                        <SelectValue placeholder="Filtrar por Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Todos os Status</SelectItem>
+                        <SelectItem value="em estoque">Em Estoque (Físico)</SelectItem>
+                        <SelectItem value="proximos">Próximos (1-3 dias)</SelectItem>
+                        <SelectItem value="vencidos">Vencidos (0 dias)</SelectItem>
+                        <SelectItem value="devolvidos">Devolvidos</SelectItem>
+                    </SelectContent>
+                </Select>
+                {/* Removendo filtro de ItemType, pois a lógica agora é baseada em Prazo/Devolução */}
+            </div>
           </div>
 
-          {/* KPIs do Inventário */}
+          {/* KPIs do Inventário (Baseado em Containers.tsx) */}
           <div className="grid gap-2 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
-              title="Total de Itens"
-              value={inventoryStats.totalItems}
-              subtitle={`${inventoryStats.totalTrocas} trocas, ${inventoryStats.totalBaixas} baixas`}
+              title="Em Estoque (Físico)"
+              value={inventoryStats.emEstoque}
+              subtitle={`Containers sem Saída SJP`}
               icon={Package}
               color="primary"
               delay={0.1}
             />
             <StatCard
-              title="Containers Em Estoque"
-              value={inventoryStats.emEstoque}
-              subtitle={`Containers únicos no pátio`}
+              title="Próximos do Vencimento"
+              value={inventoryStats.proximos}
+              subtitle={`1 a 3 dias restantes`}
               icon={Clock}
-              color="primary"
+              color="warning"
               delay={0.2}
             />
             <StatCard
-              title="Containers Aguardando Devolução"
-              value={inventoryStats.aguardandoDevolucao}
-              subtitle={`Containers únicos que saíram, mas não foram concluídos`}
+              title="Vencidos (Demurrage)"
+              value={inventoryStats.vencidos}
+              subtitle={`0 dias restantes`}
               icon={AlertTriangle}
-              color="warning"
+              color="danger"
               delay={0.3}
             />
             <StatCard
-              title="Containers Devolvidos (RIC OK)"
+              title="Devolvidos (Saídos)"
               value={inventoryStats.devolvidos}
-              subtitle={`Containers únicos com ciclo concluído`}
+              subtitle={`Com Saída SJP ou RIC OK`}
               icon={CheckCircle2}
               color="success"
               delay={0.4}
@@ -302,7 +355,7 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
           {/* Resultados da busca */}
           <div className="flex justify-between items-center pt-1">
             <p className="text-xs text-muted-foreground">
-              {filteredInventory.length} de {inventory.length} itens encontrados
+              {filteredInventory.length} de {containers.length} containers encontrados
             </p>
           </div>
         </div>
@@ -319,8 +372,9 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.3 }}
             >
+              {/* Reutilizando InventoryTable, mas passando o inventário simplificado */}
               <InventoryTable 
-                inventory={filteredInventory} 
+                inventory={filteredInventory as any} // Cast para InventoryItem[] para compatibilidade de tipos
               />
             </motion.div>
           ) : (
@@ -335,11 +389,11 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
               {filteredInventory.length === 0 ? (
                 <div className="col-span-full text-center py-8 text-muted-foreground">
                   <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>Nenhum item de inventário encontrado</p>
+                  <p>Nenhum container encontrado</p>
                 </div>
               ) : (
                 filteredInventory.map((item) => (
-                  <InventoryCard key={item.id + item.itemType} item={item} />
+                  <InventoryCard key={item.id} item={item} />
                 ))
               )}
             </motion.div>
@@ -347,7 +401,7 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
         </AnimatePresence>
       </div>
 
-      {/* Modal de detalhes do item (mobile) */}
+      {/* Modal de detalhes do item (mobile) - Simplificado */}
       {selectedItem && isMobile && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -380,7 +434,7 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-sm text-muted-foreground">Tipo de Item</span>
+                  <span className="text-sm text-muted-foreground">Tipo de Rastreio</span>
                   <div className="mt-1">{getItemTypeBadge(selectedItem.itemType)}</div>
                 </div>
                 <div>
@@ -396,7 +450,7 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Última Atualização:</span>
+                  <span className="text-sm text-muted-foreground">Atualizado:</span>
                   <span className="text-sm">{new Date(selectedItem.lastUpdated).toLocaleDateString('pt-BR')}</span>
                 </div>
               </div>
