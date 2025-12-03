@@ -38,7 +38,7 @@ interface SimplifiedInventoryItem {
 export default function InventarioCheios({ containers }: InventarioCheiosProps) {
   const [searchTerm, setSearchTerm] = useState("");
   // Usaremos statusFilter para filtrar por status de prazo/devolução
-  const [statusFilter, setStatusFilter] = useState<'all' | 'devolvidos' | 'vencidos' | 'proximos'>("all");
+  const [statusFilter, setStatusFilter] = useState<'all' | 'devolvidos' | 'vencidos' | 'proximos' | 'em estoque'>("all");
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [selectedItem, setSelectedItem] = useState<SimplifiedInventoryItem | null>(null);
   const isMobile = useIsMobile();
@@ -108,6 +108,9 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
       if (statusFilter === 'proximos') {
         return item.status === 'Próximo';
       }
+      if (statusFilter === 'em estoque') {
+        return item.status === 'Em Estoque';
+      }
       
       return true;
     });
@@ -121,8 +124,8 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
     const vencidos = containers.filter(c => getDiasRestantes(c) === 0 && !isContainerDevolvido(c)).length;
     const proximos = containers.filter(c => getDiasRestantes(c) > 0 && getDiasRestantes(c) <= 3 && !isContainerDevolvido(c)).length;
     
-    // Em Estoque (Físico) = Total - Devolvidos
-    const emEstoque = totalItems - devolvidos;
+    // Em Estoque (Físico) = Containers que não foram devolvidos E têm prazo > 3 dias
+    const emEstoque = containers.filter(c => !isContainerDevolvido(c) && getDiasRestantes(c) > 3).length;
     
     return {
       totalItems,
@@ -321,7 +324,7 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
             <StatCard
               title="Em Estoque (Físico)"
               value={inventoryStats.emEstoque}
-              subtitle={`Containers sem Saída SJP`}
+              subtitle={`Containers com prazo > 3 dias`}
               icon={Package}
               color="primary"
               delay={0.1}
