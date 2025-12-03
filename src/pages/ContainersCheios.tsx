@@ -228,7 +228,7 @@ export default function ContainersCheios({
   );
 
   return (
-    <div className="flex flex-col h-full px-4"> {/* Removendo min-h */}
+    <div className="flex flex-col h-full px-4">
       <ContainerHeader
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -248,7 +248,8 @@ export default function ContainersCheios({
         subtitle="Controle de entrada e saída de containers cheios"
       />
 
-      <div className="pt-2"> {/* Removendo flex-1 e overflow-y-auto */}
+      {/* Novo container de rolagem para o conteúdo abaixo do cabeçalho */}
+      <div className="flex-1 overflow-y-auto pt-2">
         <AnimatePresence mode="wait">
           {viewMode === "table" ? (
             <motion.div

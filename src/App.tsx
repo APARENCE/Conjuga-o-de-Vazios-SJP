@@ -63,7 +63,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         <header className="h-12 border-b border-border bg-card flex items-center px-3 shrink-0">
           <CustomSidebarTrigger />
         </header>
-        <main className="flex-1 py-2 px-0 overflow-y-auto">
+        {/* O main agora é flex-1 e overflow-y-auto para permitir a rolagem do conteúdo da página */}
+        <main className="flex-1 overflow-y-auto">
+          {/* O conteúdo da página (Containers.tsx, etc.) deve ser flex-col h-full para que o layout interno funcione */}
           {children}
         </main>
       </div>
