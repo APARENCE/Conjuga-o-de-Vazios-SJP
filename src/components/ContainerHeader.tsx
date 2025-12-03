@@ -21,7 +21,8 @@ import { ContainerFormDialog } from "@/components/ContainerFormDialog";
 import { VencimentoAlert } from "@/components/VencimentoAlert";
 import { motion } from "framer-motion";
 import { Container } from "@/types/container";
-import { isContainerDevolvido } from "@/lib/containerUtils"; // Importando a nova função
+import { isContainerDevolvido } from "@/lib/containerUtils";
+import { cn } from "@/lib/utils"; // Importando cn
 
 interface ContainerHeaderProps {
   searchTerm: string;
@@ -49,13 +50,19 @@ interface ContainerHeaderProps {
   subtitle: string;
 }
 
-const StatCard = ({ title, value, subtitle, icon: Icon, color, delay }: any) => (
+const StatCard = ({ title, value, subtitle, icon: Icon, color, delay, onClick, isActive }: any) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.9 }}
     animate={{ opacity: 1, scale: 1 }}
     transition={{ duration: 0.3, delay }}
   >
-    <Card className={`border-l-4 ${color} hover:shadow-md transition-shadow`}>
+    <Card 
+      className={cn(
+        `border-l-4 ${color} hover:shadow-md transition-shadow cursor-pointer`,
+        isActive && "ring-2 ring-offset-2 ring-primary/50 border-primary/50" // Adiciona destaque se ativo
+      )}
+      onClick={onClick}
+    >
       <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-1">
         <CardTitle className="text-xs font-medium text-muted-foreground">
           {title}
@@ -101,6 +108,15 @@ export function ContainerHeader({
   const taxaDevolucao = totalContainers > 0 
     ? ((calculatedStats.devolvidos / totalContainers) * 100).toFixed(1) 
     : "0";
+
+  const handleStatClick = (filterKey: string) => {
+    // Se o filtro clicado já estiver ativo, desativa (volta para 'all')
+    if (statusFilter === filterKey) {
+      setStatusFilter("all");
+    } else {
+      setStatusFilter(filterKey);
+    }
+  };
 
   return (
     <div className="sticky top-0 z-40 bg-background pb-2 border-b border-border/50 shadow-sm -mx-4 px-4">
@@ -186,6 +202,7 @@ export function ContainerHeader({
 
         {/* KPIs */}
         <div className="grid gap-2 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Total */}
           <StatCard
             title="Total"
             value={stats.total}
@@ -193,7 +210,10 @@ export function ContainerHeader({
             icon={Package}
             color="border-l-primary"
             delay={0.1}
+            onClick={() => handleStatClick("all")}
+            isActive={statusFilter === "all"}
           />
+          {/* Devolvidos */}
           <StatCard
             title="Devolvidos"
             value={calculatedStats.devolvidos}
@@ -201,7 +221,10 @@ export function ContainerHeader({
             icon={CheckCircle}
             color="border-l-success"
             delay={0.2}
+            onClick={() => handleStatClick("devolvidos")}
+            isActive={statusFilter === "devolvidos"}
           />
+          {/* Pendentes */}
           <StatCard
             title="Pendentes"
             value={calculatedStats.pendentes}
@@ -209,7 +232,10 @@ export function ContainerHeader({
             icon={TrendingUp}
             color="border-l-warning"
             delay={0.3}
+            onClick={() => handleStatClick("pendentes")}
+            isActive={statusFilter === "pendentes"}
           />
+          {/* Vencidos */}
           <StatCard
             title="Vencidos"
             value={stats.vencidos}
@@ -217,6 +243,8 @@ export function ContainerHeader({
             icon={AlertCircle}
             color="border-l-danger"
             delay={0.4}
+            onClick={() => handleStatClick("vencidos")}
+            isActive={statusFilter === "vencidos"}
           />
         </div>
 
