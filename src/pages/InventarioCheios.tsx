@@ -59,34 +59,35 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
     });
   }, [inventory, searchTerm, itemTypeFilter, statusFilter]);
 
-  // Estatísticas do inventário
+  // Estatísticas do inventário (Contando containers únicos)
   const inventoryStats = useMemo(() => {
     const totalItems = filteredInventory.length;
     
-    const emEstoque = filteredInventory.filter(item => {
-      const status = String(item.status || '').toLowerCase();
-      return status.includes("em estoque");
-    }).length;
-    
-    const aguardandoDevolucao = filteredInventory.filter(item => {
-      const status = String(item.status || '').toLowerCase();
-      return status.includes("aguardando devolução");
-    }).length;
-    
-    const devolvidos = filteredInventory.filter(item => {
-      const status = String(item.status || '').toLowerCase();
-      return status.includes("ric ok") || status.includes("devolvido");
-    }).length;
+    const uniqueContainersByStatus = (statusKeyword: string) => {
+        const containerIds = new Set<string>();
+        filteredInventory.forEach(item => {
+            if (String(item.status || '').toLowerCase().includes(statusKeyword)) {
+                containerIds.add(item.containerId);
+            }
+        });
+        return containerIds.size;
+    };
 
+    // Contagem de containers únicos
+    const emEstoque = uniqueContainersByStatus("em estoque");
+    const aguardandoDevolucao = uniqueContainersByStatus("aguardando devolução");
+    const devolvidos = uniqueContainersByStatus("ric ok"); // Usamos 'ric ok' para capturar o status final
+
+    // Contagem de itens (não únicos)
     const totalTrocas = filteredInventory.filter(item => item.itemType === 'Troca').length;
     const totalBaixas = filteredInventory.filter(item => item.itemType === 'Baixa Pátio').length;
     const totalDevolucoes = filteredInventory.filter(item => item.itemType === 'Devolução').length;
     
     return {
-      totalItems,
-      emEstoque,
-      aguardandoDevolucao,
-      devolvidos,
+      totalItems, // Total de linhas de rastreio
+      emEstoque, // Total de containers únicos em estoque físico
+      aguardandoDevolucao, // Total de containers únicos aguardando devolução
+      devolvidos, // Total de containers únicos devolvidos
       totalTrocas,
       totalBaixas,
       totalDevolucoes,
@@ -273,25 +274,25 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
               delay={0.1}
             />
             <StatCard
-              title="Em Estoque (Físico)"
+              title="Containers Em Estoque"
               value={inventoryStats.emEstoque}
-              subtitle={`${inventoryStats.totalItems > 0 ? ((inventoryStats.emEstoque / inventoryStats.totalItems) * 100).toFixed(1) : 0}% do total`}
+              subtitle={`Containers únicos no pátio`}
               icon={Clock}
               color="primary"
               delay={0.2}
             />
             <StatCard
-              title="Aguardando Devolução"
+              title="Containers Aguardando Devolução"
               value={inventoryStats.aguardandoDevolucao}
-              subtitle={`Itens que saíram, mas não foram concluídos`}
+              subtitle={`Containers únicos que saíram, mas não foram concluídos`}
               icon={AlertTriangle}
               color="warning"
               delay={0.3}
             />
             <StatCard
-              title="Devolvidos (RIC OK)"
+              title="Containers Devolvidos (RIC OK)"
               value={inventoryStats.devolvidos}
-              subtitle={`${inventoryStats.totalItems > 0 ? ((inventoryStats.devolvidos / inventoryStats.totalItems) * 100).toFixed(1) : 0}% concluídos`}
+              subtitle={`Containers únicos com ciclo concluído`}
               icon={CheckCircle2}
               color="success"
               delay={0.4}
@@ -396,7 +397,7 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
                 <div className="flex items-center gap-2">
                   <Calendar className="h-3 w-3 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">Última Atualização:</span>
-                  <span className="text-sm">{new Date(selectedItem.lastUpdated).toLocaleString('pt-BR')}</span>
+                  <span className="text-sm">{new Date(selectedItem.lastUpdated).toLocaleDateString('pt-BR')}</span>
                 </div>
               </div>
             </div>
