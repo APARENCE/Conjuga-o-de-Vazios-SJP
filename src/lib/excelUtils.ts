@@ -118,7 +118,11 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
         // Usamos raw: false para que o XLSX tente converter datas e números
         // cellDates: true é importante para que o XLSX retorne objetos Date para datas reconhecidas
         const workbook = XLSX.read(data, { type: 'array', cellDates: true, raw: false });
-        const sheetName = workbook.SheetNames[0];
+        
+        // Se o usuário anexou o arquivo, ele deve ser lido.
+        // Se a aba for 'ESTOQUE VAZIO', precisamos garantir que ela seja a aba lida.
+        // Por padrão, XLSX.read lê a primeira aba (índice 0).
+        const sheetName = workbook.SheetNames[0]; 
         const worksheet = workbook.Sheets[sheetName];
         
         // Usar header: 1 para obter um array de arrays, ignorando os nomes dos cabeçalhos e lendo por índice.
@@ -167,7 +171,8 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
                     (partialContainer as any)[containerKey] = excelDateToJSDate(value);
                 }
               } else {
-                (partialContainer as any)[containerKey] = String(value).trim();
+                // Garante que todos os campos de texto sejam strings vazias se não preenchidos
+                (partialContainer as any)[containerKey] = String(value || "").trim();
               }
             });
             
@@ -185,9 +190,9 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
             }
 
             // Garantir que todos os campos da interface existam, mesmo que vazios
-            // depotDevolucao não está no arquivo, então definimos como vazio
             partialContainer.depotDevolucao = partialContainer.depotDevolucao || "";
             
+            // Mapeamento de campos de cálculo/status
             partialContainer.diasRestantes = partialContainer.prazoDias;
             partialContainer.status = partialContainer.status || partialContainer.statusVazioCheio || "";
             partialContainer.files = [];
