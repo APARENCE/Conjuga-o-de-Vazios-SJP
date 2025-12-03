@@ -13,7 +13,7 @@ import { formatDateToBR } from "@/lib/excelUtils";
 import { toast } from "@/hooks/use-toast";
 import { ContainerHeader } from "@/components/ContainerHeader";
 
-interface ContainersPageProps {
+interface ContainersCheiosPageProps {
   containers: Container[];
   onContainerUpdate: (containerId: string, files: ContainerFile[]) => Promise<void>;
   onContainerAdd: (container: Partial<Container>) => Promise<void>;
@@ -21,13 +21,13 @@ interface ContainersPageProps {
   onContainerDelete: (id: string) => Promise<void>;
 }
 
-export default function Containers({ 
+export default function ContainersCheios({ 
   containers, 
   onContainerUpdate, 
   onContainerAdd, 
   onContainerEdit, 
   onContainerDelete 
-}: ContainersPageProps) {
+}: ContainersCheiosPageProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all"); 
   const [armadorFilter, setArmadorFilter] = useState<string>("all");
@@ -110,7 +110,7 @@ export default function Containers({
     try {
         await onContainerEdit(id, data);
         toast({
-            title: "Container atualizado!",
+            title: "Container Cheio atualizado!",
             description: "Os dados do container foram salvos com sucesso.",
         });
     } catch (e) {
@@ -243,8 +243,8 @@ export default function Containers({
         totalContainersCount={containers.length}
         stats={stats}
         onContainerAdd={onContainerAdd}
-        title="Gestão de Containers-Vazios"
-        subtitle="Controle de entrada e saída de containers vazios"
+        title="Gestão de Containers-Cheios"
+        subtitle="Controle de entrada e saída de containers cheios"
       />
 
       <div className="flex-1 pt-2">

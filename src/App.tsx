@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,8 +7,11 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Containers from "./pages/Containers";
+import ContainersCheios from "./pages/ContainersCheios"; // Novo
 import Analise from "./pages/Analise";
+import AnaliseCheios from "./pages/AnaliseCheios"; // Novo
 import Inventario from "./pages/Inventario";
+import InventarioCheios from "./pages/InventarioCheios"; // Novo
 import Portaria from "./pages/Portaria";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/Login";
@@ -21,6 +24,7 @@ import { Menu, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFileOperation } from "@/hooks/use-file-operation";
 import { useContainers } from "@/hooks/use-containers";
+import { useFullContainers } from "@/hooks/use-full-containers"; // Novo hook
 import { SessionProvider, useSession } from "@/hooks/use-session";
 
 const queryClient = new QueryClient();
@@ -68,42 +72,63 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
 };
 
 const MainApp = () => {
+  // Containers Vazios
   const { 
-    containers, 
-    isLoading, 
-    addContainer, 
-    updateContainer, 
-    deleteContainer,
-    addMultipleContainers
+    containers: emptyContainers, 
+    isLoading: isLoadingEmpty, 
+    addContainer: addEmptyContainer, 
+    updateContainer: updateEmptyContainer, 
+    deleteContainer: deleteEmptyContainer,
+    addMultipleContainers: addMultipleEmptyContainers
   } = useContainers();
   
+  // Containers Cheios
+  const { 
+    containers: fullContainers, 
+    isLoading: isLoadingFull, 
+    addContainer: addFullContainer, 
+    updateContainer: updateFullContainer, 
+    deleteContainer: deleteFullContainer,
+    addMultipleContainers: addMultipleFullContainers
+  } = useFullContainers();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importType, setImportType] = useState<'vazio' | 'cheio'>('vazio');
 
   const handleImportFile = async (file: File) => {
-    const data = await parseExcelFile(file);
+    const sheetNameHint = importType === 'vazio' ? 'ESTOQUE VAZIO' : 'ESTOQUE CHEIO';
+    const data = await parseExcelFile(file, sheetNameHint);
+    
     if (data && data.length > 0) {
-      await addMultipleContainers(data);
+      if (importType === 'vazio') {
+        await addMultipleEmptyContainers(data);
+      } else {
+        await addMultipleFullContainers(data);
+      }
     } else {
-      throw new Error("Nenhum dado de container válido foi encontrado no arquivo.");
+      throw new Error(`Nenhum dado de container válido foi encontrado no arquivo na aba '${sheetNameHint}'.`);
     }
   };
 
   const { execute: executeImport, isLoading: isImporting } = useFileOperation(
     handleImportFile,
     {
-      loadingMessage: "Importando planilha... Isso pode levar alguns segundos.",
+      loadingMessage: `Importando planilha (${importType === 'vazio' ? 'Vazios' : 'Cheios'})... Isso pode levar alguns segundos.`,
       successMessage: "Importação concluída com sucesso!",
       errorMessage: "Erro na importação. Verifique o formato do arquivo e os dados.",
     }
   );
 
+  const handleExportFile = async (type: 'vazio' | 'cheio') => {
+    const containersToExport = type === 'vazio' ? emptyContainers : fullContainers;
+    if (containersToExport.length === 0) {
+      throw new Error("Nenhum dado para exportar.");
+    }
+    exportToExcel(containersToExport);
+  };
+
   const { execute: executeExport, isLoading: isExporting } = useFileOperation(
-    async () => {
-      if (containers.length === 0) {
-        throw new Error("Nenhum dado para exportar.");
-      }
-      exportToExcel(containers);
-    },
+    handleExportFile,
     {
       loadingMessage: "Exportando dados para Excel...",
       successMessage: "Exportação concluída! O arquivo foi baixado.",
@@ -111,7 +136,8 @@ const MainApp = () => {
     }
   );
 
-  const handleImport = () => {
+  const handleImport = (type: 'vazio' | 'cheio') => {
+    setImportType(type);
     if (fileInputRef.current) {
       fileInputRef.current.value = ''; 
       fileInputRef.current.click();
@@ -124,9 +150,9 @@ const MainApp = () => {
     await executeImport(file);
   };
 
-  const handleExport = async () => {
+  const handleExport = async (type: 'vazio' | 'cheio') => {
     try {
-      await executeExport();
+      await executeExport(type);
     } catch (error) {
       if (error instanceof Error && error.message.includes("Nenhum dado")) {
         toast({
@@ -138,29 +164,42 @@ const MainApp = () => {
     }
   };
 
-  const handleContainerUpdateFiles = async (containerId: string, files: ContainerFile[]) => {
-    await updateContainer({ id: containerId, data: { files } });
+  // Funções de CRUD unificadas
+  const handleContainerUpdateFiles = async (containerId: string, files: ContainerFile[], type: 'vazio' | 'cheio') => {
+    const updateFn = type === 'vazio' ? updateEmptyContainer : updateFullContainer;
+    await updateFn({ id: containerId, data: { files } });
     toast({
         title: "Arquivos atualizados!",
         description: "Os anexos do container foram salvos com sucesso.",
     });
   };
   
-  const handleContainerEdit = async (id: string, containerData: Partial<Container>) => {
-    await updateContainer({ id, data: containerData });
+  const handleContainerEdit = async (id: string, containerData: Partial<Container>, type: 'vazio' | 'cheio') => {
+    const updateFn = type === 'vazio' ? updateEmptyContainer : updateFullContainer;
+    await updateFn({ id, data: containerData });
   };
 
-  const handleContainerAdd = async (containerData: Partial<Container>) => {
-    await addContainer(containerData);
+  const handleContainerAdd = async (containerData: Partial<Container>, type: 'vazio' | 'cheio') => {
+    const addFn = type === 'vazio' ? addEmptyContainer : addFullContainer;
+    await addFn(containerData);
   };
 
-  const handleContainerDelete = async (id: string) => {
-    await deleteContainer(id);
+  const handleContainerDelete = async (id: string, type: 'vazio' | 'cheio') => {
+    const deleteFn = type === 'vazio' ? deleteEmptyContainer : deleteFullContainer;
+    await deleteFn(id);
   };
   
   const handlePortariaUpdate = async (id: string, data: Partial<Container>) => {
-    await updateContainer({ id, data });
+    // A portaria assume containers vazios por padrão
+    await updateEmptyContainer({ id, data });
   };
+
+  const handlePortariaAdd = async (containerData: Partial<Container>) => {
+    // Containers adicionados pela portaria são considerados vazios por padrão (Entrada)
+    await addEmptyContainer(containerData);
+  };
+
+  const isLoading = isLoadingEmpty || isLoadingFull;
 
   if (isLoading) {
     return (
@@ -182,34 +221,60 @@ const MainApp = () => {
       />
       <AppLayout>
         <Routes>
+          {/* Containers Vazios */}
           <Route 
             path="/" 
             element={
               <Containers 
-                containers={containers} 
-                onContainerUpdate={handleContainerUpdateFiles}
-                onContainerAdd={handleContainerAdd}
-                onContainerEdit={handleContainerEdit}
-                onContainerDelete={handleContainerDelete}
+                containers={emptyContainers} 
+                onContainerUpdate={(id, files) => handleContainerUpdateFiles(id, files, 'vazio')}
+                onContainerAdd={(data) => handleContainerAdd(data, 'vazio')}
+                onContainerEdit={(id, data) => handleContainerEdit(id, data, 'vazio')}
+                onContainerDelete={(id) => handleContainerDelete(id, 'vazio')}
               />
             } 
           />
-          <Route path="/analise" element={<Analise containers={containers} />} />
+          <Route path="/analise" element={<Analise containers={emptyContainers} />} />
           <Route 
             path="/inventario" 
             element={
               <Inventario 
-                containers={containers} 
+                containers={emptyContainers} 
               />
             } 
           />
+          
+          {/* Containers Cheios */}
+          <Route 
+            path="/cheios" 
+            element={
+              <ContainersCheios 
+                containers={fullContainers} 
+                onContainerUpdate={(id, files) => handleContainerUpdateFiles(id, files, 'cheio')}
+                onContainerAdd={(data) => handleContainerAdd(data, 'cheio')}
+                onContainerEdit={(id, data) => handleContainerEdit(id, data, 'cheio')}
+                onContainerDelete={(id) => handleContainerDelete(id, 'cheio')}
+              />
+            } 
+          />
+          <Route path="/analise-cheios" element={<AnaliseCheios containers={fullContainers} />} />
+          <Route 
+            path="/inventario-cheios" 
+            element={
+              <InventarioCheios 
+                containers={fullContainers} 
+              />
+            } 
+          />
+
+          {/* Portaria (Assume Vazios) */}
           <Route 
             path="/portaria" 
             element={
               <Portaria 
-                containers={containers} 
+                containers={emptyContainers} 
                 onContainerUpdate={handlePortariaUpdate}
-                onContainerAdd={handleContainerAdd}
+                onContainerAdd={handlePortariaAdd}
               />
             } 
           />

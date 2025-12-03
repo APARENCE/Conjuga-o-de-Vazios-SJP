@@ -108,19 +108,22 @@ const DATE_KEYS: (keyof Container)[] = [
     'dataEntrada', 'dataPorto', 'dataEstufagem', 'dataSaidaSJP'
 ];
 
-export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
+/**
+ * Analisa um arquivo Excel, procurando por uma aba específica.
+ * @param file O arquivo Excel.
+ * @param sheetNameHint Dica de nome da aba ('ESTOQUE VAZIO' ou 'ESTOQUE CHEIO').
+ */
+export const parseExcelFile = (file: File, sheetNameHint: 'ESTOQUE VAZIO' | 'ESTOQUE CHEIO'): Promise<Partial<Container>[]> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
     reader.onload = (e) => {
       try {
         const data = e.target?.result;
-        // Usamos raw: false para que o XLSX tente converter datas e números
-        // cellDates: true é importante para que o XLSX retorne objetos Date para datas reconhecidas
         const workbook = XLSX.read(data, { type: 'array', cellDates: true, raw: false });
         
-        // 1. Tenta encontrar a aba 'ESTOQUE VAZIO'
-        let sheetName = workbook.SheetNames.find(name => name.toUpperCase().includes('ESTOQUE VAZIO'));
+        // 1. Tenta encontrar a aba com base na dica
+        let sheetName = workbook.SheetNames.find(name => name.toUpperCase().includes(sheetNameHint));
         
         // 2. Se não encontrar, usa a primeira aba
         if (!sheetName) {
@@ -129,9 +132,6 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
         
         const worksheet = workbook.Sheets[sheetName];
         
-        // Usar header: 1 para obter um array de arrays, ignorando os nomes dos cabeçalhos e lendo por índice.
-        // raw: false garante que datas sejam retornadas como objetos Date se cellDates: true for usado.
-        // defval: "" garante que células vazias sejam lidas como strings vazias.
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: "" }) as any[][];
         
         if (jsonData.length < 2) { // Deve ter cabeçalho + pelo menos uma linha de dados.
@@ -209,7 +209,7 @@ export const parseExcelFile = (file: File): Promise<Partial<Container>[]> => {
         resolve(containers);
       } catch (error) {
         console.error("Erro durante o parsing do Excel:", error);
-        reject(new Error("Falha ao ler o arquivo Excel. Verifique se o formato está correto e se a aba 'ESTOQUE VAZIO' existe. Detalhe do erro: " + (error as Error).message));
+        reject(new Error(`Falha ao ler o arquivo Excel. Verifique se o formato está correto e se a aba '${sheetNameHint}' existe. Detalhe do erro: ` + (error as Error).message));
       }
     };
     

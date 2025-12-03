@@ -43,6 +43,9 @@ interface ContainerHeaderProps {
     armadoresFiltrados: number;
   };
   onContainerAdd: (container: Partial<Container>) => Promise<void>;
+  // Novos props para título dinâmico
+  title: string;
+  subtitle: string;
 }
 
 const StatCard = ({ title, value, subtitle, icon: Icon, color, delay }: any) => (
@@ -81,6 +84,8 @@ export function ContainerHeader({
   totalContainersCount,
   stats,
   onContainerAdd,
+  title,
+  subtitle,
 }: ContainerHeaderProps) {
   return (
     <div className="sticky top-0 z-40 bg-background pb-2 border-b border-border/50 shadow-sm -mx-4 px-4">
@@ -88,9 +93,9 @@ export function ContainerHeader({
         {/* Header */}
         <div className="flex flex-col gap-2">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Gestão de Containers-Vazios</h1>
+            <h1 className="text-2xl font-bold text-foreground">{title}</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Controle de entrada e saída de containers
+              {subtitle}
             </p>
           </div>
 

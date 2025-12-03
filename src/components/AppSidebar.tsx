@@ -22,9 +22,9 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
 interface AppSidebarProps {
-  onImport: () => void;
-  onExport: () => void;
-  onContainerAdd: (container: Partial<Container>) => void;
+  onImport: (type: 'vazio' | 'cheio') => void; // Atualizado para aceitar tipo
+  onExport: (type: 'vazio' | 'cheio') => void; // Atualizado para aceitar tipo
+  onContainerAdd: (container: Partial<Container>, type: 'vazio' | 'cheio') => void; // Atualizado para aceitar tipo
   isImporting: boolean;
   isExporting: boolean;
 }
@@ -45,9 +45,12 @@ export function AppSidebar({ onImport, onExport, onContainerAdd, isImporting, is
 
   const menuItems = [
     { title: "Containers-Vazios", url: "/", icon: Home },
+    { title: "Containers-Cheios", url: "/cheios", icon: PackageOpen }, // Novo item
     { title: "Gate", url: "/portaria", icon: Truck },
-    { title: "Análise", url: "/analise", icon: BarChart3 },
-    { title: "Inventário", url: "/inventario", icon: PackageOpen },
+    { title: "Análise Vazios", url: "/analise", icon: BarChart3 },
+    { title: "Análise Cheios", url: "/analise-cheios", icon: BarChart3 }, // Novo item
+    { title: "Inventário Vazios", url: "/inventario", icon: PackageOpen },
+    { title: "Inventário Cheios", url: "/inventario-cheios", icon: PackageOpen }, // Novo item
   ];
 
   const handleToggleSidebar = () => {
@@ -100,7 +103,7 @@ export function AppSidebar({ onImport, onExport, onContainerAdd, isImporting, is
             <SidebarGroupLabel className="text-xs px-2">Ações</SidebarGroupLabel>
             <SidebarGroupContent className="space-y-1 px-1">
               <ContainerFormDialog 
-                onSave={onContainerAdd} 
+                onSave={(data) => onContainerAdd(data, 'vazio')} 
                 trigger={
                   <Button
                     variant="default"
@@ -109,7 +112,7 @@ export function AppSidebar({ onImport, onExport, onContainerAdd, isImporting, is
                     disabled={isImporting || isExporting}
                   >
                     <Plus className="h-3 w-3" /> 
-                    Novo Container
+                    Novo Container (Vazio)
                   </Button>
                 }
               />
@@ -117,7 +120,7 @@ export function AppSidebar({ onImport, onExport, onContainerAdd, isImporting, is
                 variant="outline"
                 size="sm"
                 className="w-full justify-start h-7 px-1 text-xs"
-                onClick={onImport}
+                onClick={() => onImport('vazio')}
                 disabled={isImporting || isExporting}
               >
                 {isImporting ? (
@@ -125,13 +128,27 @@ export function AppSidebar({ onImport, onExport, onContainerAdd, isImporting, is
                 ) : (
                   <Upload className="h-3 w-3 mr-1" />
                 )}
-                {isImporting ? 'Importando...' : 'Importar Excel'}
+                Importar Vazios
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 className="w-full justify-start h-7 px-1 text-xs"
-                onClick={onExport}
+                onClick={() => onImport('cheio')}
+                disabled={isImporting || isExporting}
+              >
+                {isImporting ? (
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                ) : (
+                  <Upload className="h-3 w-3 mr-1" />
+                )}
+                Importar Cheios
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start h-7 px-1 text-xs"
+                onClick={() => onExport('vazio')}
                 disabled={isImporting || isExporting}
               >
                 {isExporting ? (
@@ -139,7 +156,7 @@ export function AppSidebar({ onImport, onExport, onContainerAdd, isImporting, is
                 ) : (
                   <Download className="h-3 w-3 mr-1" />
                 )}
-                {isExporting ? 'Exportando...' : 'Exportar Excel'}
+                Exportar Excel
               </Button>
             </SidebarGroupContent>
           </SidebarGroup>
