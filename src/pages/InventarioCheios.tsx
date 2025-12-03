@@ -229,13 +229,28 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
     </motion.div>
   );
 
-  const StatCard = ({ title, value, subtitle, icon: Icon, color, delay }: any) => (
+  const handleStatClick = (filterKey: 'all' | 'devolvidos' | 'vencidos' | 'proximos' | 'em estoque') => {
+    // Se o filtro clicado já estiver ativo, desativa (volta para 'all')
+    if (statusFilter === filterKey) {
+      setStatusFilter("all");
+    } else {
+      setStatusFilter(filterKey);
+    }
+  };
+
+  const StatCard = ({ title, value, subtitle, icon: Icon, color, delay, filterKey }: any) => (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3, delay }}
     >
-      <Card className={`border-l-4 border-l-${color} hover:shadow-md transition-all duration-300 hover:scale-[1.02]`}>
+      <Card 
+        className={cn(
+          `border-l-4 border-l-${color} hover:shadow-md transition-all duration-300 hover:scale-[1.02] cursor-pointer`,
+          statusFilter === filterKey && "ring-2 ring-offset-2 ring-primary/50 border-primary/50"
+        )}
+        onClick={() => handleStatClick(filterKey)}
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0.5 p-1">
           <CardTitle className="text-xs font-medium text-muted-foreground">
             {title}
@@ -328,6 +343,7 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
               icon={Package}
               color="primary"
               delay={0.1}
+              filterKey="em estoque"
             />
             <StatCard
               title="Próximos do Vencimento"
@@ -336,6 +352,7 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
               icon={Clock}
               color="warning"
               delay={0.2}
+              filterKey="proximos"
             />
             <StatCard
               title="Vencidos (Demurrage)"
@@ -344,6 +361,7 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
               icon={AlertTriangle}
               color="danger"
               delay={0.3}
+              filterKey="vencidos"
             />
             <StatCard
               title="Devolvidos (Saídos)"
@@ -352,6 +370,7 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
               icon={CheckCircle2}
               color="success"
               delay={0.4}
+              filterKey="devolvidos"
             />
           </div>
 
