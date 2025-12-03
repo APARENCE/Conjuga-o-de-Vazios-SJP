@@ -88,7 +88,7 @@ export function ContainerHeader({
         {/* Header */}
         <div className="flex flex-col gap-2">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Gestão de Containers</h1>
+            <h1 className="text-2xl font-bold text-foreground">Gestão de Containers-Vazios</h1>
             <p className="text-muted-foreground text-sm mt-1">
               Controle de entrada e saída de containers
             </p>

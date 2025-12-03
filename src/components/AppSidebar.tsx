@@ -44,7 +44,7 @@ export function AppSidebar({ onImport, onExport, onContainerAdd, isImporting, is
   };
 
   const menuItems = [
-    { title: "Containers", url: "/", icon: Home },
+    { title: "Containers-Vazios", url: "/", icon: Home },
     { title: "Gate", url: "/portaria", icon: Truck },
     { title: "Análise", url: "/analise", icon: BarChart3 },
     { title: "Inventário", url: "/inventario", icon: PackageOpen },
