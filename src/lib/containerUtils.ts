@@ -86,3 +86,19 @@ export function validateAndCorrectContainer(containerNumber: string): string | n
 
   return null;
 }
+
+/**
+ * Verifica se um container foi devolvido com base na data de saída SJP ou status.
+ * @param container O objeto Container.
+ * @returns true se devolvido, false caso contrário.
+ */
+export function isContainerDevolvido(container: { dataSaidaSJP?: string | null; status?: string | null }): boolean {
+    // Critério 1: Data de Saída SJP preenchida
+    if (container.dataSaidaSJP && container.dataSaidaSJP.trim() !== "") {
+        return true;
+    }
+    
+    // Critério 2: Status indica devolução (fallback, mas a data é mais forte)
+    const statusLower = String(container.status || '').toLowerCase();
+    return statusLower.includes("ok") || statusLower.includes("devolvido");
+}

@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { formatDateToBR } from "@/lib/excelUtils";
+import { isContainerDevolvido } from "@/lib/containerUtils"; // Importando a nova função
 
 interface AnaliseCheiosPageProps {
   containers: Container[];
@@ -76,18 +77,20 @@ export default function AnaliseCheios({ containers }: AnaliseCheiosPageProps) {
 
   // Análise por Status Geral
   const statusData = useMemo(() => {
-    const devolvidos = filteredContainers.filter(c => {
-      const status = String(c.status || '').toLowerCase();
-      return status.includes("ok") || status.includes("devolvido") || c.dataSaidaSJP; // Considera Saída SJP como devolvido/concluído
-    }).length;
-    const pendentes = filteredContainers.filter(c => {
-      const status = String(c.status || '').toLowerCase();
-      return status.includes("aguardando") || status.includes("verificar") || (!c.dataSaidaSJP && !status.includes("ok") && !status.includes("devolvido"));
-    }).length;
-    const outros = filteredContainers.length - devolvidos - pendentes;
+    const devolvidos = filteredContainers.filter(isContainerDevolvido).length; // Usando a nova função
+    
+    // Pendentes são aqueles que não foram devolvidos E não estão vencidos
+    const vencidos = filteredContainers.filter(c => (typeof c.prazoDias === 'number' ? c.prazoDias : 0) === 0).length;
+    const naoDevolvidos = filteredContainers.length - devolvidos;
+    
+    // Pendentes = Não Devolvidos - Vencidos (para evitar dupla contagem)
+    const pendentes = Math.max(0, naoDevolvidos - vencidos); 
+    
+    const outros = filteredContainers.length - devolvidos - pendentes - vencidos;
 
     return [
       { name: "Devolvidos", value: devolvidos, color: "hsl(var(--success))" },
+      { name: "Vencidos", value: vencidos, color: "hsl(var(--danger))" },
       { name: "Pendentes", value: pendentes, color: "hsl(var(--warning))" },
       { name: "Outros", value: outros, color: "hsl(var(--muted))" },
     ].filter(item => item.value > 0);
@@ -104,6 +107,9 @@ export default function AnaliseCheios({ containers }: AnaliseCheiosPageProps) {
     };
 
     filteredContainers.forEach(c => {
+      // Ignora containers que já foram devolvidos (Saída SJP preenchida)
+      if (isContainerDevolvido(c)) return; 
+      
       const dias = typeof c.prazoDias === 'number' ? c.prazoDias : 0; 
       if (dias === 0) ranges["Vencido (0)"]++;
       else if (dias <= 3) ranges["1-3 dias"]++;
@@ -154,8 +160,8 @@ export default function AnaliseCheios({ containers }: AnaliseCheiosPageProps) {
 
   const stats = useMemo(() => {
     const devolvidos = statusData.find(s => s.name === "Devolvidos")?.value || 0;
+    const vencidos = statusData.find(d => d.name === "Vencidos")?.value || 0;
     const pendentes = statusData.find(s => s.name === "Pendentes")?.value || 0;
-    const vencidos = diasRestantesData.find(d => d.name === "Vencido (0)")?.value || 0;
 
     return {
       total: filteredContainers.length,
@@ -164,13 +170,13 @@ export default function AnaliseCheios({ containers }: AnaliseCheiosPageProps) {
       vencidos,
       taxaDevolucao: filteredContainers.length > 0 ? ((devolvidos / filteredContainers.length) * 100).toFixed(1) : "0",
     };
-  }, [filteredContainers, statusData, diasRestantesData]);
+  }, [filteredContainers, statusData]);
 
   const chartConfig = {
     devolvidos: { label: "Devolvidos", color: "hsl(var(--success))" },
     pendentes: { label: "Pendentes", color: "hsl(var(--warning))" },
+    vencidos: { label: "Vencidos", color: "hsl(var(--danger))" },
     outros: { label: "Outros", color: "hsl(var(--muted))" },
-    vencido: { label: "Vencido", color: "hsl(var(--destructive))" },
     entradas: { label: "Entradas", color: "hsl(var(--primary))" },
     devolucoes: { label: "Devoluções", color: "hsl(var(--success))" },
   };
@@ -430,7 +436,7 @@ export default function AnaliseCheios({ containers }: AnaliseCheiosPageProps) {
           {(selectedChart === "all" || selectedChart === "dias") && (
             <ChartCard
               title="Dias Restantes para Devolução"
-              description="Distribuição por prazo de devolução"
+              description="Distribuição por prazo de devolução (excluindo devolvidos)"
               icon={Clock}
             >
               <ChartContainer config={chartConfig} className={`h-[${chartHeight}px]`}>

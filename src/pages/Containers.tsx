@@ -12,6 +12,7 @@ import { ContainerDetailsSidebar } from "@/components/ContainerDetailsSidebar";
 import { formatDateToBR } from "@/lib/excelUtils";
 import { toast } from "@/hooks/use-toast";
 import { ContainerHeader } from "@/components/ContainerHeader";
+import { isContainerDevolvido } from "@/lib/containerUtils"; // Importando a nova função
 
 interface ContainersPageProps {
   containers: Container[];
@@ -56,16 +57,16 @@ export default function Containers({
 
       let matchesStatus = true;
       const dias = getDiasRestantes(c);
-      const statusLower = String(c.status || '').toLowerCase();
-
+      
       if (statusFilter === "devolvidos") {
-        matchesStatus = statusLower.includes("ok") || statusLower.includes("devolvido");
+        matchesStatus = isContainerDevolvido(c); // Usando a nova função
       } else if (statusFilter === "pendentes") {
-        matchesStatus = statusLower.includes("aguardando") || statusLower.includes("verificar");
+        // Pendentes são aqueles que não foram devolvidos E não estão vencidos
+        matchesStatus = !isContainerDevolvido(c) && dias > 0; 
       } else if (statusFilter === "vencidos") {
-        matchesStatus = dias === 0;
+        matchesStatus = dias === 0 && !isContainerDevolvido(c); // Vencido E não devolvido
       } else if (statusFilter === "proximos") {
-        matchesStatus = dias > 0 && dias <= 3;
+        matchesStatus = dias > 0 && dias <= 3 && !isContainerDevolvido(c); // Próximo E não devolvido
       }
 
       const matchesArmador = armadorFilter === "all" || c.armador === armadorFilter;
@@ -97,14 +98,14 @@ export default function Containers({
   }, [searchTerm, filteredContainers, selectedContainer, containers]);
 
   const stats = useMemo(() => {
-    const total = filteredContainers.length;
-    const devolvidos = filteredContainers.filter(c => String(c.status || '').toLowerCase().includes("ok") || String(c.status || '').toLowerCase().includes("devolvido")).length;
-    const pendentes = filteredContainers.filter(c => String(c.status || '').toLowerCase().includes("aguardando") || String(c.status || '').toLowerCase().includes("verificar")).length;
-    const vencidos = filteredContainers.filter(c => getDiasRestantes(c) === 0).length;
+    const total = containers.length; // Usamos o total de containers (não filtrados) para os KPIs
+    const devolvidos = containers.filter(isContainerDevolvido).length;
+    const vencidos = containers.filter(c => getDiasRestantes(c) === 0 && !isContainerDevolvido(c)).length;
+    const pendentes = containers.filter(c => !isContainerDevolvido(c) && getDiasRestantes(c) > 0).length;
     const armadoresFiltrados = [...new Set(filteredContainers.map(c => c.armador).filter(Boolean))].length;
 
     return { total, devolvidos, pendentes, vencidos, armadoresFiltrados };
-  }, [filteredContainers]);
+  }, [containers, filteredContainers]);
 
   const handleEdit = async (id: string, data: Partial<Container>) => {
     try {

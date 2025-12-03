@@ -21,6 +21,7 @@ import { ContainerFormDialog } from "@/components/ContainerFormDialog";
 import { VencimentoAlert } from "@/components/VencimentoAlert";
 import { motion } from "framer-motion";
 import { Container } from "@/types/container";
+import { isContainerDevolvido } from "@/lib/containerUtils"; // Importando a nova função
 
 interface ContainerHeaderProps {
   searchTerm: string;
@@ -87,6 +88,20 @@ export function ContainerHeader({
   title,
   subtitle,
 }: ContainerHeaderProps) {
+  
+  // Recalculando stats para garantir que 'Devolvidos' e 'Pendentes' usem a lógica correta
+  const calculatedStats = {
+    ...stats,
+    devolvidos: containers.filter(isContainerDevolvido).length,
+    pendentes: containers.filter(c => !isContainerDevolvido(c)).length - stats.vencidos, // Pendentes = (Total - Devolvidos) - Vencidos
+  };
+  
+  // Ajustando a taxa de devolução
+  const totalContainers = containers.length;
+  const taxaDevolucao = totalContainers > 0 
+    ? ((calculatedStats.devolvidos / totalContainers) * 100).toFixed(1) 
+    : "0";
+
   return (
     <div className="sticky top-0 z-40 bg-background pb-2 border-b border-border/50 shadow-sm -mx-4 px-4">
       <div className="space-y-2">
@@ -181,16 +196,16 @@ export function ContainerHeader({
           />
           <StatCard
             title="Devolvidos"
-            value={stats.devolvidos}
-            subtitle={`${stats.total > 0 ? ((stats.devolvidos / stats.total) * 100).toFixed(1) : 0}%`}
+            value={calculatedStats.devolvidos}
+            subtitle={`${taxaDevolucao}%`}
             icon={CheckCircle}
             color="border-l-success"
             delay={0.2}
           />
           <StatCard
             title="Pendentes"
-            value={stats.pendentes}
-            subtitle={`${stats.total > 0 ? ((stats.pendentes / stats.total) * 100).toFixed(1) : 0}%`}
+            value={calculatedStats.pendentes}
+            subtitle={`${totalContainers > 0 ? ((calculatedStats.pendentes / totalContainers) * 100).toFixed(1) : 0}%`}
             icon={TrendingUp}
             color="border-l-warning"
             delay={0.3}

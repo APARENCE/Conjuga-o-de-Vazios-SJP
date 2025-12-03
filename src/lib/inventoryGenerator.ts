@@ -1,5 +1,6 @@
 import { Container } from "@/types/container";
 import { InventoryItem } from "@/types/inventory";
+import { isContainerDevolvido } from "@/lib/containerUtils"; // Importando a nova função
 
 export const generateInventoryFromContainers = (containers: Container[]): InventoryItem[] => {
   const inventory: InventoryItem[] = [];
@@ -14,15 +15,18 @@ export const generateInventoryFromContainers = (containers: Container[]): Invent
     };
 
     // Determinar o status do item de inventário com base no status do container
-    const containerStatusLower = String(c.status || '').toLowerCase();
+    const isDevolvido = isContainerDevolvido(c);
     let itemStatus: InventoryItem['status'];
 
-    if (containerStatusLower.includes("ok") || containerStatusLower.includes("devolvido") || c.dataSaidaSJP) {
+    if (isDevolvido) {
       itemStatus = "Devolvido (RIC OK)";
-    } else if (containerStatusLower.includes("aguardando") || containerStatusLower.includes("verificar")) {
-      itemStatus = "Aguardando Devolução";
     } else {
-      itemStatus = "Em Uso";
+      const containerStatusLower = String(c.status || '').toLowerCase();
+      if (containerStatusLower.includes("aguardando") || containerStatusLower.includes("verificar")) {
+        itemStatus = "Aguardando Devolução";
+      } else {
+        itemStatus = "Em Uso";
+      }
     }
 
     // 1. Rastrear Saída SJP (Baixa)
@@ -35,17 +39,14 @@ export const generateInventoryFromContainers = (containers: Container[]): Invent
       });
     }
 
-    // 2. Rastrear Container de Troca (Se houver campos de troca no futuro, eles seriam adicionados aqui. Por enquanto, mantemos a estrutura simplificada.)
-    // Como os campos de troca foram removidos da interface, esta lógica é removida.
-    
-    // 3. Rastrear Devolução (Usando status geral)
-    if (itemStatus === "Devolvido (RIC OK)") {
+    // 2. Rastrear Devolução (Usando status geral)
+    if (isDevolvido) {
         // Se o status for devolvido, criamos um item de rastreio de devolução
         inventory.push({
             ...baseItem,
             itemType: 'Devolução',
             status: itemStatus,
-            details: `Status de devolução: ${c.status}`,
+            details: `Status de devolução: ${c.status || 'Devolvido via Saída SJP'}`,
         });
     }
   });
