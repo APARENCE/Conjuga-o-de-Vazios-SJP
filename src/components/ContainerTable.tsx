@@ -91,8 +91,7 @@ export function ContainerTable({ containers, onContainerUpdate, onContainerEdit,
   return (
     <Card className="border-0 shadow-sm">
       <div 
-        className="overflow-x-auto overflow-y-auto max-h-[75vh] lg:max-h-[85vh]"
-        style={{ height: 'calc(75vh - 40px)' }}
+        className="overflow-x-auto" // Removendo overflow-y-auto e altura fixa
       >
         <Table className="compact-table">
           <TableHeader className={fixedHeaderClasses}>
