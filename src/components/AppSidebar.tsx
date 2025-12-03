@@ -108,8 +108,8 @@ export function AppSidebar({ onImport, onExport, onContainerAdd, isImporting, is
                   <Button
                     variant="ghost"
                     size="sm"
-                    // Aplicando hover:bg-primary/10 e hover:text-primary para o efeito luminoso azul
-                    className="w-full justify-start hover:bg-primary/10 hover:text-primary text-foreground h-7 px-1 text-xs"
+                    // Ajustado para hover:bg-primary/20 para um azul mais escuro no fundo
+                    className="w-full justify-start hover:bg-primary/20 hover:text-primary text-foreground h-7 px-1 text-xs"
                     disabled={isImporting || isExporting}
                   >
                     <Plus className="h-3 w-3" /> 
