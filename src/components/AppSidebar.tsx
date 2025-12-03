@@ -108,8 +108,10 @@ export function AppSidebar({ onImport, onExport, onContainerAdd, isImporting, is
                   <Button
                     variant="ghost"
                     size="sm"
-                    // Ajustado para hover:bg-primary/20 para um azul mais escuro no fundo
-                    className="w-full justify-start hover:bg-primary/20 hover:text-primary text-foreground h-7 px-1 text-xs"
+                    // Aplicando o estilo de botão primário completo (fundo azul, texto branco) APENAS no hover
+                    className="w-full justify-start text-foreground h-7 px-1 text-xs 
+                               hover:bg-primary hover:text-primary-foreground 
+                               transition-colors duration-150"
                     disabled={isImporting || isExporting}
                   >
                     <Plus className="h-3 w-3" /> 
