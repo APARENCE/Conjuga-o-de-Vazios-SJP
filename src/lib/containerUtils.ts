@@ -93,12 +93,14 @@ export function validateAndCorrectContainer(containerNumber: string): string | n
  * @returns true se devolvido, false caso contrário.
  */
 export function isContainerDevolvido(container: { dataSaidaSJP?: string | null; status?: string | null }): boolean {
-    // Critério 1: Data de Saída SJP preenchida
-    if (container.dataSaidaSJP && container.dataSaidaSJP.trim() !== "") {
+    const dataSaida = String(container.dataSaidaSJP || '').trim().toUpperCase();
+    
+    // Critério 1: Data de Saída SJP preenchida E não é "EM PATIO"
+    if (dataSaida !== "" && dataSaida !== "EM PATIO") {
         return true;
     }
     
-    // Critério 2: Status indica devolução (fallback, mas a data é mais forte)
+    // Critério 2: Status indica devolução (fallback)
     const statusLower = String(container.status || '').toLowerCase();
     return statusLower.includes("ok") || statusLower.includes("devolvido");
 }
