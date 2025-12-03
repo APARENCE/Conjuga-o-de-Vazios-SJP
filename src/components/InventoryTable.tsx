@@ -28,8 +28,8 @@ export function InventoryTable({ inventory }: InventoryTableProps) {
     if (statusLower.includes("aguardando devolução")) {
       return <Badge className="bg-warning text-white hover:bg-warning/80">Aguardando Devolução</Badge>;
     }
-    if (statusLower.includes("em uso")) {
-      return <Badge variant="secondary">Em Uso</Badge>;
+    if (statusLower.includes("em estoque")) {
+      return <Badge className="bg-primary text-white hover:bg-primary/90">Em Estoque</Badge>;
     }
     return <Badge variant="outline">{status || 'Outro'}</Badge>;
   };

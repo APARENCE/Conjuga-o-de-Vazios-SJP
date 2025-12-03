@@ -63,9 +63,14 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
   const inventoryStats = useMemo(() => {
     const totalItems = filteredInventory.length;
     
-    const emUso = filteredInventory.filter(item => {
+    const emEstoque = filteredInventory.filter(item => {
       const status = String(item.status || '').toLowerCase();
-      return status.includes("em uso") || status.includes("aguardando devolução");
+      return status.includes("em estoque");
+    }).length;
+    
+    const aguardandoDevolucao = filteredInventory.filter(item => {
+      const status = String(item.status || '').toLowerCase();
+      return status.includes("aguardando devolução");
     }).length;
     
     const devolvidos = filteredInventory.filter(item => {
@@ -79,7 +84,8 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
     
     return {
       totalItems,
-      emUso,
+      emEstoque,
+      aguardandoDevolucao,
       devolvidos,
       totalTrocas,
       totalBaixas,
@@ -96,8 +102,8 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
     if (statusLower.includes("aguardando devolução")) {
       return <Badge className="bg-warning text-white hover:bg-warning/80 text-xs">Aguardando Devolução</Badge>;
     }
-    if (statusLower.includes("em uso")) {
-      return <Badge variant="secondary" className="text-xs">Em Uso</Badge>;
+    if (statusLower.includes("em estoque")) {
+      return <Badge className="bg-primary text-white hover:bg-primary/90 text-xs">Em Estoque</Badge>;
     }
     return <Badge variant="outline" className="text-xs">{status || 'Outro'}</Badge>;
   };
@@ -267,26 +273,27 @@ export default function InventarioCheios({ containers }: InventarioCheiosProps) 
               delay={0.1}
             />
             <StatCard
-              title="Em Uso"
-              value={inventoryStats.emUso}
-              subtitle={`${inventoryStats.totalItems > 0 ? ((inventoryStats.emUso / inventoryStats.totalItems) * 100).toFixed(1) : 0}% do total`}
+              title="Em Estoque (Físico)"
+              value={inventoryStats.emEstoque}
+              subtitle={`${inventoryStats.totalItems > 0 ? ((inventoryStats.emEstoque / inventoryStats.totalItems) * 100).toFixed(1) : 0}% do total`}
               icon={Clock}
-              color="warning"
+              color="primary"
               delay={0.2}
             />
             <StatCard
-              title="Devolvidos"
+              title="Aguardando Devolução"
+              value={inventoryStats.aguardandoDevolucao}
+              subtitle={`Itens que saíram, mas não foram concluídos`}
+              icon={AlertTriangle}
+              color="warning"
+              delay={0.3}
+            />
+            <StatCard
+              title="Devolvidos (RIC OK)"
               value={inventoryStats.devolvidos}
               subtitle={`${inventoryStats.totalItems > 0 ? ((inventoryStats.devolvidos / inventoryStats.totalItems) * 100).toFixed(1) : 0}% concluídos`}
               icon={CheckCircle2}
               color="success"
-              delay={0.3}
-            />
-            <StatCard
-              title="Taxa Conclusão"
-              value={`${inventoryStats.totalItems > 0 ? ((inventoryStats.devolvidos / inventoryStats.totalItems) * 100).toFixed(1) : 0}%`}
-              icon={Package}
-              color="primary"
               delay={0.4}
             />
           </div>

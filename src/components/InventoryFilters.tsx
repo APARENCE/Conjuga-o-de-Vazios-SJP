@@ -21,7 +21,8 @@ interface InventoryFiltersProps {
 
 // Corrigido: itemType agora inclui 'Troca'
 const itemTypes: InventoryItem['itemType'][] = ['Troca', 'Baixa Pátio', 'Devolução'];
-const statuses: InventoryItem['status'][] = ['Em Uso', 'Aguardando Devolução', 'Devolvido (RIC OK)'];
+// Status atualizados para refletir a nova lógica de estoque
+const statuses: InventoryItem['status'][] = ['Em Estoque', 'Aguardando Devolução', 'Devolvido (RIC OK)'];
 
 export function InventoryFilters({
   searchTerm,
