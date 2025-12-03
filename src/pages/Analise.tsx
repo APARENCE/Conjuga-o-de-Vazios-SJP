@@ -193,10 +193,10 @@ export default function Analise({ containers }: AnalisePageProps) {
           </CardTitle>
           <Icon className={`h-3 w-3 text-${color}`} />
         </CardHeader>
-        <CardContent className="p-1 pt-0">
-          <div className="text-sm font-bold text-foreground">{value}</div>
-          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
-        </CardContent>
+          <CardContent className="p-1 pt-0">
+            <div className="text-sm font-bold text-foreground">{value}</div>
+            <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+          </CardContent>
       </Card>
     </motion.div>
   );
@@ -236,9 +236,9 @@ export default function Analise({ containers }: AnalisePageProps) {
         <div className="space-y-2">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Análise de Dados</h1>
+              <h1 className="text-2xl font-bold tracking-tight">Análise de Containers-Vazios</h1>
               <p className="text-muted-foreground text-sm mt-1">
-                Visualização e estatísticas detalhadas dos containers CAS
+                Visualização e estatísticas detalhadas dos containers vazios CAS
               </p>
             </div>
             

@@ -228,7 +228,7 @@ export default function Containers({
   );
 
   return (
-    <div className="flex flex-col h-full px-4 min-h-[calc(100vh-48px)]"> {/* Adicionando min-h para garantir que o flex funcione */}
+    <div className="flex flex-col h-full px-4"> {/* Removendo min-h */}
       <ContainerHeader
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -248,7 +248,7 @@ export default function Containers({
         subtitle="Controle de entrada e saída de containers vazios"
       />
 
-      <div className="flex-1 pt-2 overflow-y-auto"> {/* Adicionando overflow-y-auto aqui */}
+      <div className="pt-2"> {/* Removendo flex-1 e overflow-y-auto */}
         <AnimatePresence mode="wait">
           {viewMode === "table" ? (
             <motion.div
