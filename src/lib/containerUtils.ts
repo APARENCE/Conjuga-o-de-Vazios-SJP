@@ -95,8 +95,8 @@ export function validateAndCorrectContainer(containerNumber: string): string | n
 export function isContainerDevolvido(container: { dataSaidaSJP?: string | null; status?: string | null }): boolean {
     const dataSaida = String(container.dataSaidaSJP || '').trim().toUpperCase();
     
-    // Critério 1: Data de Saída SJP preenchida E não é "EM PATIO"
-    if (dataSaida !== "" && dataSaida !== "EM PATIO") {
+    // Critério 1: Data de Saída SJP preenchida E não é "EMPATIO"
+    if (dataSaida !== "" && dataSaida !== "EMPATIO") {
         return true;
     }
     
